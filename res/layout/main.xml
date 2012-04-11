@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/titlebg"
+        android:stretchColumns="1" >
+
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/txtSchoolName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="3dip"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="@color/titlefontcolor" android:text="驾校名称"/>
+
+            <TextView
+                android:id="@+id/txtDeviceName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="3dip"
+                android:text="设备名称"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/titlefontcolor" />
+
+            <TextView
+                android:id="@+id/txtSystemTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="3dip"
+                android:text="2012-04-06 12:12:12"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/titlefontcolor" />
+
+        </TableRow>
+		<View android:layout_height="2dip"  
+        android:background="@color/titleborder" /> 
+        <TableRow
+            android:id="@+id/tableRow2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+        </TableRow>
+
+    </TableLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:layout_alignParentBottom="true" android:layout_alignParentLeft="true" android:layout_alignParentRight="true" android:layout_alignParentTop="true" android:background="@color/contentborder">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:background="@color/contentbg"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/layCoachTitle"
+                    android:layout_width="100dip"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dip"
+                    android:background="@drawable/bg1"
+                    android:orientation="vertical"
+                    android:paddingLeft="3dip" >
+
+                    <TextView
+                        android:id="@+id/textView1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="教练"
+                        android:textAppearance="?android:attr/textAppearanceMedium" android:textColor="@color/labelfont"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtInfoCoach"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="请插教练卡" android:paddingLeft="3dip" android:layout_marginTop="20dip"/>
+
+                <TextView
+                    android:id="@+id/txtCoachName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="3dip"
+                    android:text="姓名"
+                    android:textAppearance="?android:attr/textAppearanceMedium" android:visibility="gone" android:layout_marginTop="20dip"/>
+
+                <ImageView
+                    android:id="@+id/imgCoach"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="3dip"
+                    android:layout_marginTop="3dip"
+                    android:src="@drawable/coach"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnCoachLogout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="34dp"
+                    android:text="签退" android:visibility="gone" android:layout_marginTop="10dip"/>
+
+            </LinearLayout>
+	        
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_marginLeft="1dip"
+                android:layout_weight="1"
+                android:background="@color/contentbg"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="100dip"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" android:background="@drawable/bg1" android:layout_marginTop="10dip" android:paddingLeft="3dip">
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="学员"
+                        android:textAppearance="?android:attr/textAppearanceMedium" android:textColor="@color/labelfont"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtInfoStudent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dip"
+                    android:text="请先插教练卡" android:paddingLeft="3dip"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_marginLeft="1dip"
+                android:layout_weight="1"
+                android:background="@color/contentbg"
+                android:orientation="vertical" android:paddingTop="10dip" android:paddingRight="3dip">
+
+                <TextView
+                    android:id="@+id/txtStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="等待上传数据" android:layout_gravity="right"/>
+
+                <TextView
+                    android:id="@+id/txtLngLat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:layout_marginTop="5dip"
+                    android:text="GPS:0,0" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="false"
+            android:background="@color/titlebg"
+            android:stretchColumns="1" android:layout_alignParentBottom="true">
+
+		<View android:layout_height="1dip"  
+        android:background="@color/titleborder" /> 
+            <TableRow
+                android:id="@+id/tableRow5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+
+                <TextView
+                    android:id="@+id/textView12"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="3dip"
+                    android:text="网络正常"
+                    android:textColor="@color/titlefontcolor" />
+
+                <TextView
+                    android:id="@+id/textView6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="计时训练 明白消费"
+                    android:textColor="@color/titlefontcolor" android:padding="3dip"/>
+
+                <TextView
+                    android:id="@+id/textView5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:text="技术支持:武汉中信通"
+                    android:textColor="@color/titlefontcolor" android:padding="3dip"/>
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow7"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow8"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+            </TableRow>
+        </TableLayout>
+
+    </RelativeLayout>
+
+</LinearLayout>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="titlebg">#FFECECEC</color>
+    <color name="titleborder">#FF5080D8</color>
+	<color name="titlefontcolor">#FF000000</color>
+	<color name="contentbg">#FFF8F8F8</color>
+	<color name="contentborder">#FFC6C6C6</color>
+	<color name="labelfont">#FFFFFFFF</color>
+</resources>
