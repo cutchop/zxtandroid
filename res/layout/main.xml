@@ -103,32 +103,144 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="请插教练卡" android:paddingLeft="3dip" android:layout_marginTop="20dip"/>
-
-                <TextView
-                    android:id="@+id/txtCoachName"
-                    android:layout_width="wrap_content"
+
+                <LinearLayout
+                    android:id="@+id/layCoachInfo"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingLeft="3dip"
-                    android:text="姓名"
-                    android:textAppearance="?android:attr/textAppearanceMedium" android:visibility="gone" android:layout_marginTop="20dip"/>
-
-                <ImageView
-                    android:id="@+id/imgCoach"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="3dip"
-                    android:layout_marginTop="3dip"
-                    android:src="@drawable/coach"
-                    android:visibility="gone" />
-
-                <Button
-                    android:id="@+id/btnCoachLogout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="34dp"
-                    android:text="签退" android:visibility="gone" android:layout_marginTop="10dip"/>
+                    android:orientation="vertical" android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dip"
+                        android:paddingLeft="5dip" >
+
+                        <ImageView
+                            android:id="@+id/imgCoach"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="3dip"
+                            android:layout_marginTop="3dip"
+                            android:src="@drawable/coach"/>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical" >
+
+                            <TextView
+                                android:id="@+id/txtCoachName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dip"
+                                android:paddingLeft="3dip"
+                                android:text="姓名"
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:visibility="visible" />
+
+                            <TextView
+                                android:id="@+id/txtCoachCard"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dip"
+                                android:paddingLeft="3dip"
+                                android:text="卡号" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/btnCoachLogout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="34dp"
+                        android:layout_marginTop="10dip"
+                        android:text="签退"/>
+                </LinearLayout>
 
             </LinearLayout>
-	        
+	        
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_marginLeft="1dip"
+                android:layout_weight="1"
+                android:background="@color/contentbg"
+                android:orientation="vertical" >
+
+                <LinearLayout
+                    android:id="@+id/layStudentTitle"
+                    android:layout_width="100dip"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dip"
+                    android:background="@drawable/bg1"
+                    android:orientation="vertical"
+                    android:paddingLeft="3dip" >
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="学员"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textColor="@color/labelfont" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/txtInfoStudent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dip"
+                    android:paddingLeft="3dip"
+                    android:text="请先插教练卡" />
+
+                <LinearLayout
+                    android:id="@+id/layStudentInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dip"
+                        android:paddingLeft="5dip" >
+
+                        <ImageView
+                            android:id="@+id/imgStudent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="3dip"
+                            android:layout_marginTop="3dip"
+                            android:src="@drawable/coach" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical" >
+
+                            <TextView
+                                android:id="@+id/txtStudentName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dip"
+                                android:paddingLeft="3dip"
+                                android:text="姓名"
+                                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                            <TextView
+                                android:id="@+id/txtStudentCard"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dip"
+                                android:paddingLeft="3dip"
+                                android:text="卡号" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="fill_parent"
@@ -138,41 +250,35 @@
                 android:orientation="vertical">
 
                 <LinearLayout
-                    android:layout_width="100dip"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical" android:background="@drawable/bg1" android:layout_marginTop="10dip" android:paddingLeft="3dip">
-
+                    android:layout_width="match_parent"
+                    android:layout_height="220dip"
+                    android:orientation="vertical" android:paddingTop="20dip" android:paddingLeft="5dip">
+
                     <TextView
-                        android:id="@+id/textView2"
+                        android:id="@+id/txtStartTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="学员"
-                        android:textAppearance="?android:attr/textAppearanceMedium" android:textColor="@color/labelfont"/>
+                        android:text="尚未开始训练" />
+
+                    <TextView
+                        android:id="@+id/txtTrainTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dip" />
 
                 </LinearLayout>
-
-                <TextView
-                    android:id="@+id/txtInfoStudent"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="20dip"
-                    android:text="请先插教练卡" android:paddingLeft="3dip"/>
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="fill_parent"
-                android:layout_marginLeft="1dip"
-                android:layout_weight="1"
-                android:background="@color/contentbg"
-                android:orientation="vertical" android:paddingTop="10dip" android:paddingRight="3dip">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dip"
+                    android:orientation="vertical" android:background="@color/contentborder">
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/txtStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="等待上传数据" android:layout_gravity="right"/>
+                    android:text="等待上传数据" android:layout_gravity="right" android:paddingRight="3dip"/>
 
                 <TextView
                     android:id="@+id/txtLngLat"
@@ -180,7 +286,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
                     android:layout_marginTop="5dip"
-                    android:text="GPS:0,0" />
+                    android:text="GPS:0,0" android:paddingRight="3dip"/>
 
             </LinearLayout>
         </LinearLayout>

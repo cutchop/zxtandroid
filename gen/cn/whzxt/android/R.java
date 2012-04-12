@@ -29,30 +29,39 @@ public final class R {
         public static final int transparent=0x7f020006;
     }
     public static final class id {
-        public static final int btnCoachLogout=0x7f06000c;
+        public static final int btnCoachLogout=0x7f06000e;
         public static final int imgCoach=0x7f06000b;
+        public static final int imgStudent=0x7f060013;
+        public static final int layCoachInfo=0x7f06000a;
         public static final int layCoachTitle=0x7f060007;
+        public static final int layStudentInfo=0x7f060012;
+        public static final int layStudentTitle=0x7f06000f;
         public static final int tableRow1=0x7f060000;
         public static final int tableRow2=0x7f060004;
         public static final int tableRow3=0x7f060005;
         public static final int tableRow4=0x7f060006;
-        public static final int tableRow5=0x7f060011;
-        public static final int tableRow6=0x7f060015;
-        public static final int tableRow7=0x7f060016;
-        public static final int tableRow8=0x7f060017;
+        public static final int tableRow5=0x7f06001a;
+        public static final int tableRow6=0x7f06001e;
+        public static final int tableRow7=0x7f06001f;
+        public static final int tableRow8=0x7f060020;
         public static final int textView1=0x7f060008;
-        public static final int textView12=0x7f060012;
-        public static final int textView2=0x7f06000d;
-        public static final int textView5=0x7f060014;
-        public static final int textView6=0x7f060013;
-        public static final int txtCoachName=0x7f06000a;
+        public static final int textView12=0x7f06001b;
+        public static final int textView2=0x7f060010;
+        public static final int textView5=0x7f06001d;
+        public static final int textView6=0x7f06001c;
+        public static final int txtCoachCard=0x7f06000d;
+        public static final int txtCoachName=0x7f06000c;
         public static final int txtDeviceName=0x7f060002;
         public static final int txtInfoCoach=0x7f060009;
-        public static final int txtInfoStudent=0x7f06000e;
-        public static final int txtLngLat=0x7f060010;
+        public static final int txtInfoStudent=0x7f060011;
+        public static final int txtLngLat=0x7f060019;
         public static final int txtSchoolName=0x7f060001;
-        public static final int txtStatus=0x7f06000f;
+        public static final int txtStartTime=0x7f060016;
+        public static final int txtStatus=0x7f060018;
+        public static final int txtStudentCard=0x7f060015;
+        public static final int txtStudentName=0x7f060014;
         public static final int txtSystemTime=0x7f060003;
+        public static final int txtTrainTime=0x7f060017;
     }
     public static final class layout {
         public static final int main=0x7f030000;
