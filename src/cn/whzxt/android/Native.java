@@ -21,6 +21,12 @@ public class Native {
 	public native static int cesc_102(int icdev,int zone,int len,int[] key_erase);//核对擦卡密码
 	public native static int wesc_102(int icdev,int zone,int len,int[] key_erase);//修改擦卡密码
 	public native static int ser_102(int icdev,int zone,int offset,int len);//擦卡
+	
+	//***********************    operate at24c02    **************************
+	public native static String srd_24c02(int icdev,int offset,int len);//读卡
+	public native static int swr_24c02(int icdev,int offset,int len, int[] data_buffer);//写卡
+	public native static int chk_24c02(int icdev);//测卡类型
+
 	static {
 		System.loadLibrary("IC_demo_zxt"); 
 	}

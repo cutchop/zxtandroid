@@ -80,7 +80,8 @@ public class WelcomeActivity extends Activity {
 									editor.putString("session", results[1]);
 									editor.putString("deviceID", results[2]);
 									editor.putString("deviceName", results[3]);
-									editor.putString("schoolName", results[4]);
+									editor.putString("schoolID", results[4]);
+									editor.putString("schoolName", results[5]);
 									editor.commit();
 									// 初始化并跳转到主界面
 									Intent intent = new Intent();
@@ -88,7 +89,8 @@ public class WelcomeActivity extends Activity {
 									bundle.putString("session", results[1]);
 									bundle.putString("deviceID", results[2]);
 									bundle.putString("deviceName", results[3]);
-									bundle.putString("schoolName", results[4]);
+									bundle.putString("schoolID", results[4]);
+									bundle.putString("schoolName", results[5]);
 									intent.putExtras(bundle);
 									intent.setClass(WelcomeActivity.this, MainActivity.class);
 									startActivity(intent);
@@ -121,27 +123,13 @@ public class WelcomeActivity extends Activity {
 							}
 						});
 					}
-				} catch (ClientProtocolException e) {
-					handler.post(new Runnable() {
-						public void run() {
-							exitConfirm();
-						}
-					});
-					e.printStackTrace();
-				} catch (IOException e) {
-					handler.post(new Runnable() {
-						public void run() {
-							exitConfirm();
-						}
-					});
-					e.printStackTrace();
 				} catch (Exception e) {
+					e.printStackTrace();
 					handler.post(new Runnable() {
 						public void run() {
 							exitConfirm();
 						}
 					});
-					e.printStackTrace();
 				}
 			}
 		}.start();
@@ -166,7 +154,6 @@ public class WelcomeActivity extends Activity {
 
 	private void offline() {
 		final EditText txtpsd = new EditText(this);
-		txtpsd.setText(settings.getString("offlinepassword", ""));
 		AlertDialog alertDialog = new AlertDialog.Builder(WelcomeActivity.this).setTitle("请输入密码").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				if (txtpsd.getText().toString().equals(settings.getString("offlinepassword", ""))) {
