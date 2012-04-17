@@ -153,27 +153,18 @@ public class WelcomeActivity extends Activity {
 	}
 
 	private void offline() {
-		final EditText txtpsd = new EditText(this);
-		AlertDialog alertDialog = new AlertDialog.Builder(WelcomeActivity.this).setTitle("请输入密码").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				if (txtpsd.getText().toString().equals(settings.getString("offlinepassword", ""))) {
-					// 初始化并跳转到主界面
-					Intent intent = new Intent();
-					Bundle bundle = new Bundle();
-					bundle.putString("session", settings.getString("session", ""));
-					bundle.putString("deviceID", settings.getString("deviceID", ""));
-					bundle.putString("deviceName", settings.getString("deviceName", ""));
-					bundle.putString("schoolName", settings.getString("schoolName", ""));
-					intent.putExtras(bundle);
-					intent.setClass(WelcomeActivity.this, MainActivity.class);
-					startActivity(intent);
-					finish();
-				} else {
-					Toast.makeText(WelcomeActivity.this, "密码错误", Toast.LENGTH_LONG).show();
-				}
-			}
-		}).create();
-		alertDialog.show();
+		// 初始化并跳转到主界面
+		Intent intent = new Intent();
+		Bundle bundle = new Bundle();
+		bundle.putString("session", settings.getString("session", ""));
+		bundle.putString("deviceID", settings.getString("deviceID", ""));
+		bundle.putString("deviceName", settings.getString("deviceName", ""));
+		bundle.putString("schoolID", settings.getString("schoolID", ""));
+		bundle.putString("schoolName", settings.getString("schoolName", ""));
+		intent.putExtras(bundle);
+		intent.setClass(WelcomeActivity.this, MainActivity.class);
+		startActivity(intent);
+		finish();
 	}
 
 	@Override

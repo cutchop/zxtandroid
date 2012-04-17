@@ -6,4 +6,10 @@
 	<color name="contentbg">#FFF8F8F8</color>
 	<color name="contentborder">#FFC6C6C6</color>
 	<color name="labelfont">#FFFFFFFF</color>
+	<color name="button_press">#8818A2E7</color>
+	<color name="button_normal">#FFECECEC</color>
+	<color name="button_text">#FF000000</color>
+	<color name="button_checked_press">#8818A2E7</color>
+	<color name="button_checked_normal">#FF18A2E7</color>
+	<color name="button_checked_text">#FFFFFFFF</color>
 </resources>

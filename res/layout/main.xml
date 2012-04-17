@@ -108,7 +108,7 @@
                     android:id="@+id/layCoachInfo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" android:visibility="gone">
+                    android:orientation="vertical" android:visibility="visible">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -122,7 +122,7 @@
                             android:layout_height="126dip"
                             android:layout_marginLeft="3dip"
                             android:layout_marginTop="3dip"
-                            android:src="@drawable/photo"/>
+                            android:src="@drawable/photo" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -146,6 +146,102 @@
                                 android:layout_marginTop="5dip"
                                 android:paddingLeft="3dip"
                                 android:text="卡号" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="30dip" >
+
+                        <LinearLayout
+                            android:id="@+id/btnJFMS"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="5dip"
+                            android:layout_weight="1"
+                            android:background="@drawable/button_checked_bg"
+                            android:clickable="true"
+                            android:orientation="vertical"
+                            android:padding="3dip" >
+
+                            <TextView
+                                android:id="@+id/txtJFMS"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="计费模式"
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:textColor="@color/button_checked_text" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btnFJFMS"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="5dip"
+                            android:layout_weight="1"
+                            android:background="@drawable/button_bg"
+                            android:clickable="true"
+                            android:orientation="vertical"
+                            android:padding="3dip" >
+
+                            <TextView
+                                android:id="@+id/txtFJFMS"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="非计费模式"
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:textColor="@color/button_text" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dip" >
+
+                        <LinearLayout
+                            android:id="@+id/btnSubject2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="5dip"
+                            android:layout_weight="1"
+                            android:background="@drawable/button_checked_bg"
+                            android:clickable="true"
+                            android:orientation="vertical"
+                            android:padding="3dip" >
+
+                            <TextView
+                                android:id="@+id/txtSubject2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="科目二"
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:textColor="@color/button_checked_text" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btnSubject3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginRight="5dip"
+                            android:layout_weight="1"
+                            android:background="@drawable/button_bg"
+                            android:clickable="true"
+                            android:orientation="vertical"
+                            android:padding="3dip" >
+
+                            <TextView
+                                android:id="@+id/txtSubject3"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="科目三"
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:textColor="@color/button_text" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -260,6 +356,11 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dip" />
+
+                    <TextView
+                        android:id="@+id/txtBalance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" android:layout_marginTop="5dip"/>
 
                 </LinearLayout>
 
