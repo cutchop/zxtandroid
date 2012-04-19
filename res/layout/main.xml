@@ -327,6 +327,20 @@
                                 android:text="卡号" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/txtStudentID"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginLeft="5dip" android:layout_marginTop="10dip"/>
+
+                    <TextView
+                        android:id="@+id/txtStudentIDCard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="5dip"
+                        android:layout_marginTop="5dip"/>
 
                 </LinearLayout>
 
@@ -343,24 +357,38 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="220dip"
-                    android:orientation="vertical" android:paddingTop="20dip" android:paddingLeft="5dip">
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" android:padding="5dip" android:layout_marginBottom="20dip" android:background="@color/titleborder">
+
+                        <TextView
+                            android:id="@+id/textView2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="本车单价:2元/分钟"
+                            android:textAppearance="?android:attr/textAppearanceMedium" android:layout_gravity="center" android:textColor="@color/labelfont"/>
+
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/txtStartTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="尚未开始训练" />
+                        android:text="尚未开始训练" android:paddingLeft="5dip"/>
 
                     <TextView
                         android:id="@+id/txtTrainTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="5dip" />
+                        android:layout_marginTop="5dip" android:paddingLeft="5dip"/>
 
                     <TextView
                         android:id="@+id/txtBalance"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:layout_marginTop="5dip"/>
+                        android:layout_height="wrap_content" android:layout_marginTop="5dip" android:paddingLeft="5dip"/>
 
                 </LinearLayout>
 

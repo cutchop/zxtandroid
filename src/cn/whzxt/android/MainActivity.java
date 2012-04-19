@@ -1,7 +1,5 @@
 package cn.whzxt.android;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,11 +9,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import javax.xml.datatype.DatatypeFactory;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -23,11 +18,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
-import cn.whzxt.android.R.color;
 
-import android.R.bool;
-import android.R.integer;
-import android.R.string;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -35,11 +26,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.AvoidXfermode.Mode;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -48,24 +36,24 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
-import android.util.Log;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnInitListener;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnInitListener {
 	private TextView txtSchoolName, txtDeviceName, txtSystemTime;
 	private TextView txtInfoCoach, txtInfoStudent, txtStudentTitle, txtStatus, txtUploadUseDataStatus, txtLngLat;
 	private TextView txtCoachName, txtCoachCard, txtStudentName, txtStudentCard;
 	private TextView txtStartTime, txtTrainTime, txtBalance;
 	private TextView txtNetworkStatus;
 	private TextView txtJFMS, txtFJFMS, txtSubject2, txtSubject3;
+	private TextView txtStudentID, txtStudentIDCard;
 	private NetImageView imgCoach, imgStudent;
 	private LinearLayout layCoachTitle, layStudentTitle, layCoachInfo, layStudentInfo;
 	private LinearLayout btnJFMS, btnFJFMS, btnSubject2, btnSubject3;
@@ -77,6 +65,7 @@ public class MainActivity extends Activity {
 	private Boolean _hascard = false;
 	private int col = 0;
 	private Date startTime, nowTime, endTime;
+	private int startMi, nowMi = 0;
 	private String _curUUID;
 	private int mode = 0;// 计费模式0，非计费模式1
 	private int subject = 2;// 科目二，科目三
@@ -91,9 +80,16 @@ public class MainActivity extends Activity {
 	private Cursor _cursor;
 	private Boolean blindSpotFinish = true;
 
-	private static final String PATH = "/dev/s3c2410_serial1";
-	private static final int BAUD = 9600;
+	private static final int PRICE = 2; // 设备单价
+	// 读卡器
+	private static final String PATH = "/dev/s3c2410_serial1"; // 读卡器参数
+	private static final int BAUD = 9600; // 读卡器参数
 	private int fd;
+	// TTS
+	private TextToSpeech mTts;
+	private static final int REQ_TTS_STATUS_CHECK = 0;
+	// 指纹
+	private lytfingerprint finger;
 
 	Handler handler = new Handler() {
 		@Override
@@ -118,6 +114,20 @@ public class MainActivity extends Activity {
 			super.handleMessage(msg);
 		}
 	};
+
+	public void onInit(int status) {
+		if (status == TextToSpeech.SUCCESS) {
+			speak("欢迎使用,中信通智能驾培终端");
+		}
+	}
+
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == REQ_TTS_STATUS_CHECK) {
+			if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+				mTts = new TextToSpeech(this, this);
+			}
+		}
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -146,6 +156,8 @@ public class MainActivity extends Activity {
 		txtCoachCard = (TextView) findViewById(R.id.txtCoachCard);
 		txtStudentName = (TextView) findViewById(R.id.txtStudentName);
 		txtStudentCard = (TextView) findViewById(R.id.txtStudentCard);
+		txtStudentID = (TextView) findViewById(R.id.txtStudentID);
+		txtStudentIDCard = (TextView) findViewById(R.id.txtStudentIDCard);
 		imgCoach = (NetImageView) findViewById(R.id.imgCoach);
 		imgStudent = (NetImageView) findViewById(R.id.imgStudent);
 		txtStartTime = (TextView) findViewById(R.id.txtStartTime);
@@ -161,6 +173,10 @@ public class MainActivity extends Activity {
 		schoolID = bundle.getString("schoolID");
 		schoolName = bundle.getString("schoolName");
 		session = bundle.getString("session");
+		if (bundle.getString("offline") != null) {
+			retry = 3;
+			txtNetworkStatus.setText("网络异常");
+		}
 		txtSchoolName.setText(schoolName);
 		txtDeviceName.setText(deviceName);
 		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -171,7 +187,7 @@ public class MainActivity extends Activity {
 
 		server = getString(R.string.server1);
 
-		sqlHelper = new MySQLHelper(this, "zxt.db", null, 3);
+		sqlHelper = new MySQLHelper(this, "zxt.db", null, 4);
 		db = sqlHelper.getWritableDatabase();
 
 		// 科目二
@@ -202,7 +218,7 @@ public class MainActivity extends Activity {
 		btnJFMS.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (mode == 1) {
-					trainFinish();//结束训练重新开始
+					trainFinish();// 结束训练
 					mode = 0;
 					btnFJFMS.setBackgroundResource(R.drawable.button_bg);
 					txtFJFMS.setTextColor(R.color.button_text);
@@ -215,19 +231,20 @@ public class MainActivity extends Activity {
 		btnFJFMS.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (mode == 0) {
+					speak("请输入密码");
 					final EditText txtpsd = new EditText(MainActivity.this);
 					txtpsd.setText(settings.getString("offlinepassword", ""));
 					AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("请输入密码").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
 							if (txtpsd.getText().toString().toLowerCase().equals(settings.getString("offlinepassword", "").toLowerCase())) {
-								trainFinish();//结束训练重新开始
+								trainFinish();// 结束训练
 								mode = 1;
 								btnJFMS.setBackgroundResource(R.drawable.button_bg);
 								txtJFMS.setTextColor(R.color.button_text);
 								btnFJFMS.setBackgroundResource(R.drawable.button_checked_bg);
 								txtFJFMS.setTextColor(Color.WHITE);
 							} else {
-								Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_LONG).show();
+								toashShow("密码错误");
 							}
 						}
 					}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -317,6 +334,15 @@ public class MainActivity extends Activity {
 		} else {
 			showCoach(false);
 		}
+
+		// TTS
+		Intent checkIntent = new Intent();
+		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+		startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+
+		// 指纹
+		finger = new lytfingerprint();
+		finger.PSOpenDevice(1, 0, 57600 / 9600, 2);
 	}
 
 	/**
@@ -361,7 +387,7 @@ public class MainActivity extends Activity {
 	 * 
 	 * @param 开始时间
 	 * @param 结束时间
-	 * @return
+	 * @return 时间差字符串
 	 */
 	private String getTimeDiff(Date start, Date end) {
 		long between = (end.getTime() - start.getTime()) / 1000;
@@ -382,20 +408,21 @@ public class MainActivity extends Activity {
 		txtSystemTime.setText(dateFormat.format(nowTime));
 		if (null != startTime) {
 			if (mode == 0) {
+				// 计算余额
+				cardBalanceNow = cardBalance - (int) ((nowTime.getTime() - startTime.getTime()) / 60000);
+				if (((nowTime.getTime() - startTime.getTime()) / 1000) % 60 > 0) {
+					cardBalanceNow--;
+				}
+				// 显示余额
 				if (coachCard.equals(studentCard)) {
 					txtTrainTime.setText("已用车" + getTimeDiff(startTime, nowTime));
-					cardBalanceNow = cardBalance - (int) ((nowTime.getTime() - startTime.getTime()) / 60000);
-					if (((nowTime.getTime() - startTime.getTime()) / 1000) % 60 > 0) {
-						cardBalanceNow--;
-					}
 					txtBalance.setText("卡内剩余时长:" + cardBalanceNow + "分钟");
 				} else {
 					txtTrainTime.setText("已训练" + getTimeDiff(startTime, nowTime));
-					cardBalanceNow = cardBalance - (int) ((nowTime.getTime() - startTime.getTime()) / 60000) * 2;
-					if (((nowTime.getTime() - startTime.getTime()) / 1000) % 60 > 0) {
-						cardBalanceNow = cardBalanceNow - 2;
-					}
-					txtBalance.setText("卡内余额:" + cardBalanceNow + "元");
+					txtBalance.setText("余额:" + cardBalanceNow * PRICE + "元,剩余" + cardBalanceNow + "分钟");
+				}
+				if (cardBalanceNow <= 0) {
+					trainFinish();// 结束训练
 				}
 			} else {
 				txtTrainTime.setText("非计费模式");
@@ -415,6 +442,11 @@ public class MainActivity extends Activity {
 						for (int i = 9; i < 16; i++) {
 							card += String.valueOf((char) Integer.parseInt(chars[i], 16));
 						}
+						// 卡内剩余时长
+						cardBalance = Integer.parseInt(chars[1].toString() + chars[2].toString(), 16);
+						// Toast.makeText(MainActivity.this,
+						// String.valueOf(cardBalance),
+						// Toast.LENGTH_LONG).show();
 						if (chars[0].equals("01")) {
 							if (retry < 3) {
 								getCoachInfo(card);
@@ -429,7 +461,7 @@ public class MainActivity extends Activity {
 									cardschool = "001001";
 								}
 								if (!cardschool.equals(schoolID)) {
-									Toast.makeText(MainActivity.this, "此卡不属于本驾校", Toast.LENGTH_LONG).show();
+									toashShow("此卡不属于本驾校");
 								} else {
 									try {
 										coachName = new String(int2bytes(Integer.parseInt(chars[16].toString() + chars[17].toString(), 16)), "GB2312").trim();
@@ -444,8 +476,7 @@ public class MainActivity extends Activity {
 										studentID = coachID;
 										studentName = coachName;
 										studentIDCard = coachIDCard;
-										startTime = new Date();
-										showStudent(true);
+										trainBegin();
 									} catch (UnsupportedEncodingException e) {
 										e.printStackTrace();
 									}
@@ -466,7 +497,7 @@ public class MainActivity extends Activity {
 										cardschool = "001001";
 									}
 									if (!cardschool.equals(schoolID)) {
-										Toast.makeText(MainActivity.this, "此卡不属于本驾校", Toast.LENGTH_LONG).show();
+										toashShow("此卡不属于本驾校");
 									} else {
 										try {
 											studentName = new String(int2bytes(Integer.parseInt(chars[16].toString() + chars[17].toString(), 16)), "GB2312").trim();
@@ -476,15 +507,14 @@ public class MainActivity extends Activity {
 											studentCard = card;
 											studentID = "";
 											studentIDCard = "";
-											startTime = new Date();
-											showStudent(true);
+											trainBegin();
 										} catch (UnsupportedEncodingException e) {
 											e.printStackTrace();
 										}
 									}
 								}
 							} else {
-								Toast.makeText(MainActivity.this, "请先插教练卡", Toast.LENGTH_SHORT).show();
+								toashShow("请先插教练卡");
 							}
 						}
 					}
@@ -493,6 +523,38 @@ public class MainActivity extends Activity {
 				// 102卡
 			} else {
 				trainFinish();
+			}
+		}
+	}
+
+	/**
+	 * 开始训练
+	 */
+	private void trainBegin() {
+		if (cardBalance > 0) {
+			startTime = new Date();
+			startMi = nowMi;
+			showStudent(true);
+			String _tmp = "早上好";
+			if (startTime.getHours() >= 8 && startTime.getHours() < 12) {
+				_tmp = "上午好";
+			} else if (startTime.getHours() >= 12 && startTime.getHours() < 14) {
+				_tmp = "中午好";
+			} else if (startTime.getHours() >= 14 && startTime.getHours() < 20) {
+				_tmp = "下午好";
+			} else if (startTime.getHours() >= 20 || startTime.getHours() < 5) {
+				_tmp = "晚上好";
+			}
+			if (coachCard.equals(studentCard)) {
+				speak(_tmp + "," + studentName + ",卡内剩余" + cardBalance + "分钟,请谨慎驾驶");
+			} else {
+				speak(_tmp + "," + studentName + ",卡内余额:" + cardBalance * PRICE + ",剩余" + cardBalance + "分钟,请谨慎驾驶");
+			}
+		} else {
+			if (coachCard.equals(studentCard)) {
+				toashShow("卡内剩余时长不足");
+			} else {
+				toashShow("卡内余额不足");
 			}
 		}
 	}
@@ -518,8 +580,11 @@ public class MainActivity extends Activity {
 			startTime = null;
 			endTime = null;
 			_curUUID = "";
+			minute();// 上传数据
+			speak(txtStartTime.getText().toString() + "," + txtTrainTime.getText().toString() + "," + txtBalance.getText().toString());
 		}
 	}
+
 	/**
 	 * int转换为byte[]
 	 * 
@@ -551,11 +616,18 @@ public class MainActivity extends Activity {
 					tcv.put("student", studentCard);
 					tcv.put("starttime", dateFormat.format(startTime));
 					tcv.put("endtime", dateFormat.format(endTime));
+					tcv.put("balance", String.valueOf(cardBalanceNow));
+					tcv.put("startmi", String.valueOf(startMi));
+					tcv.put("endmi", String.valueOf(nowMi));
+					tcv.put("subject", String.valueOf(subject));
 					db.insert(MySQLHelper.T_ZXT_USE_DATA, null, tcv);
 				} else {
 					endTime = new Date();
 					ContentValues tcv = new ContentValues();
 					tcv.put("endtime", dateFormat.format(endTime));
+					tcv.put("balance", String.valueOf(cardBalanceNow));
+					tcv.put("endmi", String.valueOf(nowMi));
+					tcv.put("subject", String.valueOf(subject));
 					db.update(MySQLHelper.T_ZXT_USE_DATA, tcv, "guid=?", new String[] { _curUUID });
 				}
 			} else {
@@ -567,7 +639,32 @@ public class MainActivity extends Activity {
 				tcv.put("student", studentCard);
 				tcv.put("starttime", dateFormat.format(startTime));
 				tcv.put("endtime", dateFormat.format(endTime));
+				tcv.put("balance", String.valueOf(cardBalanceNow));
+				tcv.put("startmi", String.valueOf(startMi));
+				tcv.put("endmi", String.valueOf(nowMi));
+				tcv.put("subject", String.valueOf(subject));
 				db.insert(MySQLHelper.T_ZXT_USE_DATA, null, tcv);
+			}
+
+			if (fd > 0) {
+				// 重写卡内余额
+				if (Native.chk_24c02(fd) == 0) {// AT24C02卡
+					String data = Integer.toHexString(cardBalanceNow);
+					while (data.length() < 4) {
+						data = "0" + data;
+					}
+					int[] buff = new int[4];
+					buff[0] = Integer.parseInt(data.substring(0, 2), 16);
+					buff[1] = Integer.parseInt(data.substring(2), 16);
+					buff[2] = Integer.parseInt(data.substring(0, 2), 16);
+					buff[3] = Integer.parseInt(data.substring(2), 16);
+					Native.swr_24c02(fd, 0x09, 0x04, buff);
+				} else if (Native.chk_102(fd) == 0) {
+				}
+			}
+			// 余额不足提醒
+			if (cardBalanceNow <= 4) {
+				toashShow("卡内剩余时长不足" + cardBalanceNow + "分钟,请注意");
 			}
 		}
 
@@ -581,39 +678,44 @@ public class MainActivity extends Activity {
 	 * 上传GPS盲点数据
 	 */
 	private void uploadBlindSpot() {
-		_cursor = db.query(MySQLHelper.T_ZXT_GPS_DATA, null, null, null, null, null, null);
-		if (_cursor.getCount() > 0) {
-			new Thread() {
-				public void run() {
-					HttpPost httpRequest = new HttpPost(server + "/blindspot.ashx");
-					List<NameValuePair> params = new ArrayList<NameValuePair>(6);
-					_cursor.moveToFirst();
-					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
-					params.add(new BasicNameValuePair("session", session)); // 当前会话
-					params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
-					params.add(new BasicNameValuePair("gpstime", _cursor.getString(_cursor.getColumnIndex("gpstime"))));
-					params.add(new BasicNameValuePair("lng", _cursor.getString(_cursor.getColumnIndex("lng"))));
-					params.add(new BasicNameValuePair("lat", _cursor.getString(_cursor.getColumnIndex("lat"))));
-					try {
-						httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
-						HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
-						if (httpResponse.getStatusLine().getStatusCode() == 200) {
-							usedataresult = EntityUtils.toString(httpResponse.getEntity());
-							handler.post(new Runnable() {
-								public void run() {
-									if (usedataresult.equals("s")) {
-										db.delete(MySQLHelper.T_ZXT_GPS_DATA, "gpstime=?", new String[] { _cursor.getString(_cursor.getColumnIndex("gpstime")) });
-										uploadBlindSpot();
+		try {
+			_cursor = db.query(MySQLHelper.T_ZXT_GPS_DATA, null, null, null, null, null, null);
+			if (_cursor.getCount() > 0) {
+				new Thread() {
+					public void run() {
+						HttpPost httpRequest = new HttpPost(server + "/blindspot.ashx");
+						List<NameValuePair> params = new ArrayList<NameValuePair>(6);
+						_cursor.moveToFirst();
+						params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
+						params.add(new BasicNameValuePair("session", session)); // 当前会话
+						params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
+						params.add(new BasicNameValuePair("gpstime", _cursor.getString(_cursor.getColumnIndex("gpstime"))));
+						params.add(new BasicNameValuePair("lng", _cursor.getString(_cursor.getColumnIndex("lng"))));
+						params.add(new BasicNameValuePair("lat", _cursor.getString(_cursor.getColumnIndex("lat"))));
+						try {
+							httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+							HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+							if (httpResponse.getStatusLine().getStatusCode() == 200) {
+								usedataresult = EntityUtils.toString(httpResponse.getEntity());
+								handler.post(new Runnable() {
+									public void run() {
+										if (usedataresult.equals("s")) {
+											db.delete(MySQLHelper.T_ZXT_GPS_DATA, "gpstime=?", new String[] { _cursor.getString(_cursor.getColumnIndex("gpstime")) });
+											uploadBlindSpot();
+										}
 									}
-								}
-							});
+								});
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
 					}
-				}
-			}.start();
-		} else {
+				}.start();
+			} else {
+				blindSpotFinish = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 			blindSpotFinish = true;
 		}
 	}
@@ -622,48 +724,57 @@ public class MainActivity extends Activity {
 	 * 上传训练数据
 	 */
 	private void uploadUseData() {
-		_cursor = db.query(MySQLHelper.T_ZXT_USE_DATA, null, "guid!='" + _curUUID + "'", null, null, null, null);
-		if (_cursor.getCount() > 0) {
-			txtUploadUseDataStatus.setText("正在上传训练数据");
-			new Thread() {
-				public void run() {
-					HttpPost httpRequest = new HttpPost(server + "/usedata.ashx");
-					List<NameValuePair> params = new ArrayList<NameValuePair>(8);
-					_cursor.moveToFirst();
-					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
-					params.add(new BasicNameValuePair("session", session)); // 当前会话
-					params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
-					params.add(new BasicNameValuePair("guid", _cursor.getString(_cursor.getColumnIndex("guid"))));
-					params.add(new BasicNameValuePair("coach", _cursor.getString(_cursor.getColumnIndex("coach"))));
-					params.add(new BasicNameValuePair("student", _cursor.getString(_cursor.getColumnIndex("student"))));
-					params.add(new BasicNameValuePair("starttime", _cursor.getString(_cursor.getColumnIndex("starttime"))));
-					params.add(new BasicNameValuePair("endtime", _cursor.getString(_cursor.getColumnIndex("endtime"))));
-					try {
-						httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
-						HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
-						if (httpResponse.getStatusLine().getStatusCode() == 200) {
-							usedataresult = EntityUtils.toString(httpResponse.getEntity());
+		try {
+			_cursor = db.query(MySQLHelper.T_ZXT_USE_DATA, null, "guid!='" + _curUUID + "'", null, null, null, null);
+			if (_cursor.getCount() > 0) {
+				txtUploadUseDataStatus.setText("正在上传训练数据");
+				new Thread() {
+					public void run() {
+						HttpPost httpRequest = new HttpPost(server + "/usedata.ashx");
+						List<NameValuePair> params = new ArrayList<NameValuePair>(12);
+						_cursor.moveToFirst();
+						params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
+						params.add(new BasicNameValuePair("session", session)); // 当前会话
+						params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
+						params.add(new BasicNameValuePair("guid", _cursor.getString(_cursor.getColumnIndex("guid"))));
+						params.add(new BasicNameValuePair("coach", _cursor.getString(_cursor.getColumnIndex("coach"))));
+						params.add(new BasicNameValuePair("student", _cursor.getString(_cursor.getColumnIndex("student"))));
+						params.add(new BasicNameValuePair("starttime", _cursor.getString(_cursor.getColumnIndex("starttime"))));
+						params.add(new BasicNameValuePair("endtime", _cursor.getString(_cursor.getColumnIndex("endtime"))));
+						params.add(new BasicNameValuePair("balance", _cursor.getString(_cursor.getColumnIndex("balance"))));
+						params.add(new BasicNameValuePair("startmi", _cursor.getString(_cursor.getColumnIndex("startmi"))));
+						params.add(new BasicNameValuePair("endmi", _cursor.getString(_cursor.getColumnIndex("endmi"))));
+						params.add(new BasicNameValuePair("subject", _cursor.getString(_cursor.getColumnIndex("subject"))));
+						try {
+							httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+							HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+							if (httpResponse.getStatusLine().getStatusCode() == 200) {
+								usedataresult = EntityUtils.toString(httpResponse.getEntity());
+								handler.post(new Runnable() {
+									public void run() {
+										if (usedataresult.equals("s")) {
+											db.delete(MySQLHelper.T_ZXT_USE_DATA, "guid=?", new String[] { _cursor.getString(_cursor.getColumnIndex("guid")) });
+											txtUploadUseDataStatus.setText("训练数据上传成功[" + getNowTime() + "]");
+											uploadUseData();
+										}
+									}
+								});
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
 							handler.post(new Runnable() {
 								public void run() {
-									if (usedataresult.equals("s")) {
-										db.delete(MySQLHelper.T_ZXT_USE_DATA, "guid=?", new String[] { _cursor.getString(_cursor.getColumnIndex("guid")) });
-										txtUploadUseDataStatus.setText("训练数据上传成功[" + getNowTime() + "]");
-										uploadUseData();
-									}
+									txtUploadUseDataStatus.setText("网络异常[" + getNowTime() + "]");
 								}
 							});
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						handler.post(new Runnable() {
-							public void run() {
-								txtUploadUseDataStatus.setText("网络异常[" + getNowTime() + "]");
-							}
-						});
 					}
-				}
-			}.start();
-		} else {
+				}.start();
+			} else {
+				uploadBlindSpot();// 上传GPS盲点
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 			uploadBlindSpot();// 上传GPS盲点
 		}
 	}
@@ -705,8 +816,7 @@ public class MainActivity extends Activity {
 									studentID = coachID;
 									studentName = coachName;
 									studentIDCard = coachIDCard;
-									startTime = new Date();
-									showStudent(true);
+									trainBegin();// 开始训练
 								} else {
 									Toast.makeText(MainActivity.this, cardresult.split("\\|")[1], Toast.LENGTH_LONG).show();
 								}
@@ -717,7 +827,7 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 					handler.post(new Runnable() {
 						public void run() {
-							Toast.makeText(MainActivity.this, "网络错误,暂时无法获取教练信息,请尝试重新插卡", Toast.LENGTH_LONG).show();
+							toashShow("网络错误,暂时无法获取教练信息,请尝试重新插卡");
 						}
 					});
 					retry++;
@@ -757,8 +867,7 @@ public class MainActivity extends Activity {
 									if (results.length > 5) {
 										studentIDCard = results[5];
 									}
-									startTime = new Date();
-									showStudent(true);
+									trainBegin();// 开始训练
 								} else {
 									Toast.makeText(MainActivity.this, cardresult.split("\\|")[1], Toast.LENGTH_LONG).show();
 								}
@@ -769,7 +878,7 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 					handler.post(new Runnable() {
 						public void run() {
-							Toast.makeText(MainActivity.this, "网络错误,暂时无法获取学员信息,请尝试重新插卡", Toast.LENGTH_LONG).show();
+							toashShow("网络错误,暂时无法获取学员信息,请尝试重新插卡");
 						}
 					});
 					retry++;
@@ -796,7 +905,7 @@ public class MainActivity extends Activity {
 					params.add(new BasicNameValuePair("mode", String.valueOf(mode))); // 模式
 					params.add(new BasicNameValuePair("coach", coachCard)); // 教练
 				} else {
-					params = new ArrayList<NameValuePair>(9);
+					params = new ArrayList<NameValuePair>(10);
 					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 					params.add(new BasicNameValuePair("session", session)); // 当前会话
 					params.add(new BasicNameValuePair("lng", String.format("%.6f", lng))); // 经度
@@ -806,6 +915,7 @@ public class MainActivity extends Activity {
 					params.add(new BasicNameValuePair("student", studentCard)); // 学员
 					params.add(new BasicNameValuePair("starttime", dateFormat.format(startTime))); // 开始训练时间
 					params.add(new BasicNameValuePair("balance", String.valueOf(cardBalanceNow))); // 余额
+					params.add(new BasicNameValuePair("subject", String.valueOf(subject))); // 训练科目
 				}
 				try {
 					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
@@ -909,9 +1019,13 @@ public class MainActivity extends Activity {
 				txtStartTime.setText("开始用车时间: " + timeFormat.format(startTime));
 			} else {
 				txtStudentTitle.setText("学员");
+				if (!studentID.equals("")) {
+					txtStudentID.setText("学员编号:" + studentID);
+				}
 				txtStartTime.setText("训练开始时间: " + timeFormat.format(startTime));
 			}
 			if (!studentIDCard.equals("")) {
+				txtStudentIDCard.setText("身份证号:" + studentIDCard);
 				imgStudent.setImageUrl(server + "/" + studentIDCard + ".bmp");
 			}
 		} else {
@@ -920,6 +1034,8 @@ public class MainActivity extends Activity {
 			layStudentInfo.setVisibility(View.GONE);
 			txtInfoStudent.setVisibility(View.VISIBLE);
 			imgStudent.setImageResource(R.drawable.photo);
+			txtStudentID.setText("");
+			txtStudentIDCard.setText("");
 		}
 	}
 
@@ -952,6 +1068,17 @@ public class MainActivity extends Activity {
 			server = getString(R.string.server2);
 		} else {
 			server = getString(R.string.server1);
+		}
+	}
+
+	private void toashShow(String str) {
+		Toast.makeText(MainActivity.this, str, Toast.LENGTH_SHORT).show();
+		speak(str);
+	}
+
+	private void speak(String str) {
+		if (mTts != null) {
+			mTts.speak(str, TextToSpeech.QUEUE_ADD, null);
 		}
 	}
 
@@ -1005,8 +1132,12 @@ public class MainActivity extends Activity {
 		_timerUpload.cancel();
 		_timerFlicker.cancel();
 		_timerSecond.cancel();
-		if (db != null)
+		if (mTts != null) {
+			mTts.shutdown();
+		}
+		if (db != null) {
 			db.close();
+		}
 		super.onDestroy();
 	}
 }

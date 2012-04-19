@@ -1,12 +1,10 @@
 package cn.whzxt.android;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -25,7 +23,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -161,6 +158,7 @@ public class WelcomeActivity extends Activity {
 		bundle.putString("deviceName", settings.getString("deviceName", ""));
 		bundle.putString("schoolID", settings.getString("schoolID", ""));
 		bundle.putString("schoolName", settings.getString("schoolName", ""));
+		bundle.putString("offline", "true");
 		intent.putExtras(bundle);
 		intent.setClass(WelcomeActivity.this, MainActivity.class);
 		startActivity(intent);
