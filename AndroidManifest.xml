@@ -17,7 +17,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" android:screenOrientation="landscape"></activity>
-        <activity android:name=".OfflineActivity" android:screenOrientation="landscape"></activity>
     </application>
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

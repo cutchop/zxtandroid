@@ -96,7 +96,7 @@ public class WelcomeActivity extends Activity {
 							});
 						} else if (strResult.startsWith("failure|")) {
 							results = strResult.split("\\|");
-							if (results[1] == "version_error") {
+							if (results[1].equals("version_error")) {
 								AlertDialog alertDialog = new AlertDialog.Builder(WelcomeActivity.this).setTitle("发现新版本,需要更新").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int which) {
 										Uri uri = Uri.parse(server + "/zpad.apk");

@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -18,7 +19,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentValues;
@@ -32,36 +32,46 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnInitListener {
 	private TextView txtSchoolName, txtDeviceName, txtSystemTime;
 	private TextView txtInfoCoach, txtInfoStudent, txtStudentTitle, txtStatus, txtUploadUseDataStatus, txtLngLat;
-	private TextView txtCoachName, txtCoachCard, txtStudentName, txtStudentCard;
+	private TextView txtCoachName, txtCoachCard, txtCoachCertificate, txtStudentName, txtStudentCard;
 	private TextView txtStartTime, txtTrainTime, txtBalance;
 	private TextView txtNetworkStatus;
 	private TextView txtJFMS, txtFJFMS, txtSubject2, txtSubject3;
-	private TextView txtStudentID, txtStudentIDCard;
+	private TextView txtStudentID, txtStudentIDCard, txtStudentDriverType, txtStudentTotalTime, txtStudentTotalMi;
 	private NetImageView imgCoach, imgStudent;
 	private LinearLayout layCoachTitle, layStudentTitle, layCoachInfo, layStudentInfo;
 	private LinearLayout btnJFMS, btnFJFMS, btnSubject2, btnSubject3;
+	private LinearLayout layTts, layScrollDown;
+	private TableLayout layTitle;
+	private ScrollView mainView;
 	private String deviceID, deviceName, schoolID, schoolName, session;
 	private String server;
-	private String uploadresult, cardresult, usedataresult;
-	private String coachID = "", coachName, coachCard = "", coachIDCard = "", studentID = "", studentCard = "", studentIDCard = "", studentName;
+	private String uploadresult, cardresult, usedataresult, ttsdataresult;
+	private String coachID = "", coachName, coachCard = "", coachIDCard = "", coachCertificate = "", studentID = "", studentCard = "", studentIDCard = "", studentName = "", studentDriverType = "";
+	private String card;
 	private int cardBalance = 0, cardBalanceNow = 0;
+	private int studentTotalTime = 0, studentTotalMi = 0;
 	private Boolean _hascard = false;
 	private int col = 0;
 	private Date startTime, nowTime, endTime;
@@ -79,7 +89,10 @@ public class MainActivity extends Activity implements OnInitListener {
 	private SQLiteDatabase db;
 	private Cursor _cursor;
 	private Boolean blindSpotFinish = true;
+	private HashMap<String, String> _hashTts;
+	private String _ttsVer;
 
+	private static final int DBVERSION = 5;
 	private static final int PRICE = 2; // 设备单价
 	// 读卡器
 	private static final String PATH = "/dev/s3c2410_serial1"; // 读卡器参数
@@ -90,6 +103,9 @@ public class MainActivity extends Activity implements OnInitListener {
 	private static final int REQ_TTS_STATUS_CHECK = 0;
 	// 指纹
 	private lytfingerprint finger;
+	private static final int fingerAddress = 0xffffffff;
+	private static final int CHAR_BUFFER_A = 0x01;
+	final char PS_OK = 0x00;
 
 	Handler handler = new Handler() {
 		@Override
@@ -148,16 +164,24 @@ public class MainActivity extends Activity implements OnInitListener {
 		btnFJFMS = (LinearLayout) findViewById(R.id.btnFJFMS);
 		btnSubject2 = (LinearLayout) findViewById(R.id.btnSubject2);
 		btnSubject3 = (LinearLayout) findViewById(R.id.btnSubject3);
+		layTts = (LinearLayout) findViewById(R.id.layTts);
+		layScrollDown = (LinearLayout) findViewById(R.id.layScrollDown);
+		layTitle = (TableLayout) findViewById(R.id.layTitle);
+		mainView = (ScrollView) findViewById(R.id.mainView);
 		txtJFMS = (TextView) findViewById(R.id.txtJFMS);
 		txtFJFMS = (TextView) findViewById(R.id.txtFJFMS);
 		txtSubject2 = (TextView) findViewById(R.id.txtSubject2);
 		txtSubject3 = (TextView) findViewById(R.id.txtSubject3);
 		txtCoachName = (TextView) findViewById(R.id.txtCoachName);
 		txtCoachCard = (TextView) findViewById(R.id.txtCoachCard);
+		txtCoachCertificate = (TextView) findViewById(R.id.txtCoachCertificate);
 		txtStudentName = (TextView) findViewById(R.id.txtStudentName);
 		txtStudentCard = (TextView) findViewById(R.id.txtStudentCard);
 		txtStudentID = (TextView) findViewById(R.id.txtStudentID);
 		txtStudentIDCard = (TextView) findViewById(R.id.txtStudentIDCard);
+		txtStudentDriverType = (TextView) findViewById(R.id.txtStudentDriverType);
+		txtStudentTotalTime = (TextView) findViewById(R.id.txtStudentTotalTime);
+		txtStudentTotalMi = (TextView) findViewById(R.id.txtStudentTotalMi);
 		imgCoach = (NetImageView) findViewById(R.id.imgCoach);
 		imgStudent = (NetImageView) findViewById(R.id.imgStudent);
 		txtStartTime = (TextView) findViewById(R.id.txtStartTime);
@@ -187,7 +211,7 @@ public class MainActivity extends Activity implements OnInitListener {
 
 		server = getString(R.string.server1);
 
-		sqlHelper = new MySQLHelper(this, "zxt.db", null, 4);
+		sqlHelper = new MySQLHelper(this, "zxt.db", null, DBVERSION);
 		db = sqlHelper.getWritableDatabase();
 
 		// 科目二
@@ -212,6 +236,18 @@ public class MainActivity extends Activity implements OnInitListener {
 					btnSubject3.setBackgroundResource(R.drawable.button_checked_bg);
 					txtSubject3.setTextColor(Color.WHITE);
 				}
+			}
+		});
+
+		layTitle.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				mainView.fullScroll(View.FOCUS_UP);
+			}
+		});
+		//
+		layScrollDown.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				mainView.fullScroll(View.FOCUS_DOWN);
 			}
 		});
 		// 计费模式
@@ -324,12 +360,15 @@ public class MainActivity extends Activity implements OnInitListener {
 				handler.sendMessage(msg);
 			}
 		}, 15000, 60000);
+
+		showStudent(false);
 		// 显示教练信息
 		if (settings.getString("coachCard", "") != "") {
 			coachID = settings.getString("coachID", "");
 			coachName = settings.getString("coachName", "");
 			coachCard = settings.getString("coachCard", "");
 			coachIDCard = settings.getString("coachIDCard", "");
+			coachCertificate = settings.getString("coachCertificate", "");
 			showCoach(true);
 		} else {
 			showCoach(false);
@@ -341,8 +380,95 @@ public class MainActivity extends Activity implements OnInitListener {
 		startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
 
 		// 指纹
-		finger = new lytfingerprint();
-		finger.PSOpenDevice(1, 0, 57600 / 9600, 2);
+		// finger = new lytfingerprint();
+		// finger.PSOpenDevice(1, 0, 57600 / 9600, 2);
+
+		ttsButtonInit(); // 语音提示按钮初始化
+	}
+
+	/**
+	 * 语音提示按钮初始化
+	 */
+	private void ttsButtonInit() {
+		_hashTts = new HashMap<String, String>();
+		_ttsVer = "0";
+		Cursor cursor = db.query(MySQLHelper.T_ZXT_TTS, null, "id=0", null, null, null, null);
+		if (cursor.getCount() > 0) {
+			cursor.moveToFirst();
+			_ttsVer = cursor.getString(cursor.getColumnIndex("tts"));
+		}
+		cursor.close();
+		new Thread() {
+			public void run() {
+				HttpPost httpRequest = new HttpPost(server + "/gettts.ashx");
+				List<NameValuePair> params = new ArrayList<NameValuePair>(4);
+				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
+				params.add(new BasicNameValuePair("session", session)); // 当前会话
+				params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
+				params.add(new BasicNameValuePair("ver", _ttsVer)); // 版本号
+				try {
+					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+					HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+					if (httpResponse.getStatusLine().getStatusCode() == 200) {
+						ttsdataresult = EntityUtils.toString(httpResponse.getEntity());
+						handler.post(new Runnable() {
+							public void run() {
+								if (ttsdataresult.startsWith("s|")) {
+									String[] results = ttsdataresult.split("\\|");
+									if (results.length > 1) {
+										db.delete(MySQLHelper.T_ZXT_TTS, null, null);
+										for (int i = 1; i < results.length; i++) {
+											String[] items = results[i].split("#");
+											ContentValues tcv = new ContentValues();
+											tcv.put("id", items[0]);
+											tcv.put("name", items[1]);
+											tcv.put("tts", items[2]);
+											db.insert(MySQLHelper.T_ZXT_TTS, null, tcv);
+										}
+									}
+								}
+							}
+						});
+					}
+					handler.post(new Runnable() {
+						public void run() {
+							Cursor cursor = db.query(MySQLHelper.T_ZXT_TTS, null, "id!=0", null, null, null, "id");
+							if (cursor.getCount() > 0) {
+								cursor.moveToFirst();
+								int i = 0;
+								do {
+									_hashTts.put(cursor.getString(cursor.getColumnIndex("name")), cursor.getString(cursor.getColumnIndex("tts")));
+									if (i % 7 == 0) {
+										LinearLayout lay = new LinearLayout(MainActivity.this);
+										layTts.addView(lay);
+									}
+									LinearLayout lastChild = (LinearLayout) layTts.getChildAt(layTts.getChildCount() - 1);
+									TextView textView = new TextView(MainActivity.this);
+									textView.setTextAppearance(MainActivity.this, android.R.style.TextAppearance_Medium);
+									textView.setBackgroundResource(R.drawable.card_bg);
+									textView.setTextColor(MainActivity.this.getResources().getColor(R.color.card_text));
+									textView.setPadding(3, 3, 3, 3);
+									textView.setClickable(true);
+									LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f);
+									lp.setMargins(1, 1, 1, 1);
+									textView.setLayoutParams(lp);
+									textView.setText(cursor.getString(cursor.getColumnIndex("name")));
+									textView.setOnClickListener(new OnClickListener() {
+										public void onClick(View v) {
+											speak(_hashTts.get(((TextView) v).getText().toString()));
+										}
+									});
+									lastChild.addView(textView);
+									i++;
+								} while (cursor.moveToNext());
+							}
+						}
+					});
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
 	}
 
 	/**
@@ -438,7 +564,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						String data = Native.srd_24c02(fd, 0x08, 0x20);
 						String[] chars = data.split(" ");
 						// 卡号
-						String card = String.valueOf((char) Integer.parseInt(chars[8], 16));
+						card = String.valueOf((char) Integer.parseInt(chars[8], 16));
 						for (int i = 9; i < 16; i++) {
 							card += String.valueOf((char) Integer.parseInt(chars[i], 16));
 						}
@@ -449,7 +575,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						// Toast.LENGTH_LONG).show();
 						if (chars[0].equals("01")) {
 							if (retry < 3) {
-								getCoachInfo(card);
+								getCoachInfo();
 							} else {
 								// 驾校ID
 								String cardschool = String.valueOf((char) Integer.parseInt(chars[24], 16));
@@ -485,7 +611,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						} else {
 							if (!coachCard.equals("")) {
 								if (retry < 3) {
-									getStudentInfo(card);
+									getStudentInfo();
 								} else {
 									// 驾校ID
 									String cardschool = String.valueOf((char) Integer.parseInt(chars[24], 16));
@@ -528,34 +654,50 @@ public class MainActivity extends Activity implements OnInitListener {
 	}
 
 	/**
+	 * 搜索指纹
+	 * 
+	 * @return
+	 */
+	private Boolean searchFinger() {
+		Toast.makeText(MainActivity.this, "请按指纹", Toast.LENGTH_LONG).show();
+		while (finger.PSGetImage(fingerAddress) == 2) {
+			SystemClock.sleep(30);
+		}
+		SystemClock.sleep(10);
+		if (finger.PSGenChar(fingerAddress, CHAR_BUFFER_A) != PS_OK) {
+			return false;
+		}
+		SystemClock.sleep(1000);
+		if (finger.PSSearch(fingerAddress, CHAR_BUFFER_A, 0, 50, 0) != PS_OK) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * 开始训练
 	 */
 	private void trainBegin() {
-		if (cardBalance > 0) {
-			startTime = new Date();
-			startMi = nowMi;
-			showStudent(true);
-			String _tmp = "早上好";
-			if (startTime.getHours() >= 8 && startTime.getHours() < 12) {
-				_tmp = "上午好";
-			} else if (startTime.getHours() >= 12 && startTime.getHours() < 14) {
-				_tmp = "中午好";
-			} else if (startTime.getHours() >= 14 && startTime.getHours() < 20) {
-				_tmp = "下午好";
-			} else if (startTime.getHours() >= 20 || startTime.getHours() < 5) {
-				_tmp = "晚上好";
-			}
+		startTime = new Date();
+		startMi = nowMi;
+		showStudent(true);
+		String _tmp = "早上好";
+		if (startTime.getHours() >= 8 && startTime.getHours() < 12) {
+			_tmp = "上午好";
+		} else if (startTime.getHours() >= 12 && startTime.getHours() < 14) {
+			_tmp = "中午好";
+		} else if (startTime.getHours() >= 14 && startTime.getHours() < 20) {
+			_tmp = "下午好";
+		} else if (startTime.getHours() >= 20 || startTime.getHours() < 5) {
+			_tmp = "晚上好";
+		}
+		if (mode == 0) {
 			if (coachCard.equals(studentCard)) {
-				speak(_tmp + "," + studentName + ",卡内剩余" + cardBalance + "分钟,请谨慎驾驶");
+				speak(_tmp + "," + studentName + ",卡内剩余" + (cardBalance - 1) + "分钟,请谨慎驾驶");
 			} else {
-				speak(_tmp + "," + studentName + ",卡内余额:" + cardBalance * PRICE + ",剩余" + cardBalance + "分钟,请谨慎驾驶");
+				speak(_tmp + "," + studentName + ",卡内余额:" + ((cardBalance - 1) * PRICE) + "元,剩余" + (cardBalance - 1) + "分钟,请谨慎驾驶");
 			}
-		} else {
-			if (coachCard.equals(studentCard)) {
-				toashShow("卡内剩余时长不足");
-			} else {
-				toashShow("卡内余额不足");
-			}
+			writeBalance(cardBalance - 1);// 重写卡内余额
 		}
 	}
 
@@ -564,7 +706,7 @@ public class MainActivity extends Activity implements OnInitListener {
 	 */
 	private void trainFinish() {
 		_hascard = false;
-		if (!studentCard.equals("")) {
+		if (!studentCard.equals("") && null != startTime) {
 			if (coachCard.equals(studentCard)) {
 				txtStartTime.setText("本次用车已结束");
 				txtTrainTime.setText("共使用" + getTimeDiff(startTime, nowTime));
@@ -646,22 +788,8 @@ public class MainActivity extends Activity implements OnInitListener {
 				db.insert(MySQLHelper.T_ZXT_USE_DATA, null, tcv);
 			}
 
-			if (fd > 0) {
-				// 重写卡内余额
-				if (Native.chk_24c02(fd) == 0) {// AT24C02卡
-					String data = Integer.toHexString(cardBalanceNow);
-					while (data.length() < 4) {
-						data = "0" + data;
-					}
-					int[] buff = new int[4];
-					buff[0] = Integer.parseInt(data.substring(0, 2), 16);
-					buff[1] = Integer.parseInt(data.substring(2), 16);
-					buff[2] = Integer.parseInt(data.substring(0, 2), 16);
-					buff[3] = Integer.parseInt(data.substring(2), 16);
-					Native.swr_24c02(fd, 0x09, 0x04, buff);
-				} else if (Native.chk_102(fd) == 0) {
-				}
-			}
+			writeBalance(cardBalanceNow);// 重写卡内余额
+
 			// 余额不足提醒
 			if (cardBalanceNow <= 4) {
 				toashShow("卡内剩余时长不足" + cardBalanceNow + "分钟,请注意");
@@ -671,6 +799,27 @@ public class MainActivity extends Activity implements OnInitListener {
 		if (retry < 3 && blindSpotFinish) {
 			blindSpotFinish = !blindSpotFinish;
 			uploadUseData();
+		}
+	}
+
+	/**
+	 * 重写卡内余额
+	 */
+	private void writeBalance(int balance) {
+		if (fd > 0) {
+			if (Native.chk_24c02(fd) == 0) {// AT24C02卡
+				String data = Integer.toHexString(balance);
+				while (data.length() < 4) {
+					data = "0" + data;
+				}
+				int[] buff = new int[4];
+				buff[0] = Integer.parseInt(data.substring(0, 2), 16);
+				buff[1] = Integer.parseInt(data.substring(2), 16);
+				buff[2] = Integer.parseInt(data.substring(0, 2), 16);
+				buff[3] = Integer.parseInt(data.substring(2), 16);
+				Native.swr_24c02(fd, 0x09, 0x04, buff);
+			} else if (Native.chk_102(fd) == 0) {
+			}
 		}
 	}
 
@@ -702,6 +851,8 @@ public class MainActivity extends Activity implements OnInitListener {
 										if (usedataresult.equals("s")) {
 											db.delete(MySQLHelper.T_ZXT_GPS_DATA, "gpstime=?", new String[] { _cursor.getString(_cursor.getColumnIndex("gpstime")) });
 											uploadBlindSpot();
+										} else {
+											blindSpotFinish = true;
 										}
 									}
 								});
@@ -756,6 +907,9 @@ public class MainActivity extends Activity implements OnInitListener {
 											db.delete(MySQLHelper.T_ZXT_USE_DATA, "guid=?", new String[] { _cursor.getString(_cursor.getColumnIndex("guid")) });
 											txtUploadUseDataStatus.setText("训练数据上传成功[" + getNowTime() + "]");
 											uploadUseData();
+										} else {
+											txtUploadUseDataStatus.setText(usedataresult + "[" + getNowTime() + "]");
+											uploadBlindSpot();
 										}
 									}
 								});
@@ -784,15 +938,16 @@ public class MainActivity extends Activity implements OnInitListener {
 	 * 
 	 * @param 卡号
 	 */
-	private void getCoachInfo(final String card) {
+	private void getCoachInfo() {
 		new Thread() {
 			public void run() {
 				HttpPost httpRequest = new HttpPost(server + "/getcoachinfo.ashx");
-				List<NameValuePair> params = new ArrayList<NameValuePair>(4);
+				List<NameValuePair> params = new ArrayList<NameValuePair>(5);
 				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 				params.add(new BasicNameValuePair("session", session)); // 当前会话
 				params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
 				params.add(new BasicNameValuePair("card", card)); // 卡号
+				params.add(new BasicNameValuePair("ver", getString(R.string.version)));
 				try {
 					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
 					HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
@@ -802,21 +957,32 @@ public class MainActivity extends Activity implements OnInitListener {
 							public void run() {
 								if (cardresult.startsWith("s|")) {
 									String[] results = cardresult.split("\\|");
-									coachCard = results[1];
-									cardBalance = Integer.parseInt(results[2]);
-									coachID = results[3];
-									coachName = results[4];
-									if (results.length > 5) {
-										coachIDCard = results[5];
-									} else {
-										coachIDCard = "";
+									if (results[1].equals(card)) {
+										cardBalance = Integer.parseInt(results[2]);
+										if (cardBalance > 0) {
+											coachCard = results[1];
+											coachID = results[3];
+											coachName = results[4];
+											coachIDCard = results[5];// 教练身份证
+											coachCertificate = results[6];// 教练证号
+											if (coachIDCard.equals("无")) {
+												coachIDCard = "";
+											}
+											if (coachCertificate.equals("无")) {
+												coachCertificate = "";
+											}
+											showCoach(true);
+											studentCard = coachCard;
+											studentID = coachID;
+											studentName = coachName;
+											studentIDCard = coachIDCard;
+											trainBegin();// 开始训练
+										} else {
+											toashShow("卡内余额不足");
+										}
 									}
-									showCoach(true);
-									studentCard = coachCard;
-									studentID = coachID;
-									studentName = coachName;
-									studentIDCard = coachIDCard;
-									trainBegin();// 开始训练
+								} else if (cardresult.equals("version_error")) {
+									versionUpdate();
 								} else {
 									Toast.makeText(MainActivity.this, cardresult.split("\\|")[1], Toast.LENGTH_LONG).show();
 								}
@@ -842,15 +1008,16 @@ public class MainActivity extends Activity implements OnInitListener {
 	 * 
 	 * @param 卡号
 	 */
-	private void getStudentInfo(final String card) {
+	private void getStudentInfo() {
 		new Thread() {
 			public void run() {
 				HttpPost httpRequest = new HttpPost(server + "/getstudentinfo.ashx");
-				List<NameValuePair> params = new ArrayList<NameValuePair>(4);
+				List<NameValuePair> params = new ArrayList<NameValuePair>(5);
 				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 				params.add(new BasicNameValuePair("session", session)); // 当前会话
 				params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
 				params.add(new BasicNameValuePair("card", card)); // 学员卡号
+				params.add(new BasicNameValuePair("ver", getString(R.string.version)));
 				try {
 					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
 					HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
@@ -860,14 +1027,27 @@ public class MainActivity extends Activity implements OnInitListener {
 							public void run() {
 								if (cardresult.startsWith("s|")) {
 									String[] results = cardresult.split("\\|");
-									studentCard = results[1];
-									cardBalance = Integer.parseInt(results[2]);
-									studentID = results[3];
-									studentName = results[4];
-									if (results.length > 5) {
-										studentIDCard = results[5];
+									if (results[1].equals(card)) {
+										cardBalance = Integer.parseInt(results[2]);
+										if (cardBalance > 0) {
+											studentCard = results[1];
+											studentID = results[3];
+											studentName = results[4];
+											studentIDCard = results[5];
+											studentDriverType = results[6];
+											if (studentIDCard.equals("无")) {
+												studentIDCard = "";
+											}
+											if (studentDriverType.equals("无")) {
+												studentDriverType = "";
+											}
+											trainBegin();// 开始训练
+										} else {
+											toashShow("卡内余额不足");
+										}
 									}
-									trainBegin();// 开始训练
+								} else if (cardresult.equals("version_error")) {
+									versionUpdate();
 								} else {
 									Toast.makeText(MainActivity.this, cardresult.split("\\|")[1], Toast.LENGTH_LONG).show();
 								}
@@ -889,6 +1069,44 @@ public class MainActivity extends Activity implements OnInitListener {
 	}
 
 	/**
+	 * 获取累计学时和里程
+	 */
+	private void getTotalTimeAndMi() {
+		txtStudentTotalTime.setText("累计学时:正在读取...");
+		txtStudentTotalMi.setText("累计里程:正在读取...");
+		new Thread() {
+			public void run() {
+				HttpPost httpRequest = new HttpPost(server + "/gettimeandmi.ashx");
+				List<NameValuePair> params = new ArrayList<NameValuePair>(4);
+				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
+				params.add(new BasicNameValuePair("session", session)); // 当前会话
+				params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
+				params.add(new BasicNameValuePair("stuid", studentID)); // 学员编号
+				try {
+					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+					HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
+					if (httpResponse.getStatusLine().getStatusCode() == 200) {
+						cardresult = EntityUtils.toString(httpResponse.getEntity());
+						handler.post(new Runnable() {
+							public void run() {
+								if (cardresult.startsWith("s|")) {
+									String[] results = cardresult.split("\\|");
+									studentTotalTime = Integer.parseInt(results[1]);
+									studentTotalMi = Integer.parseInt(results[2]);
+									txtStudentTotalTime.setText("累计学时:" + (studentTotalTime / 60) + "小时" + (studentTotalTime % 60) + "分钟");
+									txtStudentTotalMi.setText("累计里程:" + (studentTotalMi / 1000) + "KM");
+								}
+							}
+						});
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
+	}
+
+	/**
 	 * 上传GPS数据
 	 */
 	private void upload() {
@@ -897,7 +1115,7 @@ public class MainActivity extends Activity implements OnInitListener {
 			public void run() {
 				HttpPost httpRequest = new HttpPost(server + "/upload.ashx");
 				List<NameValuePair> params = new ArrayList<NameValuePair>(6);
-				if (studentCard.equals("")) {
+				if (studentCard.equals("") || startTime == null) {
 					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 					params.add(new BasicNameValuePair("session", session)); // 当前会话
 					params.add(new BasicNameValuePair("lng", String.format("%.6f", lng))); // 经度
@@ -974,7 +1192,8 @@ public class MainActivity extends Activity implements OnInitListener {
 			layCoachTitle.setBackgroundResource(R.drawable.bg2);
 			txtInfoStudent.setText("请插学员卡");
 			txtCoachName.setText(coachName);
-			txtCoachCard.setText(coachCard);
+			txtCoachCard.setText("卡号:" + coachCard);
+			txtCoachCertificate.setText(coachCertificate);
 			layCoachInfo.setVisibility(View.VISIBLE);
 			txtInfoCoach.setVisibility(View.GONE);
 			SharedPreferences.Editor editor = settings.edit();
@@ -982,6 +1201,7 @@ public class MainActivity extends Activity implements OnInitListener {
 			editor.putString("coachCard", coachCard);
 			editor.putString("coachName", coachName);
 			editor.putString("coachIDCard", coachIDCard);
+			editor.putString("coachCertificate", coachCertificate);
 			editor.commit();
 			if (!coachIDCard.equals("")) {
 				imgCoach.setImageUrl(server + "/" + coachIDCard + ".bmp");
@@ -996,6 +1216,7 @@ public class MainActivity extends Activity implements OnInitListener {
 			editor.putString("coachCard", "");
 			editor.putString("coachName", "");
 			editor.putString("coachIDCard", "");
+			editor.putString("coachCertificate", "");
 			editor.commit();
 			imgCoach.setImageResource(R.drawable.photo);
 		}
@@ -1011,7 +1232,7 @@ public class MainActivity extends Activity implements OnInitListener {
 		if (b) {
 			layStudentTitle.setBackgroundResource(R.drawable.bg2);
 			txtStudentName.setText(studentName);
-			txtStudentCard.setText(studentCard);
+			txtStudentCard.setText("卡号:" + studentCard);
 			layStudentInfo.setVisibility(View.VISIBLE);
 			txtInfoStudent.setVisibility(View.GONE);
 			if (coachCard.equals(studentCard)) {
@@ -1019,13 +1240,14 @@ public class MainActivity extends Activity implements OnInitListener {
 				txtStartTime.setText("开始用车时间: " + timeFormat.format(startTime));
 			} else {
 				txtStudentTitle.setText("学员");
-				if (!studentID.equals("")) {
-					txtStudentID.setText("学员编号:" + studentID);
-				}
 				txtStartTime.setText("训练开始时间: " + timeFormat.format(startTime));
+				txtStudentDriverType.setText("准驾车型:" + studentDriverType);
+				txtStudentID.setText("学员编号:" + studentID);
+				txtStudentIDCard.setText("身份证号:" + studentIDCard);
+				getTotalTimeAndMi();// 读取学时和里程
 			}
 			if (!studentIDCard.equals("")) {
-				txtStudentIDCard.setText("身份证号:" + studentIDCard);
+				// 读取头像
 				imgStudent.setImageUrl(server + "/" + studentIDCard + ".bmp");
 			}
 		} else {
@@ -1036,7 +1258,21 @@ public class MainActivity extends Activity implements OnInitListener {
 			imgStudent.setImageResource(R.drawable.photo);
 			txtStudentID.setText("");
 			txtStudentIDCard.setText("");
+			txtStudentDriverType.setText("");
+			txtStudentTotalTime.setText("");
+			txtStudentTotalMi.setText("");
 		}
+	}
+
+	private void versionUpdate() {
+		speak("发现新版本,需要更新");
+		AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("发现新版本,需要更新").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				Uri uri = Uri.parse(server + "/zpad.apk");
+				startActivity(new Intent(Intent.ACTION_VIEW, uri));
+			}
+		}).create();
+		alertDialog.show();
 	}
 
 	/**
@@ -1078,7 +1314,7 @@ public class MainActivity extends Activity implements OnInitListener {
 
 	private void speak(String str) {
 		if (mTts != null) {
-			mTts.speak(str, TextToSpeech.QUEUE_ADD, null);
+			mTts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
 		}
 	}
 
@@ -1128,15 +1364,27 @@ public class MainActivity extends Activity implements OnInitListener {
 
 	@Override
 	protected void onDestroy() {
-		Native.ic_exit(fd);
+		// 定时器
 		_timerUpload.cancel();
 		_timerFlicker.cancel();
 		_timerSecond.cancel();
+		_timerMinute.cancel();
+		// 读卡器
+		Native.ic_exit(fd);
+		// TTS语音
 		if (mTts != null) {
 			mTts.shutdown();
 		}
+		// 数据库
+		if (_cursor != null && !_cursor.isClosed()) {
+			_cursor.close();
+		}
 		if (db != null) {
 			db.close();
+		}
+		// 指纹
+		if (finger != null) {
+			finger.PSCloseDevice();
 		}
 		super.onDestroy();
 	}
