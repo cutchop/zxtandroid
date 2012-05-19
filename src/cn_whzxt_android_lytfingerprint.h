@@ -103,6 +103,46 @@ JNIEXPORT jint JNICALL Java_cn_whzxt_android_lytfingerprint_PSEmpty
 JNIEXPORT jint JNICALL Java_cn_whzxt_android_lytfingerprint_getnFinger
   (JNIEnv *, jobject);
 
+/*
+ * Class:     cn_whzxt_android_lytfingerprint
+ * Method:    PSLoadChar
+ * Signature: (III)I
+ */
+JNIEXPORT jint JNICALL Java_cn_whzxt_android_lytfingerprint_PSLoadChar
+  (JNIEnv *, jobject, jint, jint, jint);
+
+/*
+ * Class:     cn_whzxt_android_lytfingerprint
+ * Method:    PSUpChar
+ * Signature: (II[BILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_cn_whzxt_android_lytfingerprint_PSUpChar
+  (JNIEnv *, jobject, jint, jint, jbyteArray, jint, jstring);
+
+/*
+ * Class:     cn_whzxt_android_lytfingerprint
+ * Method:    PSDownChar
+ * Signature: (IIIILjava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_cn_whzxt_android_lytfingerprint_PSDownChar
+  (JNIEnv *, jobject, jint, jint, jint, jint, jstring);
+
+/*
+ * Class:     cn_whzxt_android_lytfingerprint
+ * Method:    Open
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_cn_whzxt_android_lytfingerprint_Open
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     cn_whzxt_android_lytfingerprint
+ * Method:    Close
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_cn_whzxt_android_lytfingerprint_Close
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

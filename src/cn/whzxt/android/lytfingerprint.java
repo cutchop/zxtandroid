@@ -48,8 +48,33 @@ public class lytfingerprint {
 	 */
 	public native int  getnFinger();
 	
-	static
-    {
-    System.loadLibrary("finger");
-    }
+	/*
+	 * 20120420
+	 * 增加上传指纹特征值的接口
+	 * 20120514--Frank
+	 * 为了方便客户开发对于PSUpChar以及PSDownChar 我门加上一个path通道接口用于存取或获取数据路径
+	 * path用于上传存放指纹数据存放的路径譬如/data/local/tmp/fingerprintdata 建议客户放在/data/local/tmp/目录
+	 * 因为权限问题
+	 */
+	public native int  PSLoadChar(int nAddr,int iBufferID,int iPageID);
+	public native int  PSUpChar(int nAddr,int iBufferID, byte[] pTemplet, int iTempletLength,String path);
+	
+	/*
+	 * 20120420
+	 * 从上位机下载一个特征文件到特征缓冲区
+	 * 增加获取的指纹特征值（上位机保存）与模块中的指纹库对比
+	 * 20120514--Frank
+	 * 为了方便客户开发对于PSUpChar以及PSDownChar 我门加上一个path通道接口用于存取或获取数据路径
+	 * path用于下载某个指纹数据存放的路径譬如/data/local/tmp/fingerprintdata这个指纹数据， 建议客户放在/data/local/tmp/目录
+	 * 因为权限问题
+	 */
+	public native int PSDownChar(int nAddr,int iBufferID, int pTemplet, int iTempletLength,String path);
+	
+	/*
+	 * 指纹电源 电源打开关闭
+	 */
+	public static native int Open();
+	public static native int Close();
+	
+	
 }

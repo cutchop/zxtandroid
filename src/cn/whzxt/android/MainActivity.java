@@ -1,11 +1,20 @@
 package cn.whzxt.android;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -21,6 +30,7 @@ import org.apache.http.util.EntityUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -28,7 +38,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.hardware.Camera;
+import android.hardware.Camera.PictureCallback;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -36,14 +51,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.view.KeyEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.animation.Animation;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -51,7 +68,7 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnInitListener {
+public class MainActivity extends Activity implements OnInitListener, SurfaceHolder.Callback {
 	private TextView txtSchoolName, txtDeviceName, txtSystemTime;
 	private TextView txtInfoCoach, txtInfoStudent, txtStudentTitle, txtStatus, txtUploadUseDataStatus, txtLngLat;
 	private TextView txtCoachName, txtCoachCard, txtCoachCertificate, txtStudentName, txtStudentCard;
@@ -62,9 +79,12 @@ public class MainActivity extends Activity implements OnInitListener {
 	private NetImageView imgCoach, imgStudent;
 	private LinearLayout layCoachTitle, layStudentTitle, layCoachInfo, layStudentInfo;
 	private LinearLayout btnJFMS, btnFJFMS, btnSubject2, btnSubject3;
-	private LinearLayout layTts, layScrollDown;
+	private LinearLayout layTts, layScrollDown, layTabSysInfo, layTabDevStatus, laySysInfo, layDevStatus;
+	private TextView btnTabSysInfo, btnTabDevStatus, txtSysInfo;
 	private TableLayout layTitle;
 	private ScrollView mainView;
+	private SurfaceView previewSurface;
+	private SurfaceHolder previewSurfaceHolder;
 	private String deviceID, deviceName, schoolID, schoolName, session;
 	private String server;
 	private String uploadresult, cardresult, usedataresult, ttsdataresult;
@@ -77,13 +97,14 @@ public class MainActivity extends Activity implements OnInitListener {
 	private Date startTime, nowTime, endTime;
 	private int startMi, nowMi = 0;
 	private String _curUUID;
-	private int mode = 0;// 计费模式0，非计费模式1
+	private int mode = 0;// 训练模式0，自由模式1
 	private int subject = 2;// 科目二，科目三
 	private int retry = 0;
 	private double lng, lat;
+	private int speed; // 速度
 	private SimpleDateFormat dateFormat, timeFormat;
 	private LocationManager locationManager;
-	private Timer _timerUpload, _timerFlicker, _timerSecond, _timerMinute;
+	private Timer _timerUpload, _timerFlicker, _timerSecond, _timerMinute, _timerCamera, _timerTakePhoto, _timerUploadPhoto;
 	private SharedPreferences settings;
 	private MySQLHelper sqlHelper;
 	private SQLiteDatabase db;
@@ -91,8 +112,9 @@ public class MainActivity extends Activity implements OnInitListener {
 	private Boolean blindSpotFinish = true;
 	private HashMap<String, String> _hashTts;
 	private String _ttsVer;
+	private String _tcpMsg;
 
-	private static final int DBVERSION = 5;
+	private static final int DBVERSION = 6;
 	private static final int PRICE = 2; // 设备单价
 	// 读卡器
 	private static final String PATH = "/dev/s3c2410_serial1"; // 读卡器参数
@@ -106,6 +128,19 @@ public class MainActivity extends Activity implements OnInitListener {
 	private static final int fingerAddress = 0xffffffff;
 	private static final int CHAR_BUFFER_A = 0x01;
 	final char PS_OK = 0x00;
+	// 摄像头
+	private Camera _camera;
+	private static final int PHOTO_DEF_WIDTH = 720; // 默认照片宽度
+	private static final int PHOTO_DEF_HEIGHT = 576; // 默认照片高度
+	private static final int PHOTO_DEF_INTERVAL = 30; // 默认拍照间隔(秒)
+	private static final String PHOTO_PATH = "/sdcard/zxtphoto";// 照片保存路径
+	private int _curCamera = 1;// 当前摄像头
+	private Boolean _previewing = false;
+	private Boolean _takephotoing = false;
+	private Boolean _photouploading = false;
+	private String _phototime = "";
+
+	private WakeLock wakeLock;
 
 	Handler handler = new Handler() {
 		@Override
@@ -123,6 +158,15 @@ public class MainActivity extends Activity implements OnInitListener {
 				break;
 			case 4:
 				minute();
+				break;
+			case 5:
+				takephoto();
+				break;
+			case 6:
+				uploadPhoto();
+				break;
+			case 7:
+				takephotoDelay();
 				break;
 			default:
 				break;
@@ -166,8 +210,16 @@ public class MainActivity extends Activity implements OnInitListener {
 		btnSubject3 = (LinearLayout) findViewById(R.id.btnSubject3);
 		layTts = (LinearLayout) findViewById(R.id.layTts);
 		layScrollDown = (LinearLayout) findViewById(R.id.layScrollDown);
+		layTabSysInfo = (LinearLayout) findViewById(R.id.layTabSysInfo);
+		layTabDevStatus = (LinearLayout) findViewById(R.id.layTabDevStatus);
+		btnTabSysInfo = (TextView) findViewById(R.id.btnTabSysInfo);
+		btnTabDevStatus = (TextView) findViewById(R.id.btnTabDevStatus);
+		txtSysInfo = (TextView) findViewById(R.id.txtSysInfo);
+		laySysInfo = (LinearLayout) findViewById(R.id.laySysInfo);
+		layDevStatus = (LinearLayout) findViewById(R.id.layDevStatus);
 		layTitle = (TableLayout) findViewById(R.id.layTitle);
 		mainView = (ScrollView) findViewById(R.id.mainView);
+		previewSurface = (SurfaceView) findViewById(R.id.previewSurface);
 		txtJFMS = (TextView) findViewById(R.id.txtJFMS);
 		txtFJFMS = (TextView) findViewById(R.id.txtFJFMS);
 		txtSubject2 = (TextView) findViewById(R.id.txtSubject2);
@@ -220,9 +272,9 @@ public class MainActivity extends Activity implements OnInitListener {
 				if (subject == 3) {
 					subject = 2;
 					btnSubject3.setBackgroundResource(R.drawable.button_bg);
-					txtSubject3.setTextColor(R.color.button_text);
+					txtSubject3.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
 					btnSubject2.setBackgroundResource(R.drawable.button_checked_bg);
-					txtSubject2.setTextColor(Color.WHITE);
+					txtSubject2.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
 				}
 			}
 		});
@@ -232,9 +284,9 @@ public class MainActivity extends Activity implements OnInitListener {
 				if (subject == 2) {
 					subject = 3;
 					btnSubject2.setBackgroundResource(R.drawable.button_bg);
-					txtSubject2.setTextColor(R.color.button_text);
+					txtSubject2.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
 					btnSubject3.setBackgroundResource(R.drawable.button_checked_bg);
-					txtSubject3.setTextColor(Color.WHITE);
+					txtSubject3.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
 				}
 			}
 		});
@@ -250,46 +302,53 @@ public class MainActivity extends Activity implements OnInitListener {
 				mainView.fullScroll(View.FOCUS_DOWN);
 			}
 		});
-		// 计费模式
-		btnJFMS.setOnClickListener(new OnClickListener() {
+		// 系统消息Tab
+		btnTabSysInfo.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (mode == 1) {
-					trainFinish();// 结束训练
-					mode = 0;
-					btnFJFMS.setBackgroundResource(R.drawable.button_bg);
-					txtFJFMS.setTextColor(R.color.button_text);
-					btnJFMS.setBackgroundResource(R.drawable.button_checked_bg);
-					txtJFMS.setTextColor(Color.WHITE);
-				}
+				layTabDevStatus.setBackgroundResource(R.drawable.button_bg);
+				btnTabDevStatus.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
+				layTabSysInfo.setBackgroundResource(R.drawable.button_checked_bg);
+				btnTabSysInfo.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
+				laySysInfo.setVisibility(View.VISIBLE);
+				layDevStatus.setVisibility(View.GONE);
 			}
 		});
-		// 非计费模式
+		// 设备状态Tab
+		btnTabDevStatus.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				layTabSysInfo.setBackgroundResource(R.drawable.button_bg);
+				btnTabSysInfo.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
+				layTabDevStatus.setBackgroundResource(R.drawable.button_checked_bg);
+				btnTabDevStatus.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
+				laySysInfo.setVisibility(View.GONE);
+				layDevStatus.setVisibility(View.VISIBLE);
+			}
+		});
+		// 训练状态
+		btnJFMS.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				changeMode(0);
+			}
+		});
+		// 自由状态
 		btnFJFMS.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (mode == 0) {
-					speak("请输入密码");
-					final EditText txtpsd = new EditText(MainActivity.this);
-					txtpsd.setText(settings.getString("offlinepassword", ""));
-					AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("请输入密码").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							if (txtpsd.getText().toString().toLowerCase().equals(settings.getString("offlinepassword", "").toLowerCase())) {
-								trainFinish();// 结束训练
-								mode = 1;
-								btnJFMS.setBackgroundResource(R.drawable.button_bg);
-								txtJFMS.setTextColor(R.color.button_text);
-								btnFJFMS.setBackgroundResource(R.drawable.button_checked_bg);
-								txtFJFMS.setTextColor(Color.WHITE);
-							} else {
-								toashShow("密码错误");
-							}
+				speak("请输入密码");
+				final EditText txtpsd = new EditText(MainActivity.this);
+				AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("请输入密码").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						if (txtpsd.getText().toString().toLowerCase().equals(settings.getString("offlinepassword", "").toLowerCase())) {
+							changeMode(1);
+						} else {
+							toashShow("密码错误");
 						}
-					}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							return;
-						}
-					}).create();
-					alertDialog.show();
-				}
+					}
+				}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						return;
+					}
+				}).create();
+				alertDialog.show();
 			}
 		});
 
@@ -310,15 +369,14 @@ public class MainActivity extends Activity implements OnInitListener {
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
 		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("请打开GPS").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					Intent intent = new Intent();
-					intent.setAction(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					startActivity(intent);
-				}
-			}).create();
-			alertDialog.show();
+			// 打开GPS
+			try {
+				Intent intent = new Intent();
+				intent.setComponent(new ComponentName("cn.whzxt.gps", "cn.whzxt.gps.ZxtOpenGPSActivity"));
+				startActivity(intent);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		// 定时30秒上传
 		_timerUpload = new Timer();
@@ -339,7 +397,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				msg.what = 2;
 				handler.sendMessage(msg);
 			}
-		}, 1, 200);
+		}, 3000, 200);
 		// 每秒执行
 		_timerSecond = new Timer();
 		_timerSecond.schedule(new TimerTask() {
@@ -349,7 +407,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				msg.what = 3;
 				handler.sendMessage(msg);
 			}
-		}, 1000, 1000);
+		}, 2000, 1000);
 		// 每分钟执行
 		_timerMinute = new Timer();
 		_timerMinute.schedule(new TimerTask() {
@@ -360,7 +418,30 @@ public class MainActivity extends Activity implements OnInitListener {
 				handler.sendMessage(msg);
 			}
 		}, 15000, 60000);
+		// 定时拍照
+		_timerCamera = new Timer();
+		_timerCamera.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				Message msg = new Message();
+				msg.what = 5;
+				handler.sendMessage(msg);
+			}
+		}, 20000, settings.getInt("photo_interval", PHOTO_DEF_INTERVAL) * 1000);
+		// 延时拍照
+		_timerTakePhoto = new Timer();
+		// 上传照片
+		_timerUploadPhoto = new Timer();
+		_timerUploadPhoto.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				Message msg = new Message();
+				msg.what = 6;
+				handler.sendMessage(msg);
+			}
+		}, 25000, 30000);
 
+		//
 		showStudent(false);
 		// 显示教练信息
 		if (settings.getString("coachCard", "") != "") {
@@ -376,18 +457,157 @@ public class MainActivity extends Activity implements OnInitListener {
 
 		// TTS
 		Intent checkIntent = new Intent();
-		checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-		startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+		try {
+			checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+			startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		// 指纹
 		// finger = new lytfingerprint();
 		// finger.PSOpenDevice(1, 0, 57600 / 9600, 2);
 
+		// 摄像头
+		File photoDir = new File(PHOTO_PATH);
+		if (!photoDir.exists()) {
+			photoDir.mkdirs();
+		}
+		previewSurfaceHolder = previewSurface.getHolder();
+		previewSurfaceHolder.addCallback(this);
+		previewSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
 		ttsButtonInit(); // 语音提示按钮初始化
+
+		socketListen();// 监听指令
+
+		// 屏幕长亮
+		PowerManager manager = ((PowerManager) getSystemService(POWER_SERVICE));
+		wakeLock = manager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "ATAAW");
+		wakeLock.acquire();
 	}
 
 	/**
-	 * 语音提示按钮初始化
+	 * 保存照片
+	 */
+	PictureCallback jpegPictureCallback = new PictureCallback() {
+		public void onPictureTaken(byte[] arg0, Camera arg1) {
+			BitmapFactory.Options options = new BitmapFactory.Options();
+			options.inSampleSize = 4;
+			Bitmap bitmapPicture = BitmapFactory.decodeByteArray(arg0, 0, arg0.length, options);
+			File file = new File(PHOTO_PATH + "/" + _phototime + "_" + _curCamera + "_" + speed + "_" + _curUUID + ".jpg");
+			try {
+				file.createNewFile();
+				BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+				bitmapPicture.compress(Bitmap.CompressFormat.JPEG, 80, os);
+				os.flush();
+				os.close();
+
+				if (_curCamera == 1) {
+					_curCamera = 2;
+					Camera.Parameters parameters = _camera.getParameters();
+					parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+					_camera.setParameters(parameters);
+					_timerTakePhoto.schedule(new TimerTask() {
+						@Override
+						public void run() {
+							Message msg = new Message();
+							msg.what = 7;
+							handler.sendMessage(msg);
+						}
+					}, 1 * 1000);
+				}
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			if (_curCamera == 2) {
+				_takephotoing = false;
+				try {
+					if (_camera != null) {
+						_camera.startPreview();
+						_previewing = true;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	};
+
+	/**
+	 * 拍照
+	 */
+	private void takephoto() {
+		if (_camera != null && !_takephotoing && null != startTime) {
+			_takephotoing = true;
+			_phototime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+			_curCamera = 1;
+			Camera.Parameters parameters = _camera.getParameters();
+			parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+			_camera.setParameters(parameters);
+			_timerTakePhoto.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					Message msg = new Message();
+					msg.what = 7;
+					handler.sendMessage(msg);
+				}
+			}, 1 * 1000);
+		}
+	}
+
+	private void takephotoDelay() {
+		_camera.takePicture(null, null, jpegPictureCallback);
+	}
+
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		if (_previewing && _camera != null) {
+			_camera.stopPreview();
+			_previewing = false;
+		}
+		try {
+			if (_camera != null) {
+				_camera.setPreviewDisplay(holder);
+				_camera.startPreview();
+				_previewing = true;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void surfaceCreated(SurfaceHolder holder) {
+		try {
+			_camera = Camera.open();
+			if (_camera != null) {
+				Camera.Parameters parameters = _camera.getParameters();
+				parameters.setPictureFormat(PixelFormat.JPEG);
+				// parameters.setJpegQuality(20);
+				// parameters.setJpegThumbnailQuality(1);
+				// parameters.setJpegThumbnailSize(0, 0);
+				parameters.setPictureSize(settings.getInt("photo_width", PHOTO_DEF_WIDTH), settings.getInt("photo_height", PHOTO_DEF_HEIGHT));
+				_camera.setParameters(parameters);
+			} else {
+				Toast.makeText(MainActivity.this, "摄像头启动失败", Toast.LENGTH_SHORT);
+			}
+		} catch (Exception e) {
+			Toast.makeText(MainActivity.this, "摄像头启动失败", Toast.LENGTH_SHORT);
+			e.printStackTrace();
+		}
+	}
+
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		if (_camera != null) {
+			_camera.stopPreview();
+			_camera.release();
+			_camera = null;
+			_previewing = false;
+		}
+	}
+
+	/**
+	 * 科目三模拟考试按钮初始化
 	 */
 	private void ttsButtonInit() {
 		_hashTts = new HashMap<String, String>();
@@ -465,6 +685,101 @@ public class MainActivity extends Activity implements OnInitListener {
 						}
 					});
 				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}.start();
+	}
+
+	/**
+	 * 监听消息
+	 */
+	private void socketListen() {
+		new Thread() {
+			public void run() {
+				try {
+					ServerSocket socket = new ServerSocket(8888);
+					while (true) {
+						Socket client = socket.accept();
+						try {
+							BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream(), "gb2312"));
+							_tcpMsg = in.readLine();
+							if (_tcpMsg != null) {
+								handler.post(new Runnable() {
+									public void run() {
+										if (_tcpMsg.startsWith("cmd:")) {
+											String cmd = _tcpMsg.substring(4);
+											if (cmd.equals("open_oil")) {
+												// 恢复油路
+											} else if (cmd.equals("close_oil")) {
+												// 切断油路
+											} else if (cmd.equals("mode_train")) {
+												changeMode(0);// 切换训练状态
+											} else if (cmd.equals("mode_free")) {
+												changeMode(1);// 切换自由状态
+											} else if (cmd.equals("take_photo")) {
+												takephoto();// 拍照
+											} else if (cmd.startsWith("set_photo_size:")) {
+												try {
+													// 设置照片尺寸
+													cmd = cmd.replace("set_photo_size:", "");
+													int pwidth = Integer.valueOf(cmd.split(",")[0]);
+													int pheight = Integer.valueOf(cmd.split(",")[1]);
+													if (_camera != null) {
+														Camera.Parameters parameters = _camera.getParameters();
+														parameters.setPictureSize(pwidth, pheight);
+														_camera.setParameters(parameters);
+														SharedPreferences.Editor editor = settings.edit();
+														editor.putInt("photo_width", pwidth);
+														editor.putInt("photo_height", pheight);
+														editor.commit();
+													}
+												} catch (Exception e) {
+													e.printStackTrace();
+												}
+											} else if (cmd.startsWith("set_photo_interval:")) {
+												/*
+												 * try { // 设置拍照间隔 cmd =
+												 * cmd.replace
+												 * ("set_photo_interval:", "");
+												 * int pinterval =
+												 * Integer.valueOf(cmd);
+												 * _timerCamera.cancel();
+												 * _timerCamera.schedule(new
+												 * TimerTask() {
+												 * 
+												 * @Override public void run() {
+												 * Message msg = new Message();
+												 * msg.what = 5;
+												 * handler.sendMessage(msg); }
+												 * }, 5000, pinterval * 1000);
+												 * SharedPreferences.Editor
+												 * editor = settings.edit();
+												 * editor
+												 * .putInt("photo_interval",
+												 * pinterval); editor.commit();
+												 * } catch (Exception e) {
+												 * e.printStackTrace(); }
+												 */
+											}
+										} else if (_tcpMsg.startsWith("sms:")) {
+											txtSysInfo.setText(_tcpMsg.substring(4));
+											layTabDevStatus.setBackgroundResource(R.drawable.button_bg);
+											btnTabDevStatus.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
+											layTabSysInfo.setBackgroundResource(R.drawable.button_checked_bg);
+											btnTabSysInfo.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
+											laySysInfo.setVisibility(View.VISIBLE);
+											layDevStatus.setVisibility(View.GONE);
+											toashShow("收到新短信:" + txtSysInfo.getText().toString());
+										}
+									}
+								});
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -551,7 +866,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					trainFinish();// 结束训练
 				}
 			} else {
-				txtTrainTime.setText("非计费模式");
+				txtTrainTime.setText("自由模式");
 				txtBalance.setText("");
 			}
 		}
@@ -698,6 +1013,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				speak(_tmp + "," + studentName + ",卡内余额:" + ((cardBalance - 1) * PRICE) + "元,剩余" + (cardBalance - 1) + "分钟,请谨慎驾驶");
 			}
 			writeBalance(cardBalance - 1);// 重写卡内余额
+			takephoto();// 拍照
 		}
 	}
 
@@ -833,7 +1149,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				new Thread() {
 					public void run() {
 						HttpPost httpRequest = new HttpPost(server + "/blindspot.ashx");
-						List<NameValuePair> params = new ArrayList<NameValuePair>(6);
+						List<NameValuePair> params = new ArrayList<NameValuePair>(7);
 						_cursor.moveToFirst();
 						params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 						params.add(new BasicNameValuePair("session", session)); // 当前会话
@@ -841,6 +1157,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						params.add(new BasicNameValuePair("gpstime", _cursor.getString(_cursor.getColumnIndex("gpstime"))));
 						params.add(new BasicNameValuePair("lng", _cursor.getString(_cursor.getColumnIndex("lng"))));
 						params.add(new BasicNameValuePair("lat", _cursor.getString(_cursor.getColumnIndex("lat"))));
+						params.add(new BasicNameValuePair("speed", _cursor.getString(_cursor.getColumnIndex("speed"))));
 						try {
 							httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
 							HttpResponse httpResponse = new DefaultHttpClient().execute(httpRequest);
@@ -930,6 +1247,37 @@ public class MainActivity extends Activity implements OnInitListener {
 		} catch (Exception e) {
 			e.printStackTrace();
 			uploadBlindSpot();// 上传GPS盲点
+		}
+	}
+
+	/**
+	 * 上传照片
+	 */
+	private void uploadPhoto() {
+		if (retry < 3 && !_photouploading) {
+			new Thread() {
+				public void run() {
+					_photouploading = true;
+					try {
+						Map<String, String> params = new HashMap<String, String>();
+						params.put("deviceid", deviceID);// 设备号码
+						params.put("session", session);// 当前会话
+						File path = new File(PHOTO_PATH);
+						while (path.listFiles().length > 0) {
+							File file = path.listFiles()[0];
+							params.put("filename", file.getName().substring(0, 16) + ".jpg");
+							params.put("speed", file.getName().split("_")[2]);// 速度
+							params.put("guid", file.getName().split("_")[3].replace(".jpg", ""));// 训练任务ID
+							FormFile formfile = new FormFile(file.getName(), file, "image", "application/octet-stream");
+							SocketHttpRequester.post(server + "/photoupload.ashx", params, formfile);
+							file.delete();
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					_photouploading = false;
+				}
+			}.start();
 		}
 	}
 
@@ -1114,20 +1462,22 @@ public class MainActivity extends Activity implements OnInitListener {
 		new Thread() {
 			public void run() {
 				HttpPost httpRequest = new HttpPost(server + "/upload.ashx");
-				List<NameValuePair> params = new ArrayList<NameValuePair>(6);
+				List<NameValuePair> params = new ArrayList<NameValuePair>(7);
 				if (studentCard.equals("") || startTime == null) {
 					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 					params.add(new BasicNameValuePair("session", session)); // 当前会话
 					params.add(new BasicNameValuePair("lng", String.format("%.6f", lng))); // 经度
 					params.add(new BasicNameValuePair("lat", String.format("%.6f", lat))); // 纬度
+					params.add(new BasicNameValuePair("speed", String.valueOf(speed))); // 速度
 					params.add(new BasicNameValuePair("mode", String.valueOf(mode))); // 模式
 					params.add(new BasicNameValuePair("coach", coachCard)); // 教练
 				} else {
-					params = new ArrayList<NameValuePair>(10);
+					params = new ArrayList<NameValuePair>(11);
 					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 					params.add(new BasicNameValuePair("session", session)); // 当前会话
 					params.add(new BasicNameValuePair("lng", String.format("%.6f", lng))); // 经度
 					params.add(new BasicNameValuePair("lat", String.format("%.6f", lat))); // 纬度
+					params.add(new BasicNameValuePair("speed", String.valueOf(speed))); // 速度
 					params.add(new BasicNameValuePair("mode", String.valueOf(mode))); // 模式
 					params.add(new BasicNameValuePair("coach", coachCard)); // 教练
 					params.add(new BasicNameValuePair("student", studentCard)); // 学员
@@ -1153,6 +1503,7 @@ public class MainActivity extends Activity implements OnInitListener {
 									tcv.put("gpstime", dateFormat.format(new Date()));
 									tcv.put("lng", String.format("%.6f", lng));
 									tcv.put("lat", String.format("%.6f", lat));
+									tcv.put("speed", String.valueOf(speed));
 									db.insert(MySQLHelper.T_ZXT_GPS_DATA, null, tcv);
 								}
 							}
@@ -1203,6 +1554,7 @@ public class MainActivity extends Activity implements OnInitListener {
 			editor.putString("coachIDCard", coachIDCard);
 			editor.putString("coachCertificate", coachCertificate);
 			editor.commit();
+			imgCoach.setImageResource(R.drawable.photo);
 			if (!coachIDCard.equals("")) {
 				imgCoach.setImageUrl(server + "/" + coachIDCard + ".bmp");
 			}
@@ -1264,6 +1616,39 @@ public class MainActivity extends Activity implements OnInitListener {
 		}
 	}
 
+	/**
+	 * 切换状态
+	 * 
+	 * @param 训练状态0
+	 *            ,自由状态1
+	 */
+	private void changeMode(int m) {
+		if (m == 0) {
+			if (mode == 1) {
+				trainFinish();// 结束训练
+				mode = 0;
+				btnFJFMS.setBackgroundResource(R.drawable.button_bg);
+				txtFJFMS.setTextColor(R.color.button_text);
+				btnJFMS.setBackgroundResource(R.drawable.button_checked_bg);
+				txtJFMS.setTextColor(Color.WHITE);
+				toashShow("已经切换为训练状态");
+			}
+		} else {
+			if (mode == 0) {
+				trainFinish();// 结束训练
+				mode = 1;
+				btnJFMS.setBackgroundResource(R.drawable.button_bg);
+				txtJFMS.setTextColor(R.color.button_text);
+				btnFJFMS.setBackgroundResource(R.drawable.button_checked_bg);
+				txtFJFMS.setTextColor(Color.WHITE);
+				toashShow("已经切换为自由状态");
+			}
+		}
+	}
+
+	/**
+	 * 程序更新
+	 */
 	private void versionUpdate() {
 		speak("发现新版本,需要更新");
 		AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("发现新版本,需要更新").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
@@ -1283,6 +1668,7 @@ public class MainActivity extends Activity implements OnInitListener {
 		if (location != null) {
 			lng = location.getLongitude();
 			lat = location.getLatitude();
+			speed = Math.round(location.getSpeed() * 60 / 1000);
 			txtLngLat.setText("GPS:" + String.format("%.6f", lng) + "," + String.format("%.6f", lat));
 		}
 	}
@@ -1314,7 +1700,11 @@ public class MainActivity extends Activity implements OnInitListener {
 
 	private void speak(String str) {
 		if (mTts != null) {
-			mTts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
+			try {
+				mTts.speak(str, TextToSpeech.QUEUE_FLUSH, null);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -1345,6 +1735,7 @@ public class MainActivity extends Activity implements OnInitListener {
 			if (location != null) {
 				lng = location.getLongitude();
 				lat = location.getLatitude();
+				speed = Math.round(location.getSpeed() * 60 / 1000);
 				txtLngLat.setText("GPS:" + String.format("%.6f", lng) + "," + String.format("%.6f", lat));
 			}
 		}
@@ -1369,22 +1760,57 @@ public class MainActivity extends Activity implements OnInitListener {
 		_timerFlicker.cancel();
 		_timerSecond.cancel();
 		_timerMinute.cancel();
+		_timerCamera.cancel();
+		_timerUploadPhoto.cancel();
 		// 读卡器
-		Native.ic_exit(fd);
+		try {
+			Native.ic_exit(fd);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		// TTS语音
 		if (mTts != null) {
-			mTts.shutdown();
+			try {
+				mTts.shutdown();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		// 数据库
 		if (_cursor != null && !_cursor.isClosed()) {
-			_cursor.close();
+			try {
+				_cursor.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		if (db != null) {
-			db.close();
+			try {
+				db.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		// 指纹
 		if (finger != null) {
-			finger.PSCloseDevice();
+			try {
+				finger.PSCloseDevice();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		// 摄像头
+		if (_camera != null) {
+			try {
+				_camera.stopPreview();
+				_camera.release();
+				_camera = null;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if (wakeLock != null) {
+			wakeLock.release();
 		}
 		super.onDestroy();
 	}

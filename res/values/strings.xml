@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">驾培智能终端</string>
     <string name="version">1</string>
-	<string name="server1">http://61.183.254.19</string>
-	<string name="server2">http://59.175.160.174</string>
+	<string name="server1">http://58.49.57.5</string>
+	<string name="server2">http://58.49.57.5</string>
 </resources>
