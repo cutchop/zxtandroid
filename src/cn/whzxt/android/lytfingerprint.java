@@ -75,6 +75,9 @@ public class lytfingerprint {
 	 */
 	public static native int Open();
 	public static native int Close();
-	
+
+	static {
+		System.loadLibrary("finger_zxt");
+	}
 	
 }

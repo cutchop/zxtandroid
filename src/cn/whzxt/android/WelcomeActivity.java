@@ -14,13 +14,10 @@ import org.apache.http.util.EntityUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.PendingIntent;
-import android.app.PendingIntent.CanceledException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -100,13 +97,18 @@ public class WelcomeActivity extends Activity {
 						} else if (strResult.startsWith("failure|")) {
 							results = strResult.split("\\|");
 							if (results[1].equals("version_error")) {
-								AlertDialog alertDialog = new AlertDialog.Builder(WelcomeActivity.this).setTitle("发现新版本,需要更新").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog, int which) {
-										Uri uri = Uri.parse(server + "/zpad.apk");
-										startActivity(new Intent(Intent.ACTION_VIEW, uri));
+								handler.post(new Runnable() {
+									public void run() {
+										AlertDialog alertDialog = new AlertDialog.Builder(WelcomeActivity.this).setTitle("发现新版本,需要更新").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+											public void onClick(DialogInterface dialog, int which) {
+												Uri uri = Uri.parse(server + "/zpad.apk");
+												startActivity(new Intent(Intent.ACTION_VIEW, uri));
+												WelcomeActivity.this.finish();
+											}
+										}).create();
+										alertDialog.show();
 									}
-								}).create();
-								alertDialog.show();
+								});
 							} else {
 								handler.post(new Runnable() {
 									public void run() {

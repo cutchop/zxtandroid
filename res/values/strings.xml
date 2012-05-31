@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">驾培智能终端</string>
-    <string name="version">1</string>
+    <string name="version">2</string>
 	<string name="server1">http://58.49.57.5</string>
 	<string name="server2">http://58.49.57.5</string>
 </resources>
