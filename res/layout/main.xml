@@ -3,7 +3,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-
+
     <TableLayout
         android:id="@+id/layTitle"
         android:layout_width="match_parent"
@@ -14,15 +14,16 @@
         <TableRow
             android:id="@+id/tableRow1"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
+            android:layout_height="wrap_content" >
+
             <TextView
                 android:id="@+id/txtSchoolName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="3dip"
-                android:textColor="@color/titlefontcolor" android:text="驾校名称"/>
-
+                android:text="驾校名称"
+                android:textColor="@color/titlefontcolor" />
+
             <TextView
                 android:id="@+id/txtDeviceName"
                 android:layout_width="wrap_content"
@@ -31,7 +32,7 @@
                 android:padding="3dip"
                 android:text="设备名称"
                 android:textColor="@color/titlefontcolor" />
-
+
             <TextView
                 android:id="@+id/txtSystemTime"
                 android:layout_width="wrap_content"
@@ -39,10 +40,13 @@
                 android:padding="3dip"
                 android:text="2012-04-06 12:12:12"
                 android:textColor="@color/titlefontcolor" />
-
         </TableRow>
-		<View android:layout_height="2dip"  
-        android:background="@color/titleborder" /> 
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="2dip"
+            android:background="@color/titleborder" />
+
         <TableRow
             android:id="@+id/tableRow2"
             android:layout_width="wrap_content"
@@ -60,32 +64,32 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
         </TableRow>
-
     </TableLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-	<ScrollView
-	    android:id="@+id/mainView"
-	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_alignParentBottom="false"
-	    android:layout_alignParentLeft="true"
-	    android:layout_alignParentRight="true"
-	    android:layout_alignParentTop="true"
-	    android:background="@color/contentbg" >
+        android:layout_height="wrap_content" >
+
+        <ScrollView
+            android:id="@+id/mainView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="false"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:background="@color/contentbg" >
 
             <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
 
                 <LinearLayout
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/contentborder" android:paddingBottom="1dip">
+                    android:background="@color/contentborder"
+                    android:paddingBottom="1dip" >
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -98,9 +102,10 @@
                             android:id="@+id/layCoachTitle"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dip"
                             android:background="@drawable/bg1"
-                            android:paddingLeft="3dip" android:layout_marginBottom="10dip">
-
+                            android:paddingLeft="3dip" >
+
                             <TextView
                                 android:id="@+id/textView1"
                                 android:layout_width="wrap_content"
@@ -116,7 +121,8 @@
                                 android:paddingLeft="3dip"
                                 android:text="姓名"
                                 android:textAppearance="?android:attr/textAppearanceMedium"
-                                android:visibility="visible" android:textColor="@color/labelfont"/>
+                                android:textColor="@color/labelfont"
+                                android:visibility="visible" />
                         </LinearLayout>
 
                         <TextView
@@ -131,37 +137,38 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:visibility="visible">
+                            android:visibility="visible" >
 
-                                <cn.whzxt.android.NetImageView
-                                    android:id="@+id/imgCoach"
-                                    android:layout_width="102dip"
-                                    android:layout_height="126dip"
-                                    android:layout_marginLeft="3dip"
-                                    android:layout_marginTop="3dip"
-                                    android:src="@drawable/photo" android:layout_gravity="center"/>
-                                
-                                    <TextView
-                                        android:id="@+id/txtCoachCard"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="5dip"
-                                        android:paddingLeft="3dip"
-                                        android:text="卡号:" />
+                            <cn.whzxt.android.NetImageView
+                                android:id="@+id/imgCoach"
+                                android:layout_width="102dip"
+                                android:layout_height="126dip"
+                                android:layout_gravity="center"
+                                android:layout_marginLeft="3dip"
+                                android:layout_marginTop="3dip"
+                                android:src="@drawable/photo" />
 
-                                    <TextView
-                                        android:id="@+id/txtCoachCertificateLabel"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="5dip"
-                                        android:paddingLeft="3dip"
-                                        android:text="教练证号:" />
+                            <TextView
+                                android:id="@+id/txtCoachCard"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dip"
+                                android:paddingLeft="3dip"
+                                android:text="卡号:" />
 
-                                    <TextView
-                                        android:id="@+id/txtCoachCertificate"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="3dip"/>
+                            <TextView
+                                android:id="@+id/txtCoachCertificateLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dip"
+                                android:paddingLeft="3dip"
+                                android:text="教练证号:" />
+
+                            <TextView
+                                android:id="@+id/txtCoachCertificate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dip" />
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -175,7 +182,10 @@
                                     android:layout_weight="1"
                                     android:background="@drawable/button_checked_bg"
                                     android:clickable="true"
-                                    android:orientation="vertical" android:paddingBottom="2dip" android:paddingTop="2dip">
+                                    android:orientation="vertical"
+                                    android:paddingBottom="2dip"
+                                    android:paddingTop="2dip" >
+
                                     <TextView
                                         android:id="@+id/txtJFMS"
                                         android:layout_width="wrap_content"
@@ -183,7 +193,6 @@
                                         android:layout_gravity="center"
                                         android:text="训练状态"
                                         android:textColor="@color/button_checked_text" />
-
                                 </LinearLayout>
 
                                 <LinearLayout
@@ -193,16 +202,17 @@
                                     android:layout_weight="1"
                                     android:background="@drawable/button_bg"
                                     android:clickable="true"
-                                    android:orientation="vertical">
-
+                                    android:orientation="vertical" >
+
                                     <TextView
                                         android:id="@+id/txtFJFMS"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_gravity="center"
+                                        android:paddingBottom="2dip"
+                                        android:paddingTop="2dip"
                                         android:text="自由状态"
-                                        android:textColor="@color/button_text" android:paddingTop="2dip" android:paddingBottom="2dip"/>
-
+                                        android:textColor="@color/button_text" />
                                 </LinearLayout>
                             </LinearLayout>
 
@@ -220,7 +230,8 @@
                                     android:background="@drawable/button_checked_bg"
                                     android:clickable="true"
                                     android:orientation="vertical"
-                                    android:paddingBottom="2dip" android:paddingTop="2dip">
+                                    android:paddingBottom="2dip"
+                                    android:paddingTop="2dip" >
 
                                     <TextView
                                         android:id="@+id/txtSubject2"
@@ -239,7 +250,8 @@
                                     android:background="@drawable/button_bg"
                                     android:clickable="true"
                                     android:orientation="vertical"
-                                    android:paddingBottom="2dip" android:paddingTop="2dip">
+                                    android:paddingBottom="2dip"
+                                    android:paddingTop="2dip" >
 
                                     <TextView
                                         android:id="@+id/txtSubject3"
@@ -248,7 +260,6 @@
                                         android:layout_gravity="center"
                                         android:text="科目三"
                                         android:textColor="@color/button_text" />
-
                                 </LinearLayout>
                             </LinearLayout>
 
@@ -260,7 +271,7 @@
                                 android:clickable="true"
                                 android:gravity="center"
                                 android:paddingTop="3dip" >
-
+
                                 <TextView
                                     android:id="@+id/textView3"
                                     android:layout_width="wrap_content"
@@ -268,11 +279,8 @@
                                     android:layout_gravity="center"
                                     android:text="^ 科目三模拟考试 ^"
                                     android:textColor="@color/card_text" />
-
                             </LinearLayout>
-
                         </LinearLayout>
-
                     </LinearLayout>
 
                     <LinearLayout
@@ -283,25 +291,69 @@
                         android:background="@color/contentbg"
                         android:orientation="vertical" >
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@color/black"
+                            android:orientation="vertical"
+                            android:padding="2dip" >
+
+                            <TextView
+                                android:id="@+id/textView2"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="本车单价:2元/分钟"
+                                android:textColor="@color/white" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/camCanvas"
+                            android:layout_width="fill_parent"
+                            android:layout_height="220dip" >
+
+                            <ImageView
+                                android:id="@+id/camView"
+                                android:layout_width="match_parent"
+                                android:layout_height="fill_parent"
+                                android:layout_weight="0.3" android:background="#FF000000" android:scaleType="centerCrop"/>
+
                             <LinearLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:padding="2dip" android:background="@color/black">
-
-                                <TextView
-                                    android:id="@+id/textView2"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center"
-                                    android:text="本车单价:2元/分钟" android:textColor="@color/white"/>
+                                android:layout_height="match_parent"
+                                android:orientation="vertical" android:layout_weight="1" android:background="#FF000000">
+
+                                <ImageView
+                                    android:id="@+id/imgLast01"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:background="#FFCCCCCC" android:scaleType="centerCrop" android:layout_marginBottom="1dip" android:layout_marginLeft="1dip" android:clickable="true"/>
+
+                                <ImageView
+                                    android:id="@+id/imgLast02"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:background="#FFCCCCCC" android:scaleType="centerCrop" android:layout_marginLeft="1dip" android:layout_marginBottom="1dip" android:clickable="true"/>
+
+                                <ImageView
+                                    android:id="@+id/imgLast03"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:background="#FFCCCCCC" android:scaleType="centerCrop" android:layout_marginBottom="1dip" android:layout_marginLeft="1dip" android:clickable="true"/>
+
+                                <ImageView
+                                    android:id="@+id/imgLast04"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:background="#FFCCCCCC" android:scaleType="centerCrop" android:layout_marginLeft="1dip" android:clickable="true"/>
 
                             </LinearLayout>
-
-                            <SurfaceView
-                                android:id="@+id/previewSurface"
-                                android:layout_width="fill_parent"
-                                android:layout_height="220dip" android:clickable="true"/>
+
+                        </LinearLayout>
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -312,10 +364,13 @@
 
                         <LinearLayout
                             android:layout_width="fill_parent"
-                            android:layout_height="85dip">
+                            android:layout_height="88dip" >
+
                             <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical" >
 
                                 <TextView
                                     android:id="@+id/txtStartTime"
@@ -337,118 +392,131 @@
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="5dip"
                                     android:paddingLeft="5dip" />
-
                             </LinearLayout>
-                            <View android:layout_width="1dip"  
-        android:background="@color/contentborder" android:layout_height="fill_parent"/> 
+
+                            <View
+                                android:layout_width="1dip"
+                                android:layout_height="fill_parent"
+                                android:background="@color/contentborder" />
+
                             <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
-                        
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="2dip">
-
-                            <LinearLayout
-                                android:id="@+id/layTabSysInfo"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:id="@+id/btnTabSysInfo"
+                                android:orientation="vertical" >
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginBottom="2dip" >
+
+                                    <LinearLayout
+                                        android:id="@+id/layTabSysInfo"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical" >
+
+                                        <TextView
+                                            android:id="@+id/btnTabSysInfo"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="fill_parent"
+                                            android:background="@drawable/button_bg"
+                                            android:clickable="true"
+                                            android:gravity="center"
+                                            android:paddingBottom="3dip"
+                                            android:paddingTop="3dip"
+                                            android:text="系统消息"
+                                            android:textColor="@color/button_text" />
+                                    </LinearLayout>
+
+                                    <LinearLayout
+                                        android:id="@+id/layTabDevStatus"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical" >
+
+                                        <TextView
+                                            android:id="@+id/btnTabDevStatus"
+                                            android:layout_width="fill_parent"
+                                            android:layout_height="fill_parent"
+                                            android:background="@drawable/button_checked_bg"
+                                            android:clickable="true"
+                                            android:gravity="center"
+                                            android:paddingBottom="3dip"
+                                            android:paddingTop="3dip"
+                                            android:text="设备状态"
+                                            android:textColor="@color/button_checked_text" />
+                                    </LinearLayout>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:id="@+id/laySysInfo"
                                     android:layout_width="fill_parent"
                                     android:layout_height="fill_parent"
-                                    android:text="系统消息"
-                                    android:textColor="@color/button_text" android:clickable="true" android:background="@drawable/button_bg" android:paddingTop="3dip" android:paddingBottom="3dip" android:gravity="center"/>
+                                    android:orientation="vertical"
+                                    android:paddingLeft="5dip"
+                                    android:visibility="gone" >
 
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:id="@+id/layTabDevStatus"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:id="@+id/btnTabDevStatus"
-                                    android:text="设备状态"
-                                    android:textColor="@color/button_checked_text" android:background="@drawable/button_checked_bg" android:layout_height="fill_parent" android:layout_width="fill_parent" android:clickable="true" android:paddingTop="3dip" android:paddingBottom="3dip" android:gravity="center"/>
+                                    <TextView
+                                        android:id="@+id/txtSysInfo"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="暂无消息" />
+                                </LinearLayout>
 
+                                <LinearLayout
+                                    android:id="@+id/layDevStatus"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="fill_parent"
+                                    android:orientation="vertical" >
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_gravity="right"
+                                        android:gravity="right" >
+
+                                        <TextView
+                                            android:id="@+id/txtLngLat"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="right"
+                                            android:paddingRight="3dip"
+                                            android:text="GPS:0,0" />
+
+                                        <TextView
+                                            android:id="@+id/txtSensor"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="right"
+                                            android:paddingRight="3dip"
+                                            android:text="SEN:0" />
+                                    </LinearLayout>
+
+                                    <TextView
+                                        android:id="@+id/txtStatus"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_gravity="right"
+                                        android:layout_marginTop="2dip"
+                                        android:paddingRight="3dip"
+                                        android:text="等待上传GPS数据" />
+
+                                    <TextView
+                                        android:id="@+id/txtUploadUseDataStatus"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_gravity="right"
+                                        android:layout_marginTop="2dip"
+                                        android:paddingRight="3dip"
+                                        android:text="等待上传训练数据" />
+                                </LinearLayout>
                             </LinearLayout>
                         </LinearLayout>
-
-                        <LinearLayout
-                            android:id="@+id/laySysInfo"
-                            android:layout_width="fill_parent"
-                            android:layout_height="fill_parent"
-                            android:orientation="vertical"
-                            android:paddingLeft="5dip"
-                            android:visibility="gone" >
-
-                            <TextView
-                                android:id="@+id/txtSysInfo"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="暂无消息" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:id="@+id/layDevStatus"
-                            android:layout_width="fill_parent"
-                            android:layout_height="fill_parent"
-                            android:orientation="vertical" >
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="right"
-                                android:gravity="right" >
-
-                                <TextView
-                                    android:id="@+id/txtLngLat"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="right"
-                                    android:paddingRight="3dip"
-                                    android:text="GPS:0,0" />
-
-                                <TextView
-                                    android:id="@+id/txtSensor"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="right"
-                                    android:paddingRight="3dip"
-                                    android:text="SEN:0" />
-                            </LinearLayout>
-
-                            <TextView
-                                android:id="@+id/txtStatus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="right"
-                                android:layout_marginTop="2dip"
-                                android:paddingRight="3dip"
-                                android:text="等待上传GPS数据" />
-
-                            <TextView
-                                android:id="@+id/txtUploadUseDataStatus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="right"
-                                android:layout_marginTop="2dip"
-                                android:paddingRight="3dip"
-                                android:text="等待上传训练数据" />
-                        </LinearLayout>
-
-</LinearLayout>
-</LinearLayout>
                     </LinearLayout>
-                    
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="328dip"
@@ -462,9 +530,10 @@
                             android:id="@+id/layStudentTitle"
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dip"
                             android:background="@drawable/bg1"
-                            android:paddingLeft="3dip" android:layout_marginBottom="10dip">
-
+                            android:paddingLeft="3dip" >
+
                             <TextView
                                 android:id="@+id/txtStudentTitle"
                                 android:layout_width="wrap_content"
@@ -479,15 +548,17 @@
                                 android:layout_height="wrap_content"
                                 android:paddingLeft="3dip"
                                 android:text="姓名"
-                                android:textAppearance="?android:attr/textAppearanceMedium" android:textColor="@color/labelfont"/>
-
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:textColor="@color/labelfont" />
                         </LinearLayout>
 
                         <TextView
                             android:id="@+id/txtInfoStudent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="请先插教练卡" android:layout_gravity="center" android:paddingRight="3dip"/>
+                            android:layout_gravity="center"
+                            android:paddingRight="3dip"
+                            android:text="请先插教练卡" />
 
                         <LinearLayout
                             android:id="@+id/layStudentInfo"
@@ -495,22 +566,24 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:visibility="visible" >
-                                    
-                                <cn.whzxt.android.NetImageView
-                                    android:id="@+id/imgStudent"
-                                    android:layout_width="102dip"
-                                    android:layout_height="126dip"
-                                    android:layout_marginTop="3dip"
-                                    android:src="@drawable/photo" android:layout_gravity="center" android:layout_marginRight="3dip"/>
 
-                                    <TextView
-                                        android:id="@+id/txtStudentCard"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginTop="5dip"
-                                        android:paddingLeft="3dip"
-                                        android:text="卡号:" />
-
+                            <cn.whzxt.android.NetImageView
+                                android:id="@+id/imgStudent"
+                                android:layout_width="102dip"
+                                android:layout_height="126dip"
+                                android:layout_gravity="center"
+                                android:layout_marginRight="3dip"
+                                android:layout_marginTop="3dip"
+                                android:src="@drawable/photo" />
+
+                            <TextView
+                                android:id="@+id/txtStudentCard"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="5dip"
+                                android:paddingLeft="3dip"
+                                android:text="卡号:" />
+
                             <TextView
                                 android:id="@+id/txtStudentDriverType"
                                 android:layout_width="wrap_content"
@@ -550,22 +623,26 @@
                     android:id="@+id/layTts"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical" android:layout_marginTop="5dip" android:layout_marginBottom="30dip">
+                    android:layout_marginBottom="30dip"
+                    android:layout_marginTop="5dip"
+                    android:orientation="vertical" >
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
 
-                    </LinearLayout>
-
-        </LinearLayout>
-</ScrollView>
         <TableLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="false"
             android:background="@color/titlebg"
-            android:stretchColumns="1" android:layout_alignParentBottom="true">
+            android:stretchColumns="1" >
 
-		<View android:layout_height="1dip"  
-        android:background="@color/titleborder" /> 
+            <View
+                android:layout_height="1dip"
+                android:background="@color/titleborder" />
+
             <TableRow
                 android:id="@+id/tableRow5"
                 android:layout_width="wrap_content"
@@ -578,14 +655,14 @@
                     android:padding="3dip"
                     android:text="网络正常"
                     android:textColor="@color/titlefontcolor" />
-
+
                 <TextView
                     android:id="@+id/textView6"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:padding="3dip"
-                    android:text="科技驾培 从我做起"
+                    android:text="@string/bottomcenter"
                     android:textColor="@color/titlefontcolor" />
 
                 <TextView
@@ -593,8 +670,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
-                    android:text="技术支持:武汉中信通"
-                    android:textColor="@color/titlefontcolor" android:padding="3dip"/>
+                    android:padding="3dip"
+                    android:text="@string/copyright"
+                    android:textColor="@color/titlefontcolor" />
             </TableRow>
 
             <TableRow
@@ -615,7 +693,6 @@
                 android:layout_height="wrap_content" >
             </TableRow>
         </TableLayout>
-
     </RelativeLayout>
 
 </LinearLayout>

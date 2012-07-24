@@ -4,40 +4,28 @@ public class Coach {
 	/**
 	 * 教练编号
 	 */
-	public String ID;
+	public static String ID;
 	/**
 	 * 教练姓名
 	 */
-	public String Name;
+	public static String Name;
 	/**
 	 * 教练卡号
 	 */
-	public String CardNo;
+	public static String CardNo;
 	/**
 	 * 教练身份证
 	 */
-	public String IDCardNo;
+	public static String IDCardNo;
 	/**
 	 * 教练证号
 	 */
-	public String Certificate;
-
-	public Coach() {
-		this.ID = "";
-		this.Name = "";
-		this.CardNo = "";
-		this.IDCardNo = "";
-		this.Certificate = "";
-	}
+	public static String Certificate;
 
 	/**
-	 * 重置所有属性
+	 * 初始化
 	 */
-	public void reset() {
-		this.ID = "";
-		this.Name = "";
-		this.CardNo = "";
-		this.IDCardNo = "";
-		this.Certificate = "";
+	public static void Init() {
+		ID = Name = CardNo = IDCardNo = Certificate = "";
 	}
 }

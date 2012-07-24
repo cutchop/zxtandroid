@@ -4,70 +4,58 @@ public class Student {
 	/**
 	 * 学员编号
 	 */
-	public String ID;
+	public static String ID;
 	/**
 	 * 学员姓名
 	 */
-	public String Name;
+	public static String Name;
 	/**
 	 * 学员卡号
 	 */
-	public String CardNo;
+	public static String CardNo;
 	/**
 	 * 学员身份证号
 	 */
-	public String IDCardNo;
+	public static String IDCardNo;
 	/**
 	 * 学员驾驶类型
 	 */
-	public String DriverType;
+	public static String DriverType;
+	/**
+	 * 余额
+	 */
+	public static int Balance;
+	/**
+	 * 实时余额
+	 */
+	public static int RealBalance;
 	/**
 	 * 学员累计训练里程（米）
 	 */
-	public int TotalMi;
+	public static int TotalMi;
 	/**
 	 * 学员实时累计里程（米）
 	 */
-	public int RealTotalMi;
+	public static int RealTotalMi;
 	/**
 	 * 学员累计训练时长（分钟）
 	 */
-	public int TotalTime;
+	public static int TotalTime;
 	/**
 	 * 学员实时累计训练时长（分钟）
 	 */
-	public int RealTotalTime;
+	public static int RealTotalTime;
 	/**
 	 * 是否是教练
 	 */
-	public Boolean IsCoach;
-
-	public Student() {
-		this.ID = "";
-		this.Name = "";
-		this.CardNo = "";
-		this.IDCardNo = "";
-		this.DriverType = "";
-		this.TotalMi = 0;
-		this.RealTotalMi = 0;
-		this.TotalTime = 0;
-		this.RealTotalTime = 0;
-		this.IsCoach = false;
-	}
+	public static Boolean IsCoach;
 
 	/**
-	 * 充值所有属性
+	 * 重置所有属性
 	 */
-	public void reset() {
-		this.ID = "";
-		this.Name = "";
-		this.CardNo = "";
-		this.IDCardNo = "";
-		this.DriverType = "";
-		this.TotalMi = 0;
-		this.RealTotalMi = 0;
-		this.TotalTime = 0;
-		this.RealTotalTime = 0;
-		this.IsCoach = false;
+	public static void Init() {
+		ID = Name = CardNo = IDCardNo = DriverType = "";
+		Balance = RealBalance = TotalMi = RealTotalMi = TotalTime = RealTotalTime = 0;
+		IsCoach = false;
 	}
 }

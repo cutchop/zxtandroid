@@ -3,7 +3,6 @@ package cn.whzxt.android;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,9 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
-
-import javax.security.auth.PrivateCredentialPermission;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -39,6 +35,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+
+import com.android.serial_camera;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -56,9 +54,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
-import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -75,19 +72,18 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnInitListener, SurfaceHolder.Callback {
+public class MainActivity extends Activity implements OnInitListener {
 	private TextView txtSchoolName, txtDeviceName, txtSystemTime;
 	private TextView txtInfoCoach, txtInfoStudent, txtStudentTitle, txtStatus, txtUploadUseDataStatus, txtLngLat, txtSensor;
 	private TextView txtCoachName, txtCoachCard, txtCoachCertificate, txtStudentName, txtStudentCard;
@@ -96,36 +92,24 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private TextView txtJFMS, txtFJFMS, txtSubject2, txtSubject3;
 	private TextView txtStudentID, txtStudentDriverType, txtStudentTotalTime, txtStudentTotalMi;
 	private NetImageView imgCoach, imgStudent;
+	private ImageView camView, imgLast01, imgLast02, imgLast03, imgLast04;
 	private LinearLayout layCoachTitle, layStudentTitle, layCoachInfo, layStudentInfo;
 	private LinearLayout btnJFMS, btnFJFMS, btnSubject2, btnSubject3;
 	private LinearLayout layTts, layScrollDown, laySysInfo, layDevStatus;
 	private TextView btnTabSysInfo, btnTabDevStatus, txtSysInfo;
 	private TableLayout layTitle;
 	private ScrollView mainView;
-	private SurfaceView previewSurface;
-	private SurfaceHolder previewSurfaceHolder;
 	private String deviceID, deviceName, schoolID, schoolName, session;
 	private String server;
 	private String uploadresult, cardresult, usedataresult, ttsdataresult;
-	private Student _student;
-	private Coach _coach;
 	private int _cardType;
-	private int cardBalance = 0, cardBalanceNow = 0;
 	private int[] _initcontext;
 	private int col = 0;
-	private Date startTime, nowTime, endTime;
-	private int startMi = 0, nowMi = 0, startSenMi = 0, nowSenMi = 0;
-	private String _curUUID;
-	private static final int MODE_TRAIN = 0;
-	private static final int MODE_FREE = 1;
-	private int mode = MODE_TRAIN;// 训练模式0，自由模式1
-	private int subject = 2;// 科目二，科目三
+	private Date nowTime;
 	private int retry = 0;
-	private double lng, lat;
-	private int speed, senspeed; // 速度
 	private SimpleDateFormat dateFormat, timeFormat;
 	private LocationManager locationManager;
-	private Timer _timerUpload, _timerFlicker, _timerSecond, _timerMinute, _timerCamera, _timerTakePhoto, _timerUploadPhoto, _timerSensor;
+	private Timer _timerUpload, _timerFlicker, _timerSecond, _timerMinute, _timerCamera, _timerUploadPhoto, _timerSensor, _timerCamView;
 	private SharedPreferences settings;
 	private MySQLHelper sqlHelper;
 	private SQLiteDatabase db;
@@ -136,14 +120,20 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private String _tcpMsg;
 	private Boolean _rfidProcsing = false;
 	private String _rfidUID;
+	private Paint _markPaint;
 	private int _uploadblindSpotCount = 0;
 	private Boolean _hasfingerdata = false;
 	private static final int BS_EVERY_MAX = 10;// 每次上传10个盲点
+	private int _relayoff = 0;// 继电器
+	// private int dogfd = -1;
 
 	private ServerSocket socket = null;
 	private Socket client = null;
 
-	private static final int DBVERSION = 10;
+	private static final int MODE_TRAIN = 0;
+	private static final int MODE_FREE = 1;
+
+	private static final int DBVERSION = 10;// 数据库版本
 	private static final int PRICE = 2; // 设备单价
 	private static final float NMDIVIDED = 1.852f; // 海里换算成公里
 	// 读卡器
@@ -178,19 +168,22 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private int _fingerCurId;
 	private Boolean _fingerFinish = false;
 	// 摄像头
-	private Camera _camera;
-	private static final int PHOTO_DEF_WIDTH = 720; // 默认照片宽度
-	private static final int PHOTO_DEF_HEIGHT = 576; // 默认照片高度
-	private static final int PHOTO_DEF_INTERVAL = 30; // 默认拍照间隔(秒)
 	private static final String PHOTO_PATH = "/sdcard/zxtphoto";// 照片保存路径
+	private static final int PHOTO_DEF_INTERVAL = 60; // 默认拍照间隔(秒)
 	private int _inSampleSize = 4;// 照片压缩比,宽720/4,高576/4
-	private int _curCamera = 1;// 当前摄像头
-	private int _phototaked = 1;
-	private Boolean _previewing = false;
-	private Boolean _takephotoing = false;
 	private Boolean _photouploading = false;
+	private Boolean _takephotoing = false;
 	private String _phototime = "";
 	private String _photoUUID = "";
+	private int _photoSpeed = 0;
+	private int _photoSenSpeed = 0;
+	private Boolean _camViewFlag = false;
+	private URL _camUrl;
+	private InputStream _camIS;
+	private Bitmap _camBmp;
+	private Bitmap[] _lastBmps;
+	// 串口摄像头
+	private serial_camera native_camera;
 	// 控制屏幕长亮
 	private WakeLock wakeLock;
 	// 弹出框
@@ -210,16 +203,21 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private static final int H_W_MINUTE = 0x04;
 	private static final int H_W_TAKE_PHOTO = 0x05;
 	private static final int H_W_UPLOAD_PHOTO = 0x06;
-	private static final int H_W_TAKE_PHOTO_DELAY = 0x07;
 	private static final int H_W_HIDE_TRAININFO = 0x08;
-	private static final int H_W_SET_RELAY_FALSE = 0x09;
 	private static final int H_W_SHOW_SENSOR = 0x0A;
 	private static final int H_W_UPDATEDIALOG_MAX = 0x14;
 	private static final int H_W_UPDATEDIALOG_NOW = 0x15;
+	private static final int H_W_CAMERAVIEW = 0x20;
 	// 程序更新对话框
 	private ProgressDialog _updateDialog;
 	private File _downLoadFile;
 	private int _fileLength, _downedFileLength = 0;
+
+	private Boolean _isclosed = false;
+	private Boolean _sensorTimerFlag = false;
+	private Boolean _secondTimerFlag = false;
+
+	private Boolean _readICCard = false;
 
 	Handler handler = new Handler() {
 		@Override
@@ -243,19 +241,8 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			case H_W_UPLOAD_PHOTO:
 				uploadPhoto();
 				break;
-			case H_W_TAKE_PHOTO_DELAY:
-				takephotoDelay();
-				break;
 			case H_W_HIDE_TRAININFO:
 				hideTrainInfo();
-				break;
-			case H_W_SET_RELAY_FALSE:
-				if (mode == MODE_TRAIN) {
-					if (startTime == null) {
-						NativeGPIO.setRelay(false);
-						toashShow("油电已断");
-					}
-				}
 				break;
 			case H_W_SHOW_SENSOR:
 				showSensor();
@@ -267,6 +254,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				int x = _downedFileLength * 100 / _fileLength;
 				_updateDialog.setMessage("正在下载，已完成" + x + "%");
 				break;
+			case H_W_CAMERAVIEW:
+				cameraView();
+				break;
 			default:
 				break;
 			}
@@ -276,7 +266,11 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 
 	public void onInit(int status) {
 		if (status == TextToSpeech.SUCCESS) {
-			speak("欢迎使用,中信通智能驾培终端");
+			if (NativeGPIO.getAccState() == 0) {
+				speak("欢迎使用,中信通智能驾培终端");
+			} else {
+				speak("欢迎使用,中信通智能驾培终端,请插卡并验证指纹,否则一分钟后将断油电");
+			}
 		}
 	}
 
@@ -292,7 +286,103 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+
+		// 初始化GPS
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			// 打开GPS
+			try {
+				Intent intent = new Intent();
+				intent.setComponent(new ComponentName("cn.whzxt.gps", "cn.whzxt.gps.ZxtOpenGPSActivity"));
+				startActivity(intent);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		_lastBmps = new Bitmap[4];
+		server = getString(R.string.server1);
+		nowTime = new Date();
+		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		timeFormat = new SimpleDateFormat("HH:mm:ss");
+		settings = getSharedPreferences("whzxt.net", 0);
+		// 照片压缩比
+		_inSampleSize = settings.getInt("inSampleSize", 4);
+		// 训练科目
+		DeviceInfo.Subject = settings.getInt("subject", 2);
+		// 状态
+		DeviceInfo.Mode = settings.getInt("mode", MODE_TRAIN);
+		// 数据库
+		sqlHelper = new MySQLHelper(this, "zxt.db", null, DBVERSION);
+		db = sqlHelper.getWritableDatabase();
+		// 照片水印
+		_markPaint = new Paint();
+		_markPaint.setColor(Color.RED);
+		_markPaint.setTypeface(Typeface.create("宋体", Typeface.NORMAL));
+		_markPaint.setTextSize(14);
+		// 控制屏幕长亮
+		PowerManager manager = ((PowerManager) getSystemService(POWER_SERVICE));
+		wakeLock = manager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "ATAAW");
+		wakeLock.acquire();
+
+		// 设备和驾校信息
+		Bundle bundle = this.getIntent().getExtras();
+		deviceID = bundle.getString("deviceID");
+		deviceName = bundle.getString("deviceName");
+		schoolID = bundle.getString("schoolID");
+		schoolName = bundle.getString("schoolName");
+		session = bundle.getString("session");
+		retry = 0;
+		if (bundle.getString("offline") != null) {
+			retry = 3;
+		}
+
+		// 教练信息
+		Coach.Init();
+		Student.Init();
+		if (settings.getString("coachCard", "") != "") {
+			Coach.ID = settings.getString("coachID", "");
+			Coach.Name = settings.getString("coachName", "");
+			Coach.CardNo = settings.getString("coachCard", "");
+			Coach.IDCardNo = settings.getString("coachIDCard", "");
+			Coach.Certificate = settings.getString("coachCertificate", "");
+		}
+
 		// 界面初始化
+		initView();
+
+		// 模块初始化
+		initMoudle();
+
+		// 语音提示按钮初始化
+		ttsButtonInit();
+
+		// GPS
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
+
+		// TCP监听
+		try {
+			socket = new ServerSocket(8888);
+			socketListen();// 监听指令
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// RFID选择读A卡(身份证为B卡)
+		NativeRFID.select_type(RFID_TYPE_A);
+
+		// 定时器
+		initTimer();
+
+		_relayoff = 60;
+		// 看门狗
+		// dogfd = com.lyt.watchdog.Native.init();
+		// com.lyt.watchdog.Native.settimeout(6);
+	}
+
+	/**
+	 * 初始化界面
+	 */
+	private void initView() {
 		txtSchoolName = (TextView) findViewById(R.id.txtSchoolName);
 		txtDeviceName = (TextView) findViewById(R.id.txtDeviceName);
 		txtSystemTime = (TextView) findViewById(R.id.txtSystemTime);
@@ -316,7 +406,11 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		layDevStatus = (LinearLayout) findViewById(R.id.layDevStatus);
 		layTitle = (TableLayout) findViewById(R.id.layTitle);
 		mainView = (ScrollView) findViewById(R.id.mainView);
-		previewSurface = (SurfaceView) findViewById(R.id.previewSurface);
+		camView = (ImageView) findViewById(R.id.camView);
+		imgLast01 = (ImageView) findViewById(R.id.imgLast01);
+		imgLast02 = (ImageView) findViewById(R.id.imgLast02);
+		imgLast03 = (ImageView) findViewById(R.id.imgLast03);
+		imgLast04 = (ImageView) findViewById(R.id.imgLast04);
 		txtJFMS = (TextView) findViewById(R.id.txtJFMS);
 		txtFJFMS = (TextView) findViewById(R.id.txtFJFMS);
 		txtSubject2 = (TextView) findViewById(R.id.txtSubject2);
@@ -340,180 +434,62 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		txtLngLat = (TextView) findViewById(R.id.txtLngLat);
 		txtSensor = (TextView) findViewById(R.id.txtSensor);
 		txtNetworkStatus = (TextView) findViewById(R.id.txtNetworkStatus);
-		Bundle bundle = this.getIntent().getExtras();
-		deviceID = bundle.getString("deviceID");
-		deviceName = bundle.getString("deviceName");
-		schoolID = bundle.getString("schoolID");
-		schoolName = bundle.getString("schoolName");
-		session = bundle.getString("session");
-		if (bundle.getString("offline") != null) {
-			retry = 3;
+		if (retry >= 3) {
 			txtNetworkStatus.setText("网络异常");
 			txtNetworkStatus.setTextColor(Color.RED);
 		}
 		txtSchoolName.setText(schoolName);
 		txtDeviceName.setText(deviceName);
-		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		timeFormat = new SimpleDateFormat("HH:mm:ss");
-		txtSystemTime.setText(dateFormat.format(new Date()));
-
-		settings = getSharedPreferences("whzxt.net", 0);
-
-		_inSampleSize = settings.getInt("inSampleSize", 4);
-
-		server = getString(R.string.server1);
-
-		sqlHelper = new MySQLHelper(this, "zxt.db", null, DBVERSION);
-		db = sqlHelper.getWritableDatabase();
-
-		// 初始化学员和教练
-		_student = new Student();
-		_coach = new Coach();
-		// 初始化TTS
-		Intent checkIntent = new Intent();
-		try {
-			checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-			startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
-		} catch (Exception e) {
-			e.printStackTrace();
+		txtSystemTime.setText(dateFormat.format(nowTime));
+		if (DeviceInfo.Subject == 3) {
+			btnSubject2.setBackgroundResource(R.drawable.button_bg);
+			txtSubject2.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
+			btnSubject3.setBackgroundResource(R.drawable.button_checked_bg);
+			txtSubject3.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
 		}
-
-		// IC卡读卡器
-		try {
-			fd = Native.auto_init(PATH, BAUD);
-		} catch (Exception e) {
-			speak("IC卡读卡器打开失败");
-			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("IC卡读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					MainActivity.this.finish();
-				}
-			}).create();
-			alertDialog.show();
-			return;
+		if (DeviceInfo.Mode == MODE_FREE) {
+			btnJFMS.setBackgroundResource(R.drawable.button_bg);
+			txtJFMS.setTextColor(R.color.button_text);
+			btnFJFMS.setBackgroundResource(R.drawable.button_checked_bg);
+			txtFJFMS.setTextColor(Color.WHITE);
 		}
-		// RFID读卡器
-		try {
-			if (!NativeRFID.open_fm1702()) {
-				speak("RFID读卡器打开失败");
-				AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("RFID读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						MainActivity.this.finish();
-					}
-				}).create();
-				alertDialog.show();
-				return;
-			}
-		} catch (ExceptionInInitializerError e) {
-			speak("RFID读卡器打开失败");
-			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("RFID读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					MainActivity.this.finish();
-				}
-			}).create();
-			alertDialog.show();
-			e.printStackTrace();
-			return;
-		}
-		NativeRFID.select_type(RFID_TYPE_A);
-		// 指纹
-		try {
-			_fingerprint = new lytfingerprint();
-			lytfingerprint.Open();
-			if (_fingerprint.PSOpenDevice(1, 0, 57600 / 9600, 2) != 1) {
-				speak("指纹模块打开失败");
-				AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("指纹模块打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						MainActivity.this.finish();
-					}
-				}).create();
-				alertDialog.show();
-				return;
-			}
-		} catch (ExceptionInInitializerError e) {
-			speak("指纹模块打开失败");
-			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("指纹模块打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					MainActivity.this.finish();
-				}
-			}).create();
-			alertDialog.show();
-			e.printStackTrace();
-			return;
-		}
-		// 隐藏学员信息
 		showStudent(false);
-		// 显示教练信息
-		if (settings.getString("coachCard", "") != "") {
-			_coach.ID = settings.getString("coachID", "");
-			_coach.Name = settings.getString("coachName", "");
-			_coach.CardNo = settings.getString("coachCard", "");
-			_coach.IDCardNo = settings.getString("coachIDCard", "");
-			_coach.Certificate = settings.getString("coachCertificate", "");
-			showCoach(true);
-		} else {
-			showCoach(false);
-		}
-
-		// 摄像头
-		File photoDir = new File(PHOTO_PATH);
-		if (!photoDir.exists()) {
-			photoDir.mkdirs();
-		}
-		previewSurfaceHolder = previewSurface.getHolder();
-		previewSurfaceHolder.addCallback(this);
-		previewSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-
-		ttsButtonInit(); // 语音提示按钮初始化
-
-		// 屏幕长亮
-		PowerManager manager = ((PowerManager) getSystemService(POWER_SERVICE));
-		wakeLock = manager.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "ATAAW");
-		wakeLock.acquire();
-
-		// 初始化GPS
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-			// 打开GPS
-			try {
-				Intent intent = new Intent();
-				intent.setComponent(new ComponentName("cn.whzxt.gps", "cn.whzxt.gps.ZxtOpenGPSActivity"));
-				startActivity(intent);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);
+		showCoach(!Coach.CardNo.equals(""));
 		// 科目二
 		btnSubject2.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (subject == 3) {
-					subject = 2;
+				if (DeviceInfo.Subject == 3) {
+					DeviceInfo.Subject = 2;
 					btnSubject3.setBackgroundResource(R.drawable.button_bg);
 					txtSubject3.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
 					btnSubject2.setBackgroundResource(R.drawable.button_checked_bg);
 					txtSubject2.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
+					SharedPreferences.Editor editor = settings.edit();
+					editor.putInt("subject", DeviceInfo.Subject);
+					editor.commit();
 				}
 			}
 		});
 		// 科目三
 		btnSubject3.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (subject == 2) {
-					subject = 3;
+				if (DeviceInfo.Subject == 2) {
+					DeviceInfo.Subject = 3;
 					btnSubject2.setBackgroundResource(R.drawable.button_bg);
 					txtSubject2.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
 					btnSubject3.setBackgroundResource(R.drawable.button_checked_bg);
 					txtSubject3.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
+					SharedPreferences.Editor editor = settings.edit();
+					editor.putInt("subject", DeviceInfo.Subject);
+					editor.commit();
 				}
 			}
 		});
-
 		layTitle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				mainView.fullScroll(View.FOCUS_UP);
 			}
 		});
-		//
 		layScrollDown.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				mainView.fullScroll(View.FOCUS_DOWN);
@@ -568,17 +544,170 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				alertDialog.show();
 			}
 		});
-		// 切换摄像头
-		previewSurface.setOnClickListener(new OnClickListener() {
+		imgLast01.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (_takephotoing) {
-					Toast.makeText(MainActivity.this, "正在拍照,请稍候再切换摄像头", Toast.LENGTH_SHORT);
-				} else {
-					changeCamera();
+				if (_lastBmps[0] != null) {
+					camView.setImageBitmap(_lastBmps[0]);
 				}
 			}
 		});
+		imgLast02.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (_lastBmps[1] != null) {
+					camView.setImageBitmap(_lastBmps[1]);
+				}
+			}
+		});
+		imgLast03.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (_lastBmps[2] != null) {
+					camView.setImageBitmap(_lastBmps[2]);
+				}
+			}
+		});
+		imgLast04.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (_lastBmps[3] != null) {
+					camView.setImageBitmap(_lastBmps[3]);
+				}
+			}
+		});
+	}
 
+	private void cameraView() {
+		if (_camViewFlag) {
+			_camViewFlag = false;
+			try {
+				// camView.setImageBitmap(_camBmp);
+				// Log.i("camera", "camera view");
+				if (Train.IsTraining && !Train.VideoPath.equals("")) {
+					_camIS = _camUrl.openConnection().getInputStream();
+					_camBmp = BitmapFactory.decodeStream(_camIS);
+					_camIS.close();
+					// 保存照片
+					File file = new File(Train.VideoPath + "/" + String.format("%05d.jpg", ++Train.VideoPhotoCount));
+					try {
+						file.createNewFile();
+						BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+						_camBmp.compress(Bitmap.CompressFormat.JPEG, 50, os);
+						os.flush();
+						os.close();
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			_camViewFlag = true;
+		}
+	}
+
+	/**
+	 * 初始化模块
+	 */
+	private void initMoudle() {
+		// 初始化TTS
+		Intent checkIntent = new Intent();
+		try {
+			checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+			startActivityForResult(checkIntent, REQ_TTS_STATUS_CHECK);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// 打开IC卡读卡器
+		try {
+			fd = Native.auto_init(PATH, BAUD);
+		} catch (Exception e) {
+			speak("IC卡读卡器打开失败");
+			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("IC卡读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					MainActivity.this.finish();
+					System.exit(0);
+				}
+			}).create();
+			alertDialog.show();
+			return;
+		}
+		// 打开RFID读卡器
+		try {
+			if (!NativeRFID.open_fm1702()) {
+				NativeRFID.close_fm1702();
+				if (!NativeRFID.open_fm1702()) {
+					speak("RFID读卡器打开失败");
+					AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("RFID读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							MainActivity.this.finish();
+							System.exit(0);
+						}
+					}).create();
+					alertDialog.show();
+					return;
+				}
+			}
+		} catch (ExceptionInInitializerError e) {
+			speak("RFID读卡器打开失败");
+			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("RFID读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					MainActivity.this.finish();
+					System.exit(0);
+				}
+			}).create();
+			alertDialog.show();
+			e.printStackTrace();
+			return;
+		}
+		// 指纹模块
+		try {
+			_fingerprint = new lytfingerprint();
+			lytfingerprint.Open();
+			if (_fingerprint.PSOpenDevice(1, 0, 57600 / 9600, 2) != 1) {
+				speak("指纹模块打开失败");
+				AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("指纹模块打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						MainActivity.this.finish();
+						System.exit(0);
+					}
+				}).create();
+				alertDialog.show();
+				return;
+			}
+		} catch (ExceptionInInitializerError e) {
+			speak("指纹模块打开失败");
+			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("指纹模块打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					MainActivity.this.finish();
+					System.exit(0);
+				}
+			}).create();
+			alertDialog.show();
+			e.printStackTrace();
+			return;
+		}
+		// 初始化摄像头
+		File file = new File(PHOTO_PATH);
+		if (!file.exists()) {
+			file.mkdirs();
+		}
+		try {
+			// 串口摄像头
+			native_camera = new serial_camera();
+		} catch (java.lang.ExceptionInInitializerError e) {
+			e.printStackTrace();
+			native_camera = null;
+		}
+	}
+
+	/**
+	 * 初始化定时器
+	 */
+	private void initTimer() {
 		// 定时30秒上传
 		_timerUpload = new Timer();
 		_timerUpload.schedule(new TimerTask() {
@@ -594,15 +723,16 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			public void run() {
 				handler.sendEmptyMessage(H_W_FLICKER);
 			}
-		}, 3000, 200);
+		}, 3000, 400);
 		// 每秒执行
+		_secondTimerFlag = true;
 		_timerSecond = new Timer();
 		_timerSecond.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				handler.sendEmptyMessage(H_W_SECOND);
 			}
-		}, 2000, 1000);
+		}, 4000, 1000);
 		// 每分钟执行
 		_timerMinute = new Timer();
 		_timerMinute.schedule(new TimerTask() {
@@ -618,9 +748,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			public void run() {
 				handler.sendEmptyMessage(H_W_TAKE_PHOTO);
 			}
-		}, 20000, settings.getInt("photo_interval", PHOTO_DEF_INTERVAL) * 1000);
-		// 延时拍照
-		_timerTakePhoto = new Timer();
+		}, 30000, settings.getInt("photo_interval", PHOTO_DEF_INTERVAL) * 1000);
 		// 上传照片
 		_timerUploadPhoto = new Timer();
 		_timerUploadPhoto.schedule(new TimerTask() {
@@ -630,172 +758,42 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			}
 		}, 25000, 30000);
 		// 计算传感器速度和里程
+		_sensorTimerFlag = true;
 		_timerSensor = new Timer();
 		_timerSensor.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				senspeed = Math.round((float) NativeGPIO.getRotateSpeed(1, 1) / 1.32f);
-				nowSenMi += senspeed * 1000 / 3600;
-
-				handler.sendEmptyMessage(H_W_SHOW_SENSOR);
-			}
-		}, 4000, 1000);
-
-		try {
-			socket = new ServerSocket(8888);
-			socketListen();// 监听指令
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * 保存照片
-	 */
-	PictureCallback jpegPictureCallback = new PictureCallback() {
-		public void onPictureTaken(byte[] arg0, Camera arg1) {
-			BitmapFactory.Options options = new BitmapFactory.Options();
-			options.inSampleSize = _inSampleSize;
-			Bitmap bitmapPicture = BitmapFactory.decodeByteArray(arg0, 0, arg0.length, options);
-			Bitmap newPicture = Bitmap.createBitmap(bitmapPicture.getWidth(), bitmapPicture.getHeight(), bitmapPicture.getConfig());
-			Canvas canvas = new Canvas(newPicture);
-			canvas.drawBitmap(bitmapPicture, 0, 0, null);
-			canvas.drawText(_phototime, bitmapPicture.getWidth() - 100, bitmapPicture.getHeight() - 30, null);
-			canvas.save(Canvas.ALL_SAVE_FLAG);
-			File file = new File(PHOTO_PATH + "/" + _phototime + "_" + _curCamera + "_" + speed + "_" + senspeed + "_" + _photoUUID + ".jpg");
-			try {
-				file.createNewFile();
-				BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-				newPicture.compress(Bitmap.CompressFormat.JPEG, 80, os);
-				os.flush();
-				os.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			changeCamera();// 切换摄像头
-			if (_phototaked == 1) {
-				_phototaked = 2;
-				_timerTakePhoto.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						handler.sendEmptyMessage(H_W_TAKE_PHOTO_DELAY);
+				if (_sensorTimerFlag) {
+					_sensorTimerFlag = false;
+					try {
+						DeviceInfo.SenSpeed = Math.round((float) NativeGPIO.getRotateSpeed(1, 1) / 1.32f);
+						DeviceInfo.SenMileage += DeviceInfo.SenSpeed * 1000 / 3600;
+						handler.sendEmptyMessage(H_W_SHOW_SENSOR);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				}, 1000);
-			} else {
-				_takephotoing = false;
-				try {
-					if (_camera != null) {
-						_camera.startPreview();
-						_previewing = true;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
+					_sensorTimerFlag = true;
 				}
 			}
+		}, 6000, 1000);
+		// 摄像头预览
+		try {
+			_camUrl = new URL("http://127.0.0.1:9999/shot.jpg");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
 		}
-	};
-
-	/**
-	 * 拍照
-	 */
-	private void takephoto() {
-		if (_camera != null && !_takephotoing && !_curUUID.equals("")) {
-			try {
-				_photoUUID = _curUUID;
-				_takephotoing = true;
-				_phototime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-				_phototaked = 1;
-				_timerTakePhoto.schedule(new TimerTask() {
-					@Override
-					public void run() {
-						handler.sendEmptyMessage(H_W_TAKE_PHOTO_DELAY);
-					}
-				}, 1 * 1000);
-			} catch (RuntimeException e) {
-				e.printStackTrace();
+		_camViewFlag = true;
+		_timerCamView = new Timer();
+		_timerCamView.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				handler.sendEmptyMessage(H_W_CAMERAVIEW);
 			}
-		}
+		}, 500, 200);
 	}
 
 	/**
-	 * 切换摄像头
-	 * 
-	 * @param 摄像头路数
-	 */
-	private void changeCamera() {
-		if (_curCamera == 1) {
-			_curCamera = 2;
-			Camera.Parameters parameters = _camera.getParameters();
-			parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
-			_camera.setParameters(parameters);
-		} else {
-			_curCamera = 1;
-			Camera.Parameters parameters = _camera.getParameters();
-			parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
-			_camera.setParameters(parameters);
-		}
-	}
-
-	private void takephotoDelay() {
-		try {
-			_camera.takePicture(null, null, jpegPictureCallback);
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-		if (_previewing && _camera != null) {
-			_camera.stopPreview();
-			_previewing = false;
-		}
-		try {
-			if (_camera != null) {
-				_camera.setPreviewDisplay(holder);
-				_camera.startPreview();
-				_previewing = true;
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void surfaceCreated(SurfaceHolder holder) {
-		try {
-			_camera = Camera.open();
-			if (_camera != null) {
-				Camera.Parameters parameters = _camera.getParameters();
-				parameters.setPictureFormat(PixelFormat.JPEG);
-				// parameters.setJpegQuality(20);
-				// parameters.setJpegThumbnailQuality(1);
-				// parameters.setJpegThumbnailSize(0, 0);
-				parameters.setPictureSize(settings.getInt("photo_width", PHOTO_DEF_WIDTH), settings.getInt("photo_height", PHOTO_DEF_HEIGHT));
-				_camera.setParameters(parameters);
-			} else {
-				Toast.makeText(MainActivity.this, "摄像头启动失败", Toast.LENGTH_SHORT);
-			}
-		} catch (Exception e) {
-			Toast.makeText(MainActivity.this, "摄像头启动失败", Toast.LENGTH_SHORT);
-			e.printStackTrace();
-		}
-	}
-
-	public void surfaceDestroyed(SurfaceHolder holder) {
-		if (_camera != null) {
-			_camera.stopPreview();
-			_camera.release();
-			_camera = null;
-			_previewing = false;
-		}
-	}
-
-	/**
-	 * 科目三模拟考试按钮初始化
+	 * 初始化科目三模拟考试按钮
 	 */
 	private void ttsButtonInit() {
 		_hashTts = new HashMap<String, String>();
@@ -894,6 +892,109 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	}
 
 	/**
+	 * 拍照
+	 */
+	private void takephoto() {
+		if (!_takephotoing && Train.IsTraining) {
+			_takephotoing = true;
+			_photoUUID = Train.TrainID;
+			_phototime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+			_photoSpeed = DeviceInfo.Speed;
+			_photoSenSpeed = DeviceInfo.SenSpeed;
+
+			try {
+				_camIS = _camUrl.openConnection().getInputStream();
+				lastBitmapJoin(BitmapFactory.decodeStream(_camIS));
+				savePhoto(1);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			// 串口摄像头拍照
+			if (native_camera != null) {
+				new AsyncTask<Void, Void, Integer>() {
+					@Override
+					protected Integer doInBackground(Void... args) {
+						return takeSerialPhoto();
+					}
+
+					@Override
+					protected void onPostExecute(Integer result) {
+						_takephotoing = false;
+						if (result == 0) {
+							BitmapFactory.Options options = new BitmapFactory.Options();
+							options.inSampleSize = _inSampleSize;
+							lastBitmapJoin(BitmapFactory.decodeFile("/data/local/tmp/picture.jpg", options));
+							savePhoto(2);
+						} else if (result == 1) {
+							Log.i("serial_camera", "串口初始化失败");
+						} else if (result == 2) {
+							Log.i("serial_camera", "摄像头初始化失败");
+						} else if (result == 3) {
+							Log.i("serial_camera", "发摄像头拍照命令失败");
+						} else if (result == 4) {
+							Log.i("serial_camera", "摄像头传送数据失败");
+						}
+					}
+				}.execute();
+			} else {
+				_takephotoing = false;
+			}
+		}
+	}
+
+	private void lastBitmapJoin(Bitmap bmp) {
+		if (_lastBmps[0] == null) {
+			_lastBmps[0] = bmp;
+			imgLast01.setImageBitmap(_lastBmps[0]);
+			camView.setImageBitmap(_lastBmps[0]);//
+			return;
+		}
+		_lastBmps[3] = _lastBmps[2];
+		imgLast04.setImageBitmap(_lastBmps[3]);
+		_lastBmps[2] = _lastBmps[1];
+		imgLast03.setImageBitmap(_lastBmps[2]);
+		_lastBmps[1] = _lastBmps[0];
+		imgLast02.setImageBitmap(_lastBmps[1]);
+		_lastBmps[0] = bmp;
+		imgLast01.setImageBitmap(_lastBmps[0]);
+		camView.setImageBitmap(_lastBmps[0]);//
+	}
+
+	private void savePhoto(int i) {
+		Bitmap newPicture = Bitmap.createBitmap(_lastBmps[0].getWidth(), _lastBmps[0].getHeight(), _lastBmps[0].getConfig());
+		Canvas canvas = new Canvas(newPicture);
+		canvas.drawBitmap(_lastBmps[0], 0, 0, null);
+		canvas.drawText(_phototime, _lastBmps[0].getWidth() - 140, _lastBmps[0].getHeight() - 6, _markPaint);
+		canvas.save(Canvas.ALL_SAVE_FLAG);
+		File file = new File(PHOTO_PATH + "/" + _phototime + "_" + i + "_" + _photoSpeed + "_" + _photoSenSpeed + "_" + _photoUUID + ".jpg");
+		try {
+			file.createNewFile();
+			BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+			newPicture.compress(Bitmap.CompressFormat.JPEG, 80, os);
+			os.flush();
+			os.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private int takeSerialPhoto() {
+		if (native_camera.uart_init0(115200) == 0)
+			return 1;
+		if (native_camera.photo_init() == 0)
+			return 2;
+		if (native_camera.take_photo_cmd() == 0)
+			return 3;
+		if (native_camera.take_photo("/data/local/tmp/picture.jpg") == 0)
+			return 4;
+		return 0;
+	}
+
+	/**
 	 * 监听消息
 	 */
 	private void socketListen() {
@@ -905,6 +1006,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					client = socket.accept();
 				} catch (IOException e) {
 					e.printStackTrace();
+					SystemClock.sleep(5000);
 					return 0;
 				}
 				try {
@@ -938,16 +1040,43 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 						String cmd = _tcpMsg.substring(4);
 						if (cmd.equals("open_oil")) {
 							// 恢复油电
-							NativeGPIO.setRelay(true);
+							NativeGPIO.setRelay(false);
 						} else if (cmd.equals("close_oil")) {
 							// 切断油电
 							toashShow("1分钟后将断油电");
-							new Timer().schedule(new TimerTask() {
-								@Override
-								public void run() {
-									handler.sendEmptyMessage(H_W_SET_RELAY_FALSE);
-								}
-							}, 60 * 1000);
+							_relayoff = 60;
+						} else if (cmd.startsWith("call:")) {
+							// 拨号
+							cmd = cmd.replace("call:", "");
+							if (cmd.length() == 11) {
+								Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + cmd.replace("call:", "")));
+								intent.putExtra("lytmode", true);
+								MainActivity.this.startActivity(intent);
+							}
+						} else if (cmd.equals("subject_2")) {
+							// 切换到科目二
+							if (DeviceInfo.Subject == 3) {
+								DeviceInfo.Subject = 2;
+								btnSubject3.setBackgroundResource(R.drawable.button_bg);
+								txtSubject3.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
+								btnSubject2.setBackgroundResource(R.drawable.button_checked_bg);
+								txtSubject2.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
+								SharedPreferences.Editor editor = settings.edit();
+								editor.putInt("subject", DeviceInfo.Subject);
+								editor.commit();
+							}
+						} else if (cmd.equals("subject_3")) {
+							// 切换到科目三
+							if (DeviceInfo.Subject == 2) {
+								DeviceInfo.Subject = 3;
+								btnSubject2.setBackgroundResource(R.drawable.button_bg);
+								txtSubject2.setTextColor(MainActivity.this.getResources().getColor(R.color.button_text));
+								btnSubject3.setBackgroundResource(R.drawable.button_checked_bg);
+								txtSubject3.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
+								SharedPreferences.Editor editor = settings.edit();
+								editor.putInt("subject", DeviceInfo.Subject);
+								editor.commit();
+							}
 						} else if (cmd.equals("mode_train")) {
 							changeMode(MODE_TRAIN);// 切换训练状态
 						} else if (cmd.equals("mode_free")) {
@@ -966,20 +1095,31 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 								e.printStackTrace();
 							}
 						} else if (cmd.startsWith("set_photo_interval:")) {
-							/*
-							 * try { // 设置拍照间隔 cmd = cmd.replace
-							 * ("set_photo_interval:", ""); int pinterval =
-							 * Integer.valueOf(cmd); _timerCamera.cancel();
-							 * _timerCamera.schedule(new TimerTask() {
-							 * 
-							 * @Override public void run() { Message msg = new
-							 * Message(); msg.what = 5;
-							 * handler.sendMessage(msg); } }, 5000, pinterval *
-							 * 1000); SharedPreferences.Editor editor =
-							 * settings.edit(); editor .putInt("photo_interval",
-							 * pinterval); editor.commit(); } catch (Exception
-							 * e) { e.printStackTrace(); }
-							 */
+							try { // 设置拍照间隔
+								cmd = cmd.replace("set_photo_interval:", "");
+								int pinterval = Integer.valueOf(cmd);
+								_timerCamera.cancel();
+								_timerCamera.purge();
+								_timerCamera = new Timer();
+								_timerCamera.schedule(new TimerTask() {
+									@Override
+									public void run() {
+										handler.sendEmptyMessage(H_W_TAKE_PHOTO);
+									}
+								}, 5000, pinterval * 1000);
+								SharedPreferences.Editor editor = settings.edit();
+								editor.putInt("photo_interval", pinterval);
+								editor.commit();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						} else if (cmd.startsWith("remove_finger:")) {
+							// 删除某个卡号的指纹
+							cmd = cmd.replace("remove_finger:", "");
+							db.delete(MySQLHelper.T_ZXT_FINGER, "cardno=?", new String[] { cmd });
+						} else if (cmd.startsWith("clear_finger")) {
+							// 删除所有指纹
+							db.delete(MySQLHelper.T_ZXT_FINGER, null, null);
 						} else if (cmd.startsWith("card_init:")) {
 							// 初始化卡
 							_fingerFinish = true;
@@ -1005,6 +1145,10 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 							new AsyncTask<Void, Void, Integer>() {
 								@Override
 								protected Integer doInBackground(Void... args) {
+									if (NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, _initcontext) == 1) {
+										return 1;
+									}
+									SystemClock.sleep(100);
 									return NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, _initcontext);
 								}
 
@@ -1013,7 +1157,10 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 									dismissDialog(DL_CARD_INIT);
 									_rfidProcsing = false;
 									if (result == 1) {
-										NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 0 });
+										if (NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 0 }) != 1) {
+											SystemClock.sleep(100);
+											NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 0 });
+										}
 										toashShow("卡初始化成功,请重新插卡");
 									} else {
 										toashShow("卡初始化失败,请重试");
@@ -1032,7 +1179,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 						toashShow("收到新短信:" + txtSysInfo.getText().toString());
 					}
 				}
-				socketListen();// 继续监听
+				if (!_isclosed) {
+					socketListen();// 继续监听
+				}
 			}
 		}.execute();
 	}
@@ -1050,17 +1199,11 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			break;
 		case 1:
 			if (txtInfoCoach.getVisibility() == View.VISIBLE)
-				txtInfoCoach.setTextColor(Color.YELLOW);
-			if (txtInfoStudent.getVisibility() == View.VISIBLE)
-				txtInfoStudent.setTextColor(Color.YELLOW);
-			break;
-		case 2:
-			if (txtInfoCoach.getVisibility() == View.VISIBLE)
 				txtInfoCoach.setTextColor(Color.RED);
 			if (txtInfoStudent.getVisibility() == View.VISIBLE)
 				txtInfoStudent.setTextColor(Color.RED);
 			break;
-		case 3:
+		case 2:
 			if (txtInfoCoach.getVisibility() == View.VISIBLE)
 				txtInfoCoach.setTextColor(Color.BLUE);
 			if (txtInfoStudent.getVisibility() == View.VISIBLE)
@@ -1069,7 +1212,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		default:
 			break;
 		}
-		if (col++ > 3) {
+		if (col++ > 2) {
 			col = 0;
 		}
 	}
@@ -1097,36 +1240,42 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 * @return
 	 */
 	private int readCardType() {
-		if (Native.chk_24c02(fd) == 0) {
-			return CARD_24C02;
+		if (_readICCard) {
+			_readICCard = !_readICCard;
+			if (Native.chk_24c02(fd) == 0) {
+				return CARD_24C02;
+			}
 		}
-		_rfidUID = NativeRFID.read_A();
-		if (_rfidUID.charAt(16) == '0') {
-			// _rfidUID = hex2string(_rfidUID.substring(0, 13));
-			return CARD_S50;
-		}
-		if (_rfidUID.charAt(16) == '1') {
-			// _rfidUID = hex2string(_rfidUID.substring(0, 13));
-			return CARD_S70;
+		if (!_readICCard) {
+			_readICCard = !_readICCard;
+			_rfidUID = NativeRFID.read_A();
+			if (_rfidUID == null) {
+				Log.i("rfid", "null");
+			} else {
+				Log.i("rfid", _rfidUID);
+			}
+			if (null != _rfidUID) {
+				if (_rfidUID.charAt(16) == '0') {
+					// _rfidUID = hex2string(_rfidUID.substring(0, 13));
+					return CARD_S50;
+				}
+				if (_rfidUID.charAt(16) == '1') {
+					// _rfidUID = hex2string(_rfidUID.substring(0, 13));
+					return CARD_S70;
+				}
+			}
 		}
 		return NO_CARD;
 	}
-
-	/*
-	 * private String hex2string(String hex) { String str = ""; String[] strs =
-	 * str.split(" "); for (int i = 0; i < strs.length; i++) { if
-	 * (!strs[i].equals("")) { str += String.valueOf((char)
-	 * Integer.parseInt(strs[i], 16)); } } return str; }
-	 */
 
 	/**
 	 * 读卡
 	 */
 	private void readCard() {
 		if (_cardType == CARD_24C02) {
-			String tmpdata = Native.srd_24c02(fd, 0x08, 0x20);
+			String tmpdata = Native.srd_24c02(fd, 0x08, 0x21);
 			String[] tmpchars = tmpdata.split(" ");
-			if (tmpchars[0].equals("02") && _coach.CardNo.equals("")) {
+			if (tmpchars[0].equals("02") && Coach.CardNo.equals("")) {
 				toashShow("请先插教练卡");
 				return;
 			}
@@ -1149,9 +1298,8 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				tmpCardNo += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
 			}
 			// 卡内剩余时长
-			cardBalance = 0;
 			try {
-				cardBalance = Integer.parseInt(tmpchars[1].toString() + tmpchars[2].toString(), 16);
+				Student.RealBalance = Student.Balance = Integer.parseInt(tmpchars[1].toString() + tmpchars[2].toString(), 16);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1167,31 +1315,26 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			}
 			if (tmpchars[0].equals("01")) {
 				// 教练卡
-				_coach.CardNo = _student.CardNo = tmpCardNo;
-				_coach.ID = _student.ID = "";
-				_coach.Name = _student.Name = tmpCardName;
-				_coach.IDCardNo = _student.IDCardNo = "";
-				_student.IsCoach = true;
-				showCoach(true);
-				showStudent(true);
-				if (retry < 3) {
-					getCoachInfo();
-				} else {
-					trainBegin();// 开始离线训练
-				}
+				Coach.CardNo = Student.CardNo = tmpCardNo;
+				Coach.ID = Student.ID = "";
+				Coach.Name = Student.Name = tmpCardName;
+				Coach.IDCardNo = Student.IDCardNo = "";
+				Student.IsCoach = true;
 			} else {
 				// 学员卡
-				_student.CardNo = tmpCardNo;
-				_student.ID = "";
-				_student.Name = tmpCardName;
-				_student.IDCardNo = "";
-				_student.IsCoach = false;
-				showStudent(true);
-				if (retry < 3) {
-					getStudentInfo();
-				} else {
-					trainBegin();// 开始离线训练
-				}
+				Student.CardNo = tmpCardNo;
+				Student.ID = "";
+				Student.Name = tmpCardName;
+				Student.IDCardNo = "";
+				Student.IsCoach = false;
+			}
+			if (!tmpchars[32].equals("01")) {
+				Log.i("finger", "record finger 1");
+				writeFinger();// 第一次使用记录指纹
+			} else {
+				showDialog(DL_DOWN_FINGER);
+				Log.i("finger", "download finger 1");
+				downFinger();// 下载指纹
 			}
 		} else if (_cardType == CARD_S50 || _cardType == CARD_S70) {
 			_rfidProcsing = true;
@@ -1199,19 +1342,22 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			new AsyncTask<Void, Void, Integer>() {
 				@Override
 				protected Integer doInBackground(Void... args) {
-					Log.i("genzong", "read card 1");
+					Log.i("rfid", "read card 1");
 					// 身份信息
 					String tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA);
-					if (!tmpdata.endsWith("1")) {
-						SystemClock.sleep(200);// 200毫秒后尝试重新读卡
+					if (null == tmpdata || !tmpdata.endsWith("1")) {
+						SystemClock.sleep(100);// 100毫秒后尝试重新读卡
 						tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA);
+					}
+					if (null == tmpdata) {
+						return 1;
 					}
 					if (!tmpdata.endsWith("1")) {
 						return 1;
 					}
 					String[] tmpchars = tmpdata.split(" ");
 					// 卡类型
-					if (tmpchars[0].equals("02") && _coach.CardNo.equals("")) {
+					if (tmpchars[0].equals("02") && Coach.CardNo.equals("")) {
 						return 3;
 					}
 					// 驾校ID
@@ -1246,87 +1392,63 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					}
 					if (tmpchars[0].equals("01")) {
 						// 教练卡
-						_coach.CardNo = _student.CardNo = tmpCardNo;
-						_coach.ID = _student.ID = "";
-						_coach.Name = _student.Name = tmpCardName;
-						_coach.IDCardNo = _student.IDCardNo = "";
-						_student.IsCoach = true;
+						Coach.CardNo = Student.CardNo = tmpCardNo;
+						Coach.ID = Student.ID = "";
+						Coach.Name = Student.Name = tmpCardName;
+						Coach.IDCardNo = Student.IDCardNo = "";
+						Student.IsCoach = true;
 					} else {
 						// 学员卡
-						_student.CardNo = tmpCardNo;
-						_student.ID = "";
-						_student.Name = tmpCardName;
-						_student.IDCardNo = "";
-						_student.IsCoach = false;
+						Student.CardNo = tmpCardNo;
+						Student.ID = "";
+						Student.Name = tmpCardName;
+						Student.IDCardNo = "";
+						Student.IsCoach = false;
 					}
-					Log.i("genzong", "read card 2");
+					Log.i("rfid", "read card 2");
 					// 余额.学时.里程
 					tmpdata = NativeRFID.read_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK);
-					if (!tmpdata.endsWith("1")) {
-						SystemClock.sleep(200);// 200毫秒后尝试重新读卡
+					if (null == tmpdata || !tmpdata.endsWith("1")) {
+						SystemClock.sleep(100);// 100毫秒后尝试重新读卡
 						tmpdata = NativeRFID.read_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK);
 					}
-					if (tmpdata.endsWith("1")) {
+					if (null != tmpdata && tmpdata.endsWith("1")) {
 						tmpchars = tmpdata.split(" ");
-						cardBalance = Integer.parseInt(tmpchars[0].toString() + tmpchars[1].toString(), 16);
-						_student.TotalTime = Integer.parseInt(tmpchars[2].toString() + tmpchars[3].toString(), 16);
-						_student.TotalMi = Integer.parseInt(tmpchars[4].toString() + tmpchars[5].toString() + tmpchars[6], 16);
+						Student.RealBalance = Student.Balance = Integer.parseInt(tmpchars[0].toString() + tmpchars[1].toString(), 16);
+						Student.TotalTime = Integer.parseInt(tmpchars[2].toString() + tmpchars[3].toString(), 16);
+						Student.TotalMi = Integer.parseInt(tmpchars[4].toString() + tmpchars[5].toString() + tmpchars[6], 16);
 					}
 					// 判断是否有指纹
-					if (_cardType == CARD_S70) {
-						Log.i("genzong", "read card 3");
+					_hasfingerdata = true;
+					Log.i("rfid", "read card 3");
+					tmpdata = NativeRFID.read_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK);
+					if (null == tmpdata || !tmpdata.endsWith("1")) {
+						SystemClock.sleep(100);// 100毫秒后尝试重新读卡
 						tmpdata = NativeRFID.read_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK);
-						if (!tmpdata.endsWith("1")) {
-							SystemClock.sleep(200);// 200毫秒后尝试重新读卡
-							tmpdata = NativeRFID.read_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK);
-						}
-						if (tmpdata.startsWith("01")) {
-							_hasfingerdata = true;
-						} else {
-							_hasfingerdata = false;
-						}
+					}
+					if (null == tmpdata) {
+						return 1;
+					}
+					if (tmpdata.endsWith("1") && !tmpdata.startsWith("01")) {
+						_hasfingerdata = false;
 					}
 					return 0;
 				}
 
 				@Override
 				protected void onPostExecute(Integer result) {
+					_rfidProcsing = false;
 					dismissDialog(DL_CARD_READING);
 					if (result == 0) {
-						if (_cardType == CARD_S70) {
-							if (!_hasfingerdata) {
-								Log.i("genzong", "record finger 1");
-								writeFinger();// 第一次使用记录指纹
-							} else {
-								showDialog(DL_DOWN_FINGER);
-								Log.i("genzong", "download finger 1");
-								downFinger();
-							}
+						if (!_hasfingerdata) {
+							Log.i("finger", "record finger 1");
+							writeFinger();// 第一次使用记录指纹
 						} else {
-							_rfidProcsing = false;
-							if (_student.IsCoach) {
-								showCoach(true);
-								showStudent(true);
-								if (retry < 3) {
-									getCoachInfo();
-								} else {
-									trainBegin();// 开始离线训练
-								}
-							} else {
-								if (!_coach.CardNo.equals("")) {
-									showStudent(true);
-									if (retry < 3) {
-										getStudentInfo();
-									} else {
-										trainBegin();// 开始离线训练
-									}
-								} else {
-									toashShow("请先插教练卡");
-								}
-							}
+							showDialog(DL_DOWN_FINGER);
+							Log.i("finger", "download finger 1");
+							downFinger();// 下载指纹
 						}
 					} else {
-						_rfidProcsing = false;
 						if (result == 1) {
 							toashShow("读卡失败,请尝试重新插卡");
 						} else if (result == 2) {
@@ -1347,20 +1469,21 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
-				Cursor cursor = db.query(MySQLHelper.T_ZXT_FINGER, new String[] { "id" }, "cardno=?", new String[] { _student.CardNo }, null, null, null);
-				if (cursor.getCount() > 0) {
-					cursor.moveToFirst();
+				Cursor cursor = db.query(MySQLHelper.T_ZXT_FINGER, new String[] { "id" }, "cardno=?", new String[] { Student.CardNo }, null, null, null);
+				if (cursor.moveToFirst()) {
 					_fingerCurId = cursor.getInt(0);
 					ContentValues tcv = new ContentValues();
 					tcv.put("lasttime", dateFormat.format(nowTime));
 					db.update(MySQLHelper.T_ZXT_FINGER, tcv, "id=?", new String[] { String.valueOf(_fingerCurId) });
 					return 1;
 				}
+				if (retry > 3) {
+					return 0;// 网络异常
+				}
 				Boolean isinsert = true;
 				cursor = db.rawQuery("SELECT MAX(id) AS max_id FROM " + MySQLHelper.T_ZXT_FINGER, null);
 				_fingerCurId = 1;
-				if (cursor.getCount() > 0) {
-					cursor.moveToFirst();
+				if (cursor.moveToFirst()) {
 					_fingerCurId = cursor.getInt(0);
 					if (_fingerCurId < 253) {
 						if (_fingerCurId == 0) {
@@ -1375,134 +1498,90 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 						isinsert = false;
 					}
 				}
-				Boolean done = false;
-				if (retry < 3) {
-					try {
-						URL url = new URL(server + "/getfinger.ashx?cardno=" + _student.CardNo + "&n=1");
-						URLConnection connection = url.openConnection();
-						connection.connect();
-						InputStream inputStream = connection.getInputStream();
-						File fingerfile = new File(_fingertmppath);
-						if (fingerfile.exists()) {
-							fingerfile.delete();
-						}
-						fingerfile.createNewFile();
-						OutputStream outputStream = new FileOutputStream(fingerfile);
-						int len = connection.getContentLength();
-						if (len >= 512) {
-							byte[] buffer = new byte[512];
-							inputStream.read(buffer);
-							outputStream.write(buffer, 0, buffer.length);
-							done = true;
-						}
-					} catch (MalformedURLException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
+				try {
+					URL url = new URL(server + "/getfinger.ashx?cardno=" + Student.CardNo + "&n=1");
+					URLConnection connection = url.openConnection();
+					connection.connect();
+					InputStream inputStream = connection.getInputStream();
+					File fingerfile = new File(_fingertmppath + "1");
+					if (fingerfile.exists()) {
+						fingerfile.delete();
 					}
-				}
-				if (!done) {
-					Log.i("zhiwen", "(卡)指纹1开始:" + new Date().toString());
-					String tmpdata = NativeRFID.read_card(new int[] { 3, 11 }, RFID_KEY, RFID_EARA);
-					if (!tmpdata.endsWith("1")) {
-						tmpdata = NativeRFID.read_card(new int[] { 3, 11 }, RFID_KEY, RFID_EARA);
-					}
-					Log.i("zhiwen", "(卡)指纹1结束:" + new Date().toString());
-					if (!tmpdata.endsWith("1")) {
+					fingerfile.createNewFile();
+					OutputStream outputStream = new FileOutputStream(fingerfile);
+					int len = connection.getContentLength();
+					if (len >= 512) {
+						byte[] buffer = new byte[512];
+						inputStream.read(buffer);
+						outputStream.write(buffer, 0, buffer.length);
+					} else {
 						return 0;
 					}
-					String[] tmpchars = tmpdata.split(" ");
-					byte[] tmpbytes = new byte[512];
-					for (int i = 0; i < tmpbytes.length; i++) {
-						tmpbytes[i] = 0;
-					}
-					for (int i = 0; i < tmpbytes.length; i++) {
-						tmpbytes[i] = (byte) Integer.parseInt(tmpchars[i], 16);
-					}
-					try {
-						FileOutputStream fo = new FileOutputStream(_fingertmppath);
-						fo.write(tmpbytes);
-						fo.close();
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-						return 2;
-					} catch (IOException e) {
-						e.printStackTrace();
-						return 2;
-					}
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+					return 0;
+				} catch (IOException e) {
+					e.printStackTrace();
+					return 0;
 				}
-				Log.i("zhiwen", "(模块)指纹1开始:" + new Date().toString());
-				_fingerprint.PSDownChar(_fingerAddress, CHAR_BUFFER_A, 0, 512, _fingertmppath);
-				_fingerprint.PSStoreChar(_fingerAddress, CHAR_BUFFER_A, _fingerCurId);
-				Log.i("zhiwen", "(模块)指纹1结束:" + new Date().toString());
+				try {
+					Log.i("zhiwen", "(模块)指纹1开始:" + new Date().toString());
+					_fingerprint.PSDownChar(_fingerAddress, CHAR_BUFFER_A, 0, 512, _fingertmppath + "1");
+					SystemClock.sleep(200);
+					_fingerprint.PSStoreChar(_fingerAddress, CHAR_BUFFER_A, _fingerCurId);
+					SystemClock.sleep(200);
+					Log.i("zhiwen", "(模块)指纹1结束:" + new Date().toString());
+				} catch (Exception e) {
+					e.printStackTrace();
+					return 2;
+				}
 
-				done = false;
-				if (retry < 3) {
-					try {
-						URL url = new URL(server + "/getfinger.ashx?cardno=" + _student.CardNo + "&n=2");
-						URLConnection connection = url.openConnection();
-						connection.connect();
-						InputStream inputStream = connection.getInputStream();
-						File fingerfile = new File(_fingertmppath);
-						if (fingerfile.exists()) {
-							fingerfile.delete();
-						}
-						fingerfile.createNewFile();
-						OutputStream outputStream = new FileOutputStream(fingerfile);
-						int len = connection.getContentLength();
-						if (len >= 512) {
-							byte[] buffer = new byte[512];
-							inputStream.read(buffer);
-							outputStream.write(buffer, 0, buffer.length);
-							done = true;
-						}
-					} catch (MalformedURLException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
+				try {
+					URL url = new URL(server + "/getfinger.ashx?cardno=" + Student.CardNo + "&n=2");
+					URLConnection connection = url.openConnection();
+					connection.connect();
+					InputStream inputStream = connection.getInputStream();
+					File fingerfile = new File(_fingertmppath + "2");
+					if (fingerfile.exists()) {
+						fingerfile.delete();
 					}
-				}
-				if (!done) {
-					Log.i("zhiwen", "(卡)指纹2开始:" + new Date().toString());
-					String tmpdata = NativeRFID.read_card(new int[] { 14, 11 }, RFID_KEY, RFID_EARA);
-					if (!tmpdata.endsWith("1")) {
-						tmpdata = NativeRFID.read_card(new int[] { 14, 11 }, RFID_KEY, RFID_EARA);
-					}
-					Log.i("zhiwen", "(卡)指纹2结束:" + new Date().toString());
-					if (!tmpdata.endsWith("1")) {
+					fingerfile.createNewFile();
+					OutputStream outputStream = new FileOutputStream(fingerfile);
+					int len = connection.getContentLength();
+					if (len >= 512) {
+						byte[] buffer = new byte[512];
+						inputStream.read(buffer);
+						outputStream.write(buffer, 0, buffer.length);
+					} else {
 						return 0;
 					}
-					String[] tmpchars = tmpdata.split(" ");
-					byte[] tmpbytes = new byte[512];
-					for (int i = 0; i < tmpbytes.length; i++) {
-						tmpbytes[i] = (byte) Integer.parseInt(tmpchars[i], 16);
-					}
-					try {
-						FileOutputStream fo = new FileOutputStream(_fingertmppath);
-						fo.write(tmpbytes);
-						fo.close();
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-						return 2;
-					} catch (IOException e) {
-						e.printStackTrace();
-						return 2;
-					}
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+					return 0;
+				} catch (IOException e) {
+					e.printStackTrace();
+					return 0;
 				}
-				Log.i("zhiwen", "(模块)指纹2开始:" + new Date().toString());
-				_fingerprint.PSDownChar(_fingerAddress, CHAR_BUFFER_A, 0, 512, _fingertmppath);
-				_fingerprint.PSStoreChar(_fingerAddress, CHAR_BUFFER_A, _fingerCurId + 1);
-				Log.i("zhiwen", "(模块)指纹2结束:" + new Date().toString());
-
+				try {
+					Log.i("zhiwen", "(模块)指纹2开始:" + new Date().toString());
+					_fingerprint.PSDownChar(_fingerAddress, CHAR_BUFFER_B, 0, 512, _fingertmppath + "2");
+					SystemClock.sleep(200);
+					_fingerprint.PSStoreChar(_fingerAddress, CHAR_BUFFER_B, _fingerCurId + 1);
+					SystemClock.sleep(200);
+					Log.i("zhiwen", "(模块)指纹2结束:" + new Date().toString());
+				} catch (Exception e) {
+					e.printStackTrace();
+					return 2;
+				}
 				if (isinsert) {
 					ContentValues tcv = new ContentValues();
 					tcv.put("id", _fingerCurId);
-					tcv.put("cardno", _student.CardNo);
+					tcv.put("cardno", Student.CardNo);
 					tcv.put("lasttime", dateFormat.format(nowTime));
 					db.insert(MySQLHelper.T_ZXT_FINGER, null, tcv);
 				} else {
 					ContentValues tcv = new ContentValues();
-					tcv.put("cardno", _student.CardNo);
+					tcv.put("cardno", Student.CardNo);
 					tcv.put("lasttime", dateFormat.format(nowTime));
 					db.update(MySQLHelper.T_ZXT_FINGER, tcv, "id=?", new String[] { String.valueOf(_fingerCurId) });
 				}
@@ -1513,21 +1592,13 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			protected void onPostExecute(Integer result) {
 				_rfidProcsing = false;
 				dismissDialog(DL_DOWN_FINGER);
-				if (result == 1) {
-					if (_student.IsCoach) {
-						showCoach(true);
-						showStudent(true);
-					} else {
-						if (!_coach.CardNo.equals("")) {
-							showStudent(true);
-						} else {
-							toashShow("请先插教练卡");
-							return;
-						}
-					}
-					_fingerFinish = false;
+				if (result == 0) {
+					toashShow("网络异常,无法下载指纹,请检查网络,然后尝试重新插卡");
+				} else if (result == 1) {
+					showStudent(true);
 					showDialog(DL_VALI_FINGER);
 					speak("需要验证指纹,请按手指");
+					_fingerFinish = false;
 					valiFinger();
 				} else if (result == 2) {
 					Toast.makeText(MainActivity.this, "写指纹文件时出现异常", Toast.LENGTH_SHORT).show();
@@ -1546,16 +1617,22 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			@Override
 			protected Integer doInBackground(Void... args) {
 				// 验证指纹
-				while (_fingerprint.PSGetImage(_fingerAddress) == 2 && !_fingerFinish) {
-					SystemClock.sleep(30);
+				while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
+					if (_fingerFinish) {
+						return 0;
+					}
+					SystemClock.sleep(100);
 				}
-				SystemClock.sleep(30);
-				while (_fingerprint.PSGetImage(_fingerAddress) == 2 && !_fingerFinish) {
-					SystemClock.sleep(30);
+				SystemClock.sleep(50);
+				while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
+					if (_fingerFinish) {
+						return 0;
+					}
+					SystemClock.sleep(100);
 				}
-				SystemClock.sleep(30);
+				SystemClock.sleep(50);
 				_fingerprint.PSGenChar(_fingerAddress, CHAR_BUFFER_A);
-				SystemClock.sleep(30);
+				SystemClock.sleep(50);
 				if (_fingerprint.PSSearch(_fingerAddress, CHAR_BUFFER_A, _fingerCurId, 2, 0) == PS_OK) {
 					return 1;
 				}
@@ -1567,7 +1644,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				dismissDialog(DL_VALI_FINGER);
 				if (result == 1) {
 					toashShow("指纹验证成功");
-					if (_student.IsCoach) {
+					if (Student.IsCoach) {
 						if (retry < 3) {
 							getCoachInfo();
 						} else {
@@ -1587,6 +1664,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 						valiFinger();
 					} else {
 						toashShow("指纹验证失败,请尝试重新插卡");
+						showStudent(false);
 					}
 				}
 			}
@@ -1597,75 +1675,94 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 * 每秒执行
 	 */
 	private void second() {
-		// 更新时间
-		nowTime = new Date();
-		txtSystemTime.setText(dateFormat.format(nowTime));
-		if (null != startTime && mode == MODE_TRAIN) {
-			// 计算余额
-			cardBalanceNow = cardBalance - (int) ((nowTime.getTime() - startTime.getTime()) / 60000);
-			if (((nowTime.getTime() - startTime.getTime()) / 1000) % 60 > 0) {
-				cardBalanceNow--;
+		// 喂狗
+		// com.lyt.watchdog.Native.keepalive();
+		if (_secondTimerFlag) {
+			_secondTimerFlag = false;
+			// 更新时间
+			nowTime = new Date();
+			txtSystemTime.setText(dateFormat.format(nowTime));
+			if (Train.IsTraining) {
+				// 计算余额
+				Student.RealBalance = Student.Balance - (int) ((nowTime.getTime() - Train.StartTime.getTime()) / 60000);
+				if (((nowTime.getTime() - Train.StartTime.getTime()) / 1000) % 60 > 0) {
+					Student.RealBalance--;
+				}
+				Student.RealTotalTime = Student.TotalTime + (Student.Balance - Student.RealBalance);
+				// 显示余额
+				if (Student.IsCoach) {
+					txtTrainTime.setText("已用车" + getTimeDiff(Train.StartTime, nowTime));
+					txtBalance.setText("卡内剩余时长:" + Student.RealBalance + "分钟");
+				} else {
+					txtTrainTime.setText("已训练" + getTimeDiff(Train.StartTime, nowTime));
+					txtBalance.setText("余额:" + Student.RealBalance * PRICE + "元,剩余" + Student.RealBalance + "分钟");
+				}
+				if (Student.RealBalance <= 0) {
+					// 结束训练
+					trainFinish();
+				}
 			}
-			_student.RealTotalTime = _student.TotalTime + (cardBalance - cardBalanceNow);
-			// 显示余额
-			if (_student.IsCoach) {
-				txtTrainTime.setText("已用车" + getTimeDiff(startTime, nowTime));
-				txtBalance.setText("卡内剩余时长:" + cardBalanceNow + "分钟");
-			} else {
-				txtTrainTime.setText("已训练" + getTimeDiff(startTime, nowTime));
-				txtBalance.setText("余额:" + cardBalanceNow * PRICE + "元,剩余" + cardBalanceNow + "分钟");
-			}
-			if (cardBalanceNow <= 0) {
-				trainFinish();// 结束训练
-			}
-		}
-		// 判断是否插卡
-		switch (_cardType) {
-		case CARD_24C02:
-			if (Native.chk_24c02(fd) != 0) {
-				trainFinish();
-			}
-			break;
-		case CARD_S50:
-			if (!_rfidProcsing) {
-				if (NativeRFID.read_A().charAt(16) != '0') {
-					SystemClock.sleep(100);// 100毫秒后重试一次
-					Log.i("rfid", "re50");
-					if (NativeRFID.read_A().charAt(16) != '0') {
+			// 判断是否插卡
+			switch (_cardType) {
+			case CARD_24C02:
+				if (Native.chk_24c02(fd) != 0) {
+					trainFinish();
+				}
+				break;
+			case CARD_S50:
+				if (!_rfidProcsing) {
+					_rfidUID = NativeRFID.read_A();
+					if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
 						SystemClock.sleep(100);// 100毫秒后重试一次
 						Log.i("rfid", "re50");
-						if (NativeRFID.read_A().charAt(16) != '0') {
-							trainFinish();
+						_rfidUID = NativeRFID.read_A();
+						if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
+							SystemClock.sleep(100);// 100毫秒后重试一次
+							Log.i("rfid", "re50");
+							_rfidUID = NativeRFID.read_A();
+							if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
+								trainFinish();
+							}
 						}
 					}
 				}
-			}
-			break;
-		case CARD_S70:
-			if (!_rfidProcsing) {
-				if (NativeRFID.read_A().charAt(16) != '1') {
-					SystemClock.sleep(100);// 100毫秒后重试一次
-					Log.i("rfid", "re70");
-					if (NativeRFID.read_A().charAt(16) != '1') {
+				break;
+			case CARD_S70:
+				if (!_rfidProcsing) {
+					_rfidUID = NativeRFID.read_A();
+					if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
 						SystemClock.sleep(100);// 100毫秒后重试一次
 						Log.i("rfid", "re70");
-						if (NativeRFID.read_A().charAt(16) != '1') {
-							_fingerFinish = true;
-							trainFinish();
+						_rfidUID = NativeRFID.read_A();
+						if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
+							SystemClock.sleep(100);// 100毫秒后重试一次
+							Log.i("rfid", "re70");
+							_rfidUID = NativeRFID.read_A();
+							if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
+								trainFinish();
+							}
 						}
 					}
 				}
+				break;
+			case NO_CARD:
+				_cardType = readCardType();
+				if (_cardType != NO_CARD) {
+					readCard();
+				}
+				break;
+			default:
+				break;
 			}
-			break;
-		case NO_CARD:
-			_cardType = readCardType();
-			if (_cardType != NO_CARD) {
-				mainView.fullScroll(View.FOCUS_UP);
-				readCard();
+
+			if (_relayoff > 0) {
+				_relayoff--;
+				if (_relayoff == 0) {
+					NativeGPIO.setRelay(true);
+					toashShow("油电已断");
+				}
 			}
-			break;
-		default:
-			break;
+			_secondTimerFlag = true;
 		}
 	}
 
@@ -1673,14 +1770,14 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 * 显示传感器速度
 	 */
 	private void showSensor() {
-		txtSensor.setText("SEN:" + senspeed);
+		txtSensor.setText("SEN:" + DeviceInfo.SenSpeed);
 	}
 
 	/**
 	 * 开始训练
 	 */
 	private void trainBegin() {
-		if (mode == MODE_TRAIN && cardBalance <= 0) {
+		if (DeviceInfo.Mode == MODE_TRAIN && Student.Balance <= 0) {
 			toashShow("卡内余额不足");
 			return;
 		}
@@ -1694,97 +1791,48 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		} else if (nowTime.getHours() >= 20 || nowTime.getHours() < 5) {
 			_tmp = "晚上好";
 		}
-		if (mode == MODE_TRAIN) {
-			startTime = new Date();
-			startMi = nowMi;
-			startSenMi = nowSenMi;
-			if (_student.IsCoach) {
-				txtStartTime.setText("开始用车时间: " + timeFormat.format(startTime));
-				speak(_tmp + "," + _student.Name + ",卡内剩余" + (cardBalance - 1) + "分钟,请谨慎驾驶");
+		if (DeviceInfo.Mode == MODE_TRAIN) {
+			Train.Start(db);
+			if (Student.IsCoach) {
+				txtStartTime.setText("开始用车时间: " + timeFormat.format(Train.StartTime));
+				speak(_tmp + "," + Student.Name + ",卡内剩余" + (Student.Balance - 1) + "分钟,请谨慎驾驶");
 			} else {
-				txtStartTime.setText("训练开始时间: " + timeFormat.format(startTime));
-				speak(_tmp + "," + _student.Name + ",卡内余额:" + ((cardBalance - 1) * PRICE) + "元,剩余" + (cardBalance - 1) + "分钟,请谨慎驾驶");
+				txtStartTime.setText("训练开始时间: " + timeFormat.format(Train.StartTime));
+				speak(_tmp + "," + Student.Name + ",卡内余额:" + ((Student.Balance - 1) * PRICE) + "元,剩余" + (Student.Balance - 1) + "分钟,请谨慎驾驶");
 			}
-			writeBalance(cardBalance - 1);// 重写卡内余额
+			writeBalance(Student.Balance - 1);// 重写卡内余额
 			takephoto();// 拍照
 		} else {
-			speak(_tmp + "," + _student.Name);
+			speak(_tmp + "," + Student.Name);
 			txtStartTime.setText("尚未开始训练");
 			txtTrainTime.setText("自由模式");
-			if (_student.IsCoach) {
-				txtBalance.setText("卡内剩余时长:" + cardBalanceNow + "分钟");
+			if (Student.IsCoach) {
+				txtBalance.setText("卡内剩余时长:" + Student.RealBalance + "分钟");
 			} else {
-				txtBalance.setText("余额:" + cardBalanceNow * PRICE + "元,剩余" + cardBalanceNow + "分钟");
+				txtBalance.setText("余额:" + Student.RealBalance * PRICE + "元,剩余" + Student.RealBalance + "分钟");
 			}
 		}
 		// 继电器
-		NativeGPIO.setRelay(true);
-	}
-
-	/**
-	 * 更新训练结束时间
-	 */
-	private void trainUpdate() {
-		if (null != endTime) {
-			if (startTime.after(endTime)) {
-				endTime = new Date();
-				_curUUID = UUID.randomUUID().toString();
-				ContentValues tcv = new ContentValues();
-				tcv.put("guid", _curUUID);
-				tcv.put("coach", _coach.CardNo);
-				tcv.put("student", _student.CardNo);
-				tcv.put("starttime", dateFormat.format(startTime));
-				tcv.put("endtime", dateFormat.format(endTime));
-				tcv.put("balance", String.valueOf(cardBalanceNow));
-				tcv.put("startmi", String.valueOf(startMi));
-				tcv.put("endmi", String.valueOf(nowMi));
-				tcv.put("startsenmi", String.valueOf(startSenMi));
-				tcv.put("endsenmi", String.valueOf(nowSenMi));
-				tcv.put("subject", String.valueOf(subject));
-				db.insert(MySQLHelper.T_ZXT_USE_DATA, null, tcv);
-			} else {
-				endTime = new Date();
-				ContentValues tcv = new ContentValues();
-				tcv.put("endtime", dateFormat.format(endTime));
-				tcv.put("balance", String.valueOf(cardBalanceNow));
-				tcv.put("endmi", String.valueOf(nowMi));
-				tcv.put("endsenmi", String.valueOf(nowSenMi));
-				tcv.put("subject", String.valueOf(subject));
-				db.update(MySQLHelper.T_ZXT_USE_DATA, tcv, "guid=?", new String[] { _curUUID });
-			}
-		} else {
-			endTime = new Date();
-			_curUUID = UUID.randomUUID().toString();
-			ContentValues tcv = new ContentValues();
-			tcv.put("guid", _curUUID);
-			tcv.put("coach", _coach.CardNo);
-			tcv.put("student", _student.CardNo);
-			tcv.put("starttime", dateFormat.format(startTime));
-			tcv.put("endtime", dateFormat.format(endTime));
-			tcv.put("balance", String.valueOf(cardBalanceNow));
-			tcv.put("startmi", String.valueOf(startMi));
-			tcv.put("endmi", String.valueOf(nowMi));
-			tcv.put("startsenmi", String.valueOf(startSenMi));
-			tcv.put("endsenmi", String.valueOf(nowSenMi));
-			tcv.put("subject", String.valueOf(subject));
-			db.insert(MySQLHelper.T_ZXT_USE_DATA, null, tcv);
-		}
+		NativeGPIO.setRelay(false);
+		_relayoff = 0;
 	}
 
 	/**
 	 * 结束训练
 	 */
 	private void trainFinish() {
-		if (null != startTime && mode == MODE_TRAIN) {
-			trainUpdate();
-			if (_student.IsCoach) {
+		Log.i("train", "train finish");
+		_fingerFinish = true;
+		if (Train.IsTraining) {
+			if (Student.IsCoach) {
 				txtStartTime.setText("本次用车已结束");
-				txtTrainTime.setText("共使用" + getTimeDiff(startTime, nowTime));
+				txtTrainTime.setText("共使用" + getTimeDiff(Train.StartTime, nowTime));
 			} else {
 				txtStartTime.setText("本次训练已结束");
-				txtTrainTime.setText("共训练" + getTimeDiff(startTime, nowTime));
+				txtTrainTime.setText("共训练" + getTimeDiff(Train.StartTime, nowTime));
 			}
-			takephoto();// 拍照
+			// takephoto();// 拍照
+			Train.End(db);
 			// 20秒之后隐藏训练信息
 			new Timer().schedule(new TimerTask() {
 				@Override
@@ -1797,20 +1845,13 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			// 上传训练数据
 			if (retry < 3 && !_usedataUploading) {
 				uploadUseData();
+				upload();
 			}
 			// 1分钟后断电熄火
-			new Timer().schedule(new TimerTask() {
-				@Override
-				public void run() {
-					handler.sendEmptyMessage(H_W_SET_RELAY_FALSE);
-				}
-			}, 60 * 1000);
+			_relayoff = 60;
 		}
-		_student.reset();
+		Student.Init();
 		showStudent(false);
-		startTime = null;
-		endTime = null;
-		_curUUID = "";
 		_cardType = NO_CARD;
 	}
 
@@ -1846,14 +1887,14 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 */
 	private void minute() {
 		// 记录/更新当前训练结束时间、余额
-		if (null != startTime && mode == MODE_TRAIN) {
-			trainUpdate();
+		if (Train.IsTraining) {
+			Train.Update(db);
 
-			writeBalance(cardBalanceNow);// 重写卡内余额
+			writeBalance(Student.RealBalance);// 重写卡内余额
 
 			// 余额不足提醒
-			if (cardBalanceNow <= 3) {
-				toashShow("卡内剩余时长不足" + cardBalanceNow + "分钟,请注意");
+			if (Student.RealBalance <= 3) {
+				toashShow("卡内剩余时长不足" + Student.RealBalance + "分钟,请注意");
 			}
 		}
 		// 上传训练数据
@@ -1882,27 +1923,27 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 						_context[i] = ' ';
 					}
 					// 类型：教练卡、学员卡
-					if (_student.IsCoach) {
+					if (Student.IsCoach) {
 						_context[0] = 1;
 					} else {
 						_context[0] = 2;
 					}
 					// 卡号
-					for (int i = 0; i < _student.CardNo.length(); i++) {
-						_context[i + 1] = _student.CardNo.charAt(i);
+					for (int i = 0; i < Student.CardNo.length(); i++) {
+						_context[i + 1] = Student.CardNo.charAt(i);
 					}
 					// 驾校ID
 					for (int i = 0; i < schoolID.length(); i++) {
 						_context[i + 9] = schoolID.charAt(i);
 					}
 					// 身份证号
-					for (int i = 0; i < _student.IDCardNo.length(); i++) {
-						_context[i + 18] = _student.IDCardNo.charAt(i);
+					for (int i = 0; i < Student.IDCardNo.length(); i++) {
+						_context[i + 18] = Student.IDCardNo.charAt(i);
 					}
 					// 姓名
-					for (int i = 0; i < _student.Name.length(); i++) {
+					for (int i = 0; i < Student.Name.length(); i++) {
 						try {
-							int j = bytes2int(String.valueOf(_student.Name.charAt(i)).getBytes("GB2312"));
+							int j = bytes2int(String.valueOf(Student.Name.charAt(i)).getBytes("GB2312"));
 							String data = Integer.toHexString(j);
 							while (data.length() < 4) {
 								data = "0" + data;
@@ -1913,6 +1954,10 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 							e.printStackTrace();
 						}
 					}
+					if (NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context) == 1) {
+						return 1;
+					}
+					SystemClock.sleep(100);
 					return NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context);
 				}
 				return 0;
@@ -1931,6 +1976,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private void writeFinger() {
 		speak("需要采集指纹,请按右手手指");
 		showDialog(DL_FINGER1);
+		_fingerFinish = false;
 		recordfinger1();
 	}
 
@@ -1949,7 +1995,6 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					showDialog(DL_FINGER3);
 					recordfinger2();
 				} else {
-					_rfidProcsing = false;
 					toashShow("采集指纹失败,请尝试重新插卡");
 				}
 			}
@@ -1960,18 +2005,29 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
-				_address[0] = 3;
-				_address[1] = 11;
-				Log.i("zhiwen", new Date().toString());
-				if (NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context) == 1) {
+				if (retry < 3) {
+					if (_fingerprint.PSUpChar(_fingerAddress, CHAR_BUFFER_A, null, 0, _fingertmppath) != PS_OK) {
+						SystemClock.sleep(200);
+						if (_fingerprint.PSUpChar(_fingerAddress, CHAR_BUFFER_A, null, 0, _fingertmppath) != PS_OK) {
+							return -1;
+						}
+					}
+					Map<String, String> params = new HashMap<String, String>();
+					params.put("deviceid", deviceID);// 设备号码
+					params.put("session", session);// 当前会话
+					params.put("cardno", Student.CardNo);
+					params.put("n", "1");
+					File file = new File(_fingertmppath);
+					FormFile formfile = new FormFile(file.getName(), file, "finger", "application/octet-stream");
+					try {
+						SocketHttpRequester.post(server + "/fingerupload.ashx", params, formfile);
+					} catch (Exception e) {
+						e.printStackTrace();
+						return 0;
+					}
 					return 1;
 				}
-				SystemClock.sleep(200);
-				if (NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context) == 1) {
-					return 1;
-				}
-				SystemClock.sleep(200);
-				return NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context);
+				return 0;
 			}
 
 			@Override
@@ -1982,8 +2038,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					speak("请按左手手指..");
 					showDialog(DL_FINGER2);
 					recordfinger3();
+				} else if (result == 0) {
+					toashShow("记录指纹失败,请检查网络");
 				} else {
-					_rfidProcsing = false;
 					toashShow("记录指纹失败,请尝试重新插卡");
 				}
 			}
@@ -2005,7 +2062,6 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					showDialog(DL_FINGER3);
 					recordfinger4();
 				} else {
-					_rfidProcsing = false;
 					toashShow("采集指纹失败,请尝试重新插卡");
 				}
 			}
@@ -2016,17 +2072,30 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
-				_address[0] = 14;
-				_address[1] = 11;
-				if (NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context) == 1) {
+				if (retry < 3) {
+					if (_fingerprint.PSUpChar(_fingerAddress, CHAR_BUFFER_A, null, 0, _fingertmppath) != PS_OK) {
+						SystemClock.sleep(200);
+						if (_fingerprint.PSUpChar(_fingerAddress, CHAR_BUFFER_A, null, 0, _fingertmppath) != PS_OK) {
+							return -1;
+						}
+					}
+					SystemClock.sleep(200);
+					Map<String, String> params = new HashMap<String, String>();
+					params.put("deviceid", deviceID);// 设备号码
+					params.put("session", session);// 当前会话
+					params.put("cardno", Student.CardNo);
+					params.put("n", "2");
+					File file = new File(_fingertmppath);
+					FormFile formfile = new FormFile(file.getName(), file, "finger", "application/octet-stream");
+					try {
+						SocketHttpRequester.post(server + "/fingerupload.ashx", params, formfile);
+					} catch (Exception e) {
+						e.printStackTrace();
+						return 0;
+					}
 					return 1;
 				}
-				SystemClock.sleep(200);
-				if (NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context) == 1) {
-					return 1;
-				}
-				SystemClock.sleep(200);
-				return NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context);
+				return 0;
 			}
 
 			@Override
@@ -2034,11 +2103,26 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				dismissDialog(DL_FINGER3);
 				_rfidProcsing = false;
 				if (result == 1) {
-					if (NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 }) != 1) {
-						SystemClock.sleep(200);
-						NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 });
+					if (_cardType == CARD_24C02) {
+						if (Native.chk_24c02(fd) == 0) {// AT24C02卡
+							try {
+								Native.swr_24c02(fd, 0x28, 0x01, new int[] { 1 });
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					} else {
+						if (NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 }) != 1) {
+							SystemClock.sleep(100);
+							if (NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 }) != 1) {
+								SystemClock.sleep(100);
+								NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 });
+							}
+						}
 					}
 					toashShow("记录指纹成功,请重新插卡");
+				} else if (result == 0) {
+					toashShow("记录指纹失败,请检查网络");
 				} else {
 					toashShow("记录指纹失败,请尝试重新插卡");
 				}
@@ -2049,18 +2133,27 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private int fingertocontext() {
 		// 1，检测手指并录取图像
 		while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
-			SystemClock.sleep(30);
+			if (_fingerFinish) {
+				return -1;
+			}
+			SystemClock.sleep(100);
 		}
-		SystemClock.sleep(30);
+		SystemClock.sleep(50);
 		while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
-			SystemClock.sleep(30);
+			if (_fingerFinish) {
+				return -1;
+			}
+			SystemClock.sleep(100);
 		}
-		SystemClock.sleep(10);
+		SystemClock.sleep(50);
 		// 2，根据原始图像生成指纹特征
 		if (_fingerprint.PSGenChar(_fingerAddress, CHAR_BUFFER_A) != PS_OK) {
-			SystemClock.sleep(10);
+			SystemClock.sleep(50);
 			while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
-				SystemClock.sleep(30);
+				if (_fingerFinish) {
+					return -1;
+				}
+				SystemClock.sleep(100);
 			}
 			if (_fingerprint.PSGenChar(_fingerAddress, CHAR_BUFFER_A) != PS_OK) {
 				return -1;
@@ -2070,17 +2163,26 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		// 3，再一次检测手指并录取图像
 		// 4，根据原始图像生成指纹特征
 		while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
-			SystemClock.sleep(30);
+			if (_fingerFinish) {
+				return -1;
+			}
+			SystemClock.sleep(100);
 		}
-		SystemClock.sleep(30);
+		SystemClock.sleep(50);
 		while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
-			SystemClock.sleep(30);
+			if (_fingerFinish) {
+				return -1;
+			}
+			SystemClock.sleep(100);
 		}
-		SystemClock.sleep(10);
+		SystemClock.sleep(100);
 		if (_fingerprint.PSGenChar(_fingerAddress, CHAR_BUFFER_B) != PS_OK) {
-			SystemClock.sleep(10);
+			SystemClock.sleep(100);
 			while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
-				SystemClock.sleep(30);
+				if (_fingerFinish) {
+					return -1;
+				}
+				SystemClock.sleep(100);
 			}
 			if (_fingerprint.PSGenChar(_fingerAddress, CHAR_BUFFER_B) != PS_OK) {
 				return -1;
@@ -2092,73 +2194,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			return -1;
 		}
 		SystemClock.sleep(100);
-		// 6，存储到固定的某个page(0~256)
-		// if (_fingerprint.PSStoreChar(_fingerAddress, CHAR_BUFFER_A, 0) !=
-		// PS_OK)// 覆盖
-		// {
-		// return -1;
-		// }
-		// 特征码写到文件
-		// if (_fingerprint.PSLoadChar(_fingerAddress, CHAR_BUFFER_A, 0) !=
-		// PS_OK) {
-		// return -1;
-		// }
-
-		// String fileName = _fingertmppath + _student.CardNo + "_1";
-		// if (_address[0] == 3) {
-		// fileName = _fingertmppath + _student.CardNo + "_2";
-		// }
-		if (_fingerprint.PSUpChar(_fingerAddress, CHAR_BUFFER_A, null, 0, _fingertmppath) != PS_OK) {
-			return -1;
-		}
-
-		byte[] bs = new byte[512];
-		try {
-			FileInputStream fi = new FileInputStream(_fingertmppath);
-			fi.read(bs, 0, bs.length);
-			fi.close();
-		} catch (FileNotFoundException e) {
-			return 0xff;
-		} catch (IOException e) {
-			return 0xff;
-		}
-		_context = new int[512];
-		for (int i = 0; i < bs.length; i++) {
-			_context[i] = bs[i];
-		}
-		uploadFinger();// 上传指纹
 		return PS_OK;
-	}
-
-	/**
-	 * 上传指纹
-	 */
-	private void uploadFinger() {
-		if (retry < 3) {
-			new AsyncTask<Void, Void, Integer>() {
-				@Override
-				protected Integer doInBackground(Void... args) {
-					Map<String, String> params = new HashMap<String, String>();
-					params.put("deviceid", deviceID);// 设备号码
-					params.put("session", session);// 当前会话
-					params.put("cardno", _student.CardNo);
-					if (_address[0] == 3) {
-						params.put("n", "2");
-					} else {
-						params.put("n", "1");
-					}
-					File file = new File(_fingertmppath);
-					FormFile formfile = new FormFile(file.getName(), file, "finger", "application/octet-stream");
-					try {
-						SocketHttpRequester.post(server + "/fingerupload.ashx", params, formfile);
-						file.delete();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					return 0;
-				}
-			}.execute();
-		}
 	}
 
 	/**
@@ -2188,21 +2224,24 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			buff[0] = buffYE[0];
 			buff[1] = buffYE[1];
 			// 学时
-			data = Integer.toHexString(_student.RealTotalTime);
+			data = Integer.toHexString(Student.RealTotalTime);
 			while (data.length() < 4) {
 				data = "0" + data;
 			}
 			buff[2] = Integer.parseInt(data.substring(0, 2), 16);
 			buff[3] = Integer.parseInt(data.substring(2), 16);
 			// 里程
-			data = Integer.toHexString(_student.RealTotalMi);
+			data = Integer.toHexString(Student.RealTotalMi);
 			while (data.length() < 6) {
 				data = "0" + data;
 			}
 			buff[4] = Integer.parseInt(data.substring(0, 2), 16);
 			buff[5] = Integer.parseInt(data.substring(2, 4), 16);
 			buff[6] = Integer.parseInt(data.substring(2), 16);
-			NativeRFID.write_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK, buff);
+			if (NativeRFID.write_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK, buff) != 1) {
+				SystemClock.sleep(100);
+				NativeRFID.write_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK, buff);
+			}
 		}
 	}
 
@@ -2283,7 +2322,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
-				Cursor cursor = db.query(MySQLHelper.T_ZXT_USE_DATA, null, "guid!='" + _curUUID + "'", null, null, null, null);
+				Cursor cursor = db.query(MySQLHelper.T_ZXT_USE_DATA, null, "guid!='" + Train.TrainID + "'", null, null, null, null);
 				if (cursor.moveToFirst()) {
 					do {
 						HttpPost httpRequest = new HttpPost(server + "/usedata.ashx");
@@ -2409,7 +2448,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 				params.add(new BasicNameValuePair("session", session)); // 当前会话
 				params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
-				params.add(new BasicNameValuePair("card", _coach.CardNo)); // 教练卡号
+				params.add(new BasicNameValuePair("card", Coach.CardNo)); // 教练卡号
 				params.add(new BasicNameValuePair("ver", getString(R.string.version)));
 				try {
 					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
@@ -2449,21 +2488,21 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					}
 					if (cardresult.startsWith("s|")) {
 						String[] results = cardresult.split("\\|");
-						if (results[1].equals(_coach.CardNo)) {
-							cardBalance = Integer.parseInt(results[2]);
-							_coach.CardNo = _student.CardNo = results[1];
-							_coach.ID = _student.ID = results[3];
-							if (!_coach.Name.equals(results[4])) {
+						if (results[1].equals(Coach.CardNo)) {
+							Student.RealBalance = Student.Balance = Integer.parseInt(results[2]);
+							Coach.CardNo = Student.CardNo = results[1];
+							Coach.ID = Student.ID = results[3];
+							if (!Coach.Name.equals(results[4])) {
 								writeName();// 重写姓名
 							}
-							_coach.Name = _student.Name = results[4];
-							_coach.IDCardNo = _student.IDCardNo = results[5];
-							_coach.Certificate = results[6];// 教练证号
-							if (_coach.IDCardNo.equals("无")) {
-								_coach.IDCardNo = "";
+							Coach.Name = Student.Name = results[4];
+							Coach.IDCardNo = Student.IDCardNo = results[5];
+							Coach.Certificate = results[6];// 教练证号
+							if (Coach.IDCardNo.equals("无")) {
+								Coach.IDCardNo = "";
 							}
-							if (_coach.Certificate.equals("无")) {
-								_coach.Certificate = "";
+							if (Coach.Certificate.equals("无")) {
+								Coach.Certificate = "";
 							}
 							return 1;
 						} else {
@@ -2511,11 +2550,12 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			@Override
 			protected Integer doInBackground(Void... args) {
 				HttpPost httpRequest = new HttpPost(server + "/getstudentinfo.ashx");
-				List<NameValuePair> params = new ArrayList<NameValuePair>(5);
+				List<NameValuePair> params = new ArrayList<NameValuePair>(6);
 				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 				params.add(new BasicNameValuePair("session", session)); // 当前会话
 				params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
-				params.add(new BasicNameValuePair("card", _student.CardNo)); // 学员卡号
+				params.add(new BasicNameValuePair("card", Student.CardNo)); // 学员卡号
+				params.add(new BasicNameValuePair("balance", String.valueOf(Student.Balance))); // 卡内余额
 				params.add(new BasicNameValuePair("ver", getString(R.string.version)));
 				try {
 					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
@@ -2553,20 +2593,20 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					}
 					if (cardresult.startsWith("s|")) {
 						String[] results = cardresult.split("\\|");
-						if (results.length > 1 && results[1].equals(_student.CardNo)) {
-							cardBalance = Integer.parseInt(results[2]);
-							if (!_student.Name.equals(results[4])) {
+						if (results.length > 1 && results[1].equals(Student.CardNo)) {
+							Student.RealBalance = Student.Balance = Integer.parseInt(results[2]);
+							if (!Student.Name.equals(results[4])) {
 								writeName();// 重写姓名和身份证
 							}
-							_student.ID = results[3];
-							_student.Name = results[4];
-							_student.IDCardNo = results[5];
-							_student.DriverType = results[6];
-							if (_student.IDCardNo.equals("无")) {
-								_student.IDCardNo = "";
+							Student.ID = results[3];
+							Student.Name = results[4];
+							Student.IDCardNo = results[5];
+							Student.DriverType = results[6];
+							if (Student.IDCardNo.equals("无")) {
+								Student.IDCardNo = "";
 							}
-							if (_student.DriverType.equals("无")) {
-								_student.DriverType = "";
+							if (Student.DriverType.equals("无")) {
+								Student.DriverType = "";
 							}
 							return 1;
 						} else {
@@ -2614,7 +2654,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 				params.add(new BasicNameValuePair("session", session)); // 当前会话
 				params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
-				params.add(new BasicNameValuePair("stuid", _student.ID)); // 学员编号
+				params.add(new BasicNameValuePair("stuid", Student.ID)); // 学员编号
 				try {
 					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
 				} catch (UnsupportedEncodingException e) {
@@ -2644,10 +2684,10 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					if (cardresult.startsWith("s|")) {
 						String[] results = cardresult.split("\\|");
 						if (results.length > 1) {
-							_student.TotalTime = Integer.parseInt(results[1]);
+							Student.TotalTime = Integer.parseInt(results[1]);
 						}
 						if (results.length > 2) {
-							_student.TotalMi = Integer.parseInt(results[2]);
+							Student.TotalMi = Integer.parseInt(results[2]);
 						}
 						return 1;
 					}
@@ -2658,8 +2698,8 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			@Override
 			protected void onPostExecute(Integer result) {
 				if (result == 1) {
-					txtStudentTotalTime.setText("累计学时:" + (_student.TotalTime / 60) + "小时" + (_student.TotalTime % 60) + "分钟");
-					txtStudentTotalMi.setText("累计里程:" + (_student.TotalMi / 1000) + "KM");
+					txtStudentTotalTime.setText("累计学时:" + (Student.TotalTime / 60) + "小时" + (Student.TotalTime % 60) + "分钟");
+					txtStudentTotalMi.setText("累计里程:" + (Student.TotalMi / 1000) + "KM");
 				}
 			}
 		}.execute();
@@ -2674,30 +2714,35 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			@Override
 			protected Integer doInBackground(Void... args) {
 				HttpPost httpRequest = new HttpPost(server + "/upload.ashx");
-				List<NameValuePair> params = new ArrayList<NameValuePair>(8);
-				if (_student.CardNo.equals("") || startTime == null) {
+				List<NameValuePair> params = new ArrayList<NameValuePair>(10);
+				if (!Train.IsTraining) {
 					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 					params.add(new BasicNameValuePair("session", session)); // 当前会话
-					params.add(new BasicNameValuePair("lng", String.format("%.6f", lng))); // 经度
-					params.add(new BasicNameValuePair("lat", String.format("%.6f", lat))); // 纬度
-					params.add(new BasicNameValuePair("speed", String.valueOf(speed))); // 速度
-					params.add(new BasicNameValuePair("senspeed", String.valueOf(senspeed))); // 速度
-					params.add(new BasicNameValuePair("mode", String.valueOf(mode))); // 模式
-					params.add(new BasicNameValuePair("coach", _coach.CardNo)); // 教练
+					params.add(new BasicNameValuePair("logintime", dateFormat.format(DeviceInfo.GPSTime))); // GPS时间
+					params.add(new BasicNameValuePair("lng", String.format("%.6f", DeviceInfo.Longitude))); // 经度
+					params.add(new BasicNameValuePair("lat", String.format("%.6f", DeviceInfo.Latitude))); // 纬度
+					params.add(new BasicNameValuePair("speed", String.valueOf(DeviceInfo.Speed))); // 速度
+					params.add(new BasicNameValuePair("senspeed", String.valueOf(DeviceInfo.SenSpeed))); // 速度
+					params.add(new BasicNameValuePair("mode", String.valueOf(DeviceInfo.Mode))); // 模式
+					params.add(new BasicNameValuePair("coach", Coach.CardNo)); // 教练
+					params.add(new BasicNameValuePair("acc", String.valueOf(NativeGPIO.getAccState()))); // ACC
 				} else {
-					params = new ArrayList<NameValuePair>(12);
+					params = new ArrayList<NameValuePair>(15);
 					params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
 					params.add(new BasicNameValuePair("session", session)); // 当前会话
-					params.add(new BasicNameValuePair("lng", String.format("%.6f", lng))); // 经度
-					params.add(new BasicNameValuePair("lat", String.format("%.6f", lat))); // 纬度
-					params.add(new BasicNameValuePair("speed", String.valueOf(speed))); // 速度
-					params.add(new BasicNameValuePair("senspeed", String.valueOf(senspeed))); // 速度
-					params.add(new BasicNameValuePair("mode", String.valueOf(mode))); // 模式
-					params.add(new BasicNameValuePair("coach", _coach.CardNo)); // 教练
-					params.add(new BasicNameValuePair("student", _student.CardNo)); // 学员
-					params.add(new BasicNameValuePair("starttime", dateFormat.format(startTime))); // 开始训练时间
-					params.add(new BasicNameValuePair("balance", String.valueOf(cardBalanceNow))); // 余额
-					params.add(new BasicNameValuePair("subject", String.valueOf(subject))); // 训练科目
+					params.add(new BasicNameValuePair("logintime", dateFormat.format(DeviceInfo.GPSTime))); // GPS时间
+					params.add(new BasicNameValuePair("lng", String.format("%.6f", DeviceInfo.Longitude))); // 经度
+					params.add(new BasicNameValuePair("lat", String.format("%.6f", DeviceInfo.Latitude))); // 纬度
+					params.add(new BasicNameValuePair("speed", String.valueOf(DeviceInfo.Speed))); // 速度
+					params.add(new BasicNameValuePair("senspeed", String.valueOf(DeviceInfo.SenSpeed))); // 速度
+					params.add(new BasicNameValuePair("mode", String.valueOf(DeviceInfo.Mode))); // 模式
+					params.add(new BasicNameValuePair("coach", Coach.CardNo)); // 教练
+					params.add(new BasicNameValuePair("student", Student.CardNo)); // 学员
+					params.add(new BasicNameValuePair("starttime", dateFormat.format(Train.StartTime))); // 开始训练时间
+					params.add(new BasicNameValuePair("balance", String.valueOf(Student.RealBalance))); // 余额
+					params.add(new BasicNameValuePair("subject", String.valueOf(DeviceInfo.Subject))); // 训练科目
+					params.add(new BasicNameValuePair("taskid", Train.TrainID)); // 训练ID
+					params.add(new BasicNameValuePair("acc", String.valueOf(NativeGPIO.getAccState()))); // ACC
 				}
 				try {
 					httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
@@ -2757,11 +2802,11 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				} else {
 					// 记录盲点
 					ContentValues tcv = new ContentValues();
-					tcv.put("gpstime", dateFormat.format(new Date()));
-					tcv.put("lng", String.format("%.6f", lng));
-					tcv.put("lat", String.format("%.6f", lat));
-					tcv.put("speed", String.valueOf(speed));
-					tcv.put("senspeed", String.valueOf(senspeed));
+					tcv.put("gpstime", dateFormat.format(DeviceInfo.GPSTime));
+					tcv.put("lng", String.format("%.6f", DeviceInfo.Longitude));
+					tcv.put("lat", String.format("%.6f", DeviceInfo.Latitude));
+					tcv.put("speed", String.valueOf(DeviceInfo.Speed));
+					tcv.put("senspeed", String.valueOf(DeviceInfo.SenSpeed));
 					db.insert(MySQLHelper.T_ZXT_GPS_DATA, null, tcv);
 					if (result == 2) {
 						txtStatus.setText(uploadresult + "[" + getNowTime() + "]");
@@ -2787,21 +2832,21 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		if (b) {
 			layCoachTitle.setBackgroundResource(R.drawable.bg2);
 			txtInfoStudent.setText("请插学员卡");
-			txtCoachName.setText(_coach.Name);
-			txtCoachCard.setText("卡号:" + _coach.CardNo);
-			txtCoachCertificate.setText(_coach.Certificate);
+			txtCoachName.setText(Coach.Name);
+			txtCoachCard.setText("卡号:" + Coach.CardNo);
+			txtCoachCertificate.setText(Coach.Certificate);
 			layCoachInfo.setVisibility(View.VISIBLE);
 			txtInfoCoach.setVisibility(View.GONE);
 			SharedPreferences.Editor editor = settings.edit();
-			editor.putString("coachID", _coach.ID);
-			editor.putString("coachCard", _coach.CardNo);
-			editor.putString("coachName", _coach.Name);
-			editor.putString("coachIDCard", _coach.IDCardNo);
-			editor.putString("coachCertificate", _coach.Certificate);
+			editor.putString("coachID", Coach.ID);
+			editor.putString("coachCard", Coach.CardNo);
+			editor.putString("coachName", Coach.Name);
+			editor.putString("coachIDCard", Coach.IDCardNo);
+			editor.putString("coachCertificate", Coach.Certificate);
 			editor.commit();
 			imgCoach.setImageResource(R.drawable.photo);
-			if (!_coach.IDCardNo.equals("")) {
-				imgCoach.setImageUrl(server + "/" + _coach.IDCardNo + ".bmp");
+			if (!Coach.IDCardNo.equals("")) {
+				imgCoach.setImageUrl(server + "/" + Coach.IDCardNo + ".bmp");
 			}
 		} else {
 			layCoachTitle.setBackgroundResource(R.drawable.bg1);
@@ -2831,20 +2876,20 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			layStudentTitle.setBackgroundResource(R.drawable.bg2);
 			layStudentInfo.setVisibility(View.VISIBLE);
 			txtInfoStudent.setVisibility(View.GONE);
-			txtStudentName.setText(_student.Name);
-			txtStudentCard.setText("卡号:" + _student.CardNo);
-			if (_student.IsCoach) {
+			txtStudentName.setText(Student.Name);
+			txtStudentCard.setText("卡号:" + Student.CardNo);
+			if (Student.IsCoach) {
 				txtStudentTitle.setText("教练:");
-				txtStudentID.setText("教练编号:" + _student.ID);
+				txtStudentID.setText("教练编号:" + Student.ID);
 			} else {
 				txtStudentTitle.setText("学员:");
-				txtStudentID.setText("学员编号:" + _student.ID);
-				txtStudentDriverType.setText("准驾车型:" + _student.DriverType);
-				txtStudentTotalTime.setText("累计学时:" + (_student.TotalTime / 60) + "小时" + (_student.TotalTime % 60) + "分钟");
-				txtStudentTotalMi.setText("累计里程:" + (_student.TotalMi / 1000) + "KM");
+				txtStudentID.setText("学员编号:" + Student.ID);
+				txtStudentDriverType.setText("准驾车型:" + Student.DriverType);
+				txtStudentTotalTime.setText("累计学时:" + (Student.TotalTime / 60) + "小时" + (Student.TotalTime % 60) + "分钟");
+				txtStudentTotalMi.setText("累计里程:" + (Student.TotalMi / 1000) + "KM");
 			}
-			if (!_student.IDCardNo.equals("")) {
-				imgStudent.setImageUrl(server + "/" + _student.IDCardNo + ".bmp");
+			if (!Student.IDCardNo.equals("")) {
+				imgStudent.setImageUrl(server + "/" + Student.IDCardNo + ".bmp");
 			}
 		} else {
 			txtStudentTitle.setText("学员");
@@ -2865,7 +2910,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 * 隐藏训练提示信息(训练时长、余额)
 	 */
 	private void hideTrainInfo() {
-		if (null == startTime) {
+		if (!Train.IsTraining) {
 			txtStartTime.setText("尚未开始训练");
 			txtTrainTime.setText("");
 			txtBalance.setText("");
@@ -2880,8 +2925,8 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 */
 	private void changeMode(int m) {
 		if (m == MODE_TRAIN) {
-			if (mode == MODE_FREE) {
-				mode = MODE_TRAIN;
+			if (DeviceInfo.Mode == MODE_FREE) {
+				DeviceInfo.Mode = MODE_TRAIN;
 				btnFJFMS.setBackgroundResource(R.drawable.button_bg);
 				txtFJFMS.setTextColor(R.color.button_text);
 				btnJFMS.setBackgroundResource(R.drawable.button_checked_bg);
@@ -2892,29 +2937,36 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					toashShow("已经切换为训练状态");
 				}
 				// 继电器
-				new Timer().schedule(new TimerTask() {
-					@Override
-					public void run() {
-						handler.sendEmptyMessage(H_W_SET_RELAY_FALSE);
-					}
-				}, 60 * 1000);
-				startTime = null;
-				endTime = null;
-				_curUUID = "";
+				_relayoff = 60;
+				Train.End(db);
 				_cardType = NO_CARD;
+
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putInt("mode", DeviceInfo.Mode);
+				editor.commit();
 			}
 		} else {
-			if (mode == MODE_TRAIN) {
-				if (startTime != null) {
-					trainFinish();// 结束训练
+			if (DeviceInfo.Mode == MODE_TRAIN) {
+				txtStartTime.setText("尚未开始训练");
+				txtTrainTime.setText("自由模式");
+				if (Student.IsCoach) {
+					txtBalance.setText("卡内剩余时长:" + Student.RealBalance + "分钟");
+				} else {
+					txtBalance.setText("余额:" + Student.RealBalance * PRICE + "元,剩余" + Student.RealBalance + "分钟");
 				}
-				mode = MODE_FREE;
+				Train.End(db);
+				DeviceInfo.Mode = MODE_FREE;
 				btnJFMS.setBackgroundResource(R.drawable.button_bg);
 				txtJFMS.setTextColor(R.color.button_text);
 				btnFJFMS.setBackgroundResource(R.drawable.button_checked_bg);
 				txtFJFMS.setTextColor(Color.WHITE);
 				toashShow("已经切换为自由状态");
-				NativeGPIO.setRelay(true);
+				NativeGPIO.setRelay(false);
+				_relayoff = 0;
+
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putInt("mode", DeviceInfo.Mode);
+				editor.commit();
 			}
 		}
 	}
@@ -2936,6 +2988,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		alertDialog.show();
 	}
 
+	/**
+	 * 下载程序
+	 */
 	private void downloadAPK() {
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
@@ -3004,11 +3059,8 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		Intent intent = new Intent();
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.setAction(android.content.Intent.ACTION_VIEW);
-		// 获得下载好的文件类型
 		String type = "application/vnd.android.package-archive";
-		// 打开各种类型文件
 		intent.setDataAndType(Uri.fromFile(f), type);
-		// 安装
 		startActivity(intent);
 	}
 
@@ -3059,9 +3111,22 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	}
 
 	private void exitConfirm() {
-		AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("确定要退出程序？").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+		final EditText txtpsd = new EditText(MainActivity.this);
+		AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("确定要退出程序？").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				MainActivity.this.finish();
+				int psd = 0;
+				try {
+					psd = Integer.parseInt(txtpsd.getText().toString());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				if (psd == nowTime.getDate() * nowTime.getDay()) {
+					// com.lyt.watchdog.Native.exit(dogfd);
+					MainActivity.this.finish();
+					System.exit(0);
+				} else {
+					return;
+				}
 			}
 		}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
@@ -3082,39 +3147,61 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 
 	@Override
 	protected Dialog onCreateDialog(int id, Bundle args) {
+		AlertDialog dialog = null;
 		switch (id) {
 		case DL_CARD_READING:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("正在读卡,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("正在读卡,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_DOWN_FINGER:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("正在获取指纹信息,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("正在获取指纹信息,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_VALI_FINGER:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请按手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("请按手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_CARD_INIT:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("正在初始化卡,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("正在初始化卡,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_FINGER1:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("需要采集指纹,请按右手手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("需要采集指纹,请按右手手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_FINGER2:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请按左手手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("请按左手手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_FINGER3:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("指纹采集完毕,正在记录指纹,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("指纹采集完毕,正在记录指纹,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_GET_COACH:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("正在获取教练信息,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("正在获取教练信息,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		case DL_GET_STUDENT:
-			return new AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("正在获取学员信息,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("正在获取学员信息,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
+			break;
 		default:
 			return null;
 		}
+		if (dialog == null)
+			return null;
+		/*
+		 * dialog.setOnKeyListener(new DialogInterface.OnKeyListener() { public
+		 * boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+		 * if (keyCode == KeyEvent.KEYCODE_HOME) return true; return false; }
+		 * }); dialog.show();
+		 * dialog.getWindow().setType(WindowManager.LayoutParams
+		 * .TYPE_KEYGUARD_DIALOG);
+		 */
+		return dialog;
 	}
 
 	private final LocationListener locationListener = new LocationListener() {
 		public void onLocationChanged(Location location) {
 			// log it when the location changes
 			if (location != null) {
-				lng = location.getLongitude();
-				lat = location.getLatitude();
-				speed = Math.round(location.getSpeed() / NMDIVIDED * 60 * 60 / 1000);
-				nowMi += location.getSpeed() / NMDIVIDED;
-				txtLngLat.setText("GPS:" + String.format("%.2f", lng) + "," + String.format("%.2f", lat) + "," + speed + ";");
+				DeviceInfo.GPSTime = new Date(location.getTime());
+				DeviceInfo.Longitude = location.getLongitude();
+				DeviceInfo.Latitude = location.getLatitude();
+				DeviceInfo.Speed = Math.round(location.getSpeed() / NMDIVIDED * 60 * 60 / 1000);
+				DeviceInfo.Mileage += location.getSpeed() / NMDIVIDED;
+				txtLngLat.setText("GPS:" + String.format("%.2f", DeviceInfo.Longitude) + "," + String.format("%.2f", DeviceInfo.Latitude) + "," + DeviceInfo.Speed + ";");
 			}
 		}
 
@@ -3133,28 +3220,40 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 
 	@Override
 	protected void onDestroy() {
+		_isclosed = true;
 		// 关闭TCP监听
 		try {
 			socket.close();
-		} catch (Exception e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		// 定时器
+		// 关闭定时器
 		_timerUpload.cancel();
+		_timerUpload.purge();
 		_timerFlicker.cancel();
+		_timerFlicker.purge();
 		_timerSecond.cancel();
+		_timerSecond.purge();
 		_timerMinute.cancel();
+		_timerMinute.purge();
 		_timerCamera.cancel();
+		_timerCamera.purge();
 		_timerUploadPhoto.cancel();
+		_timerUploadPhoto.purge();
+		_timerSensor.cancel();
+		_timerSensor.purge();
+		Log.i("zxt", "timer closed");
 		// IC卡读卡器
 		try {
 			Native.ic_exit(fd);
+			Log.i("zxt", "ic card closed");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		// RFID读卡器
 		try {
 			NativeRFID.close_fm1702();
+			Log.i("zxt", "rfid card closed");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -3162,6 +3261,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		if (mTts != null) {
 			try {
 				mTts.shutdown();
+				Log.i("zxt", "tts closed");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -3170,6 +3270,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		if (db != null) {
 			try {
 				db.close();
+				Log.i("zxt", "database closed");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -3178,24 +3279,20 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		if (_fingerprint != null) {
 			try {
 				_fingerprint.PSCloseDevice();
+				Log.i("zxt", "finger closed 1");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		try {
 			lytfingerprint.Close();
+			Log.i("zxt", "finger closed 2");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		// 摄像头
-		if (_camera != null) {
-			try {
-				_camera.stopPreview();
-				_camera.release();
-				_camera = null;
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		if (native_camera != null) {
+			native_camera.uart_close();
 		}
 		if (wakeLock != null) {
 			wakeLock.release();

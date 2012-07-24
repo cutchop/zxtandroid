@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">驾培智能终端</string>
-    <string name="version">1.1</string>
-	<string name="server1">http://58.49.57.5</string>
+    <string name="version">1.9</string>
+	<string name="server1">http://221.232.160.197</string>
 	<string name="server2">http://58.49.57.5</string>
+	<string name="copyright">技术支持:武汉中信通</string>
+	<string name="bottomcenter">科技驾培 从我做起</string>
 </resources>
