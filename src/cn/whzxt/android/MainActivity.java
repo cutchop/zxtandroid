@@ -36,8 +36,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
-import com.android.serial_camera;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -55,7 +53,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Typeface;
+import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -72,6 +72,8 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -83,7 +85,7 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements OnInitListener {
+public class MainActivity extends Activity implements OnInitListener, SurfaceHolder.Callback {
 	private TextView txtSchoolName, txtDeviceName, txtSystemTime;
 	private TextView txtInfoCoach, txtInfoStudent, txtStudentTitle, txtStatus, txtUploadUseDataStatus, txtLngLat, txtSensor;
 	private TextView txtCoachName, txtCoachCard, txtCoachCertificate, txtStudentName, txtStudentCard;
@@ -92,24 +94,26 @@ public class MainActivity extends Activity implements OnInitListener {
 	private TextView txtJFMS, txtFJFMS, txtSubject2, txtSubject3;
 	private TextView txtStudentID, txtStudentDriverType, txtStudentTotalTime, txtStudentTotalMi;
 	private NetImageView imgCoach, imgStudent;
-	private ImageView camView, imgLast01, imgLast02, imgLast03, imgLast04;
+	private ImageView imgLast01, imgLast02, imgLast03, imgLast04;
 	private LinearLayout layCoachTitle, layStudentTitle, layCoachInfo, layStudentInfo;
 	private LinearLayout btnJFMS, btnFJFMS, btnSubject2, btnSubject3;
 	private LinearLayout layTts, layScrollDown, laySysInfo, layDevStatus;
 	private TextView btnTabSysInfo, btnTabDevStatus, txtSysInfo;
 	private TableLayout layTitle;
 	private ScrollView mainView;
+	private SurfaceView previewSurface;
+	private SurfaceHolder previewSurfaceHolder;
 	private String deviceID, deviceName, schoolID, schoolName, session;
 	private String server;
 	private String uploadresult, cardresult, usedataresult, ttsdataresult;
-	private int _cardType;
 	private int[] _initcontext;
 	private int col = 0;
 	private Date nowTime;
 	private int retry = 0;
 	private SimpleDateFormat dateFormat, timeFormat;
 	private LocationManager locationManager;
-	private Timer _timerUpload, _timerFlicker, _timerSecond, _timerMinute, _timerCamera, _timerUploadPhoto, _timerSensor, _timerCamView;
+	private Timer _timerUpload, _timerFlicker, _timerSecond, _timerMinute, _timerCamera, _timerUploadPhoto, _timerSensor;
+	private Timer _timerTakePhoto2;
 	private SharedPreferences settings;
 	private MySQLHelper sqlHelper;
 	private SQLiteDatabase db;
@@ -118,11 +122,8 @@ public class MainActivity extends Activity implements OnInitListener {
 	private HashMap<String, String> _hashTts;
 	private String _ttsVer;
 	private String _tcpMsg;
-	private Boolean _rfidProcsing = false;
-	private String _rfidUID;
 	private Paint _markPaint;
 	private int _uploadblindSpotCount = 0;
-	private Boolean _hasfingerdata = false;
 	private static final int BS_EVERY_MAX = 10;// 每次上传10个盲点
 	private int _relayoff = 0;// 继电器
 	// private int dogfd = -1;
@@ -137,21 +138,7 @@ public class MainActivity extends Activity implements OnInitListener {
 	private static final int PRICE = 2; // 设备单价
 	private static final float NMDIVIDED = 1.852f; // 海里换算成公里
 	// 读卡器
-	private static final String PATH = "/dev/s3c2410_serial1"; // 读卡器参数
-	private static final int BAUD = 9600; // 读卡器参数
-	private int fd;
-	private static final int NO_CARD = 0;
-	private static final int CARD_24C02 = 1;
-	private static final int CARD_S50 = 2;
-	private static final int CARD_S70 = 3;
-
-	private static final int RFID_TYPE_A = 0x02;
-	// private static final int RFID_TYPE_B = 0x01;
-
-	private static final int RFID_BLOCK = 0;
-	private static final int RFID_EARA = 1;
-
-	private static final int[] RFID_KEY = new int[] { 255, 255, 255, 255, 255, 255 };
+	private CardOper cardOper = null;
 	// TTS
 	private TextToSpeech mTts;
 	private static final int REQ_TTS_STATUS_CHECK = 0;
@@ -163,27 +150,23 @@ public class MainActivity extends Activity implements OnInitListener {
 	private static final char PS_OK = 0x00;
 	private static final char PS_NO_FINGER = 0x02;
 	private String _fingertmppath = "/data/local/tmp/finger_";
-	private int[] _address = new int[2];
-	private int[] _context;
 	private int _fingerCurId;
 	private Boolean _fingerFinish = false;
 	// 摄像头
+	private Camera _camera;
 	private static final String PHOTO_PATH = "/sdcard/zxtphoto";// 照片保存路径
 	private static final int PHOTO_DEF_INTERVAL = 60; // 默认拍照间隔(秒)
-	private int _inSampleSize = 4;// 照片压缩比,宽720/4,高576/4
+	private int _curCamera = 1;// 当前摄像头
+	private Boolean _previewing = false;
 	private Boolean _photouploading = false;
 	private Boolean _takephotoing = false;
 	private String _phototime = "";
 	private String _photoUUID = "";
 	private int _photoSpeed = 0;
 	private int _photoSenSpeed = 0;
-	private Boolean _camViewFlag = false;
-	private URL _camUrl;
-	private InputStream _camIS;
-	private Bitmap _camBmp;
 	private Bitmap[] _lastBmps;
-	// 串口摄像头
-	private serial_camera native_camera;
+	private StreamIt streamIt = null;
+	private PhotoServer photoServer;
 	// 控制屏幕长亮
 	private WakeLock wakeLock;
 	// 弹出框
@@ -202,12 +185,19 @@ public class MainActivity extends Activity implements OnInitListener {
 	private static final int H_W_SECOND = 0x03;
 	private static final int H_W_MINUTE = 0x04;
 	private static final int H_W_TAKE_PHOTO = 0x05;
+	private static final int H_W_TAKE_PHOTO1 = 0x24;
+	private static final int H_W_TAKE_PHOTO2 = 0x25;
 	private static final int H_W_UPLOAD_PHOTO = 0x06;
 	private static final int H_W_HIDE_TRAININFO = 0x08;
 	private static final int H_W_SHOW_SENSOR = 0x0A;
 	private static final int H_W_UPDATEDIALOG_MAX = 0x14;
 	private static final int H_W_UPDATEDIALOG_NOW = 0x15;
-	private static final int H_W_CAMERAVIEW = 0x20;
+	private static final int H_W_TRAIN_START = 0x17;
+	private static final int H_W_TRAIN_END = 0x18;
+	private static final int H_W_GET_COACHINFO = 0x31;
+	private static final int H_W_GET_STUDENTINFO = 0x32;
+	private static final int H_W_DOWN_FINGER = 0x33;
+	private static final int H_W_WRITE_FINGER = 0x34;
 	// 程序更新对话框
 	private ProgressDialog _updateDialog;
 	private File _downLoadFile;
@@ -216,8 +206,6 @@ public class MainActivity extends Activity implements OnInitListener {
 	private Boolean _isclosed = false;
 	private Boolean _sensorTimerFlag = false;
 	private Boolean _secondTimerFlag = false;
-
-	private Boolean _readICCard = false;
 
 	Handler handler = new Handler() {
 		@Override
@@ -238,6 +226,12 @@ public class MainActivity extends Activity implements OnInitListener {
 			case H_W_TAKE_PHOTO:
 				takephoto();
 				break;
+			case H_W_TAKE_PHOTO1:
+				takephoto1();
+				break;
+			case H_W_TAKE_PHOTO2:
+				takephoto2();
+				break;
 			case H_W_UPLOAD_PHOTO:
 				uploadPhoto();
 				break;
@@ -254,8 +248,23 @@ public class MainActivity extends Activity implements OnInitListener {
 				int x = _downedFileLength * 100 / _fileLength;
 				_updateDialog.setMessage("正在下载，已完成" + x + "%");
 				break;
-			case H_W_CAMERAVIEW:
-				cameraView();
+			case H_W_TRAIN_START:
+				trainBegin();
+				break;
+			case H_W_TRAIN_END:
+				trainFinish();
+				break;
+			case H_W_GET_COACHINFO:
+				getCoachInfo();
+				break;
+			case H_W_GET_STUDENTINFO:
+				getStudentInfo();
+				break;
+			case H_W_DOWN_FINGER:
+				downFinger();
+				break;
+			case H_W_WRITE_FINGER:
+				writeFinger();
 				break;
 			default:
 				break;
@@ -286,9 +295,16 @@ public class MainActivity extends Activity implements OnInitListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-
-		// 初始化GPS
+		
+		try {
+			Intent intent = new Intent();
+			intent.setComponent(new ComponentName("cn.whzxt.gps", "cn.whzxt.gps.ZxtService"));
+			startService(intent);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		/*
 		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			// 打开GPS
 			try {
@@ -298,15 +314,16 @@ public class MainActivity extends Activity implements OnInitListener {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
+		}*/
+		streamIt = new StreamIt();
 		_lastBmps = new Bitmap[4];
 		server = getString(R.string.server1);
+		settings = getSharedPreferences("whzxt.net", 0);
 		nowTime = new Date();
 		dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		timeFormat = new SimpleDateFormat("HH:mm:ss");
-		settings = getSharedPreferences("whzxt.net", 0);
 		// 照片压缩比
-		_inSampleSize = settings.getInt("inSampleSize", 4);
+		streamIt.options.inSampleSize = settings.getInt("inSampleSize", 4);
 		// 训练科目
 		DeviceInfo.Subject = settings.getInt("subject", 2);
 		// 状态
@@ -325,14 +342,14 @@ public class MainActivity extends Activity implements OnInitListener {
 		wakeLock.acquire();
 
 		// 设备和驾校信息
-		Bundle bundle = this.getIntent().getExtras();
-		deviceID = bundle.getString("deviceID");
-		deviceName = bundle.getString("deviceName");
-		schoolID = bundle.getString("schoolID");
-		schoolName = bundle.getString("schoolName");
-		session = bundle.getString("session");
+		deviceID = settings.getString("deviceID", "");
+		deviceName = settings.getString("deviceName", "");
+		schoolID = settings.getString("schoolID", "");
+		schoolName = settings.getString("schoolName", "");
+		session = settings.getString("session", "");
 		retry = 0;
-		if (bundle.getString("offline") != null) {
+		Bundle bundle = this.getIntent().getExtras();
+		if (bundle != null && bundle.getString("offline") != null) {
 			retry = 3;
 		}
 
@@ -367,8 +384,7 @@ public class MainActivity extends Activity implements OnInitListener {
 			e.printStackTrace();
 		}
 
-		// RFID选择读A卡(身份证为B卡)
-		NativeRFID.select_type(RFID_TYPE_A);
+		cardOper.selectRfidType(CardOper.RFID_TYPE_A);
 
 		// 定时器
 		initTimer();
@@ -377,6 +393,15 @@ public class MainActivity extends Activity implements OnInitListener {
 		// 看门狗
 		// dogfd = com.lyt.watchdog.Native.init();
 		// com.lyt.watchdog.Native.settimeout(6);
+
+		// 启动视频监控服务
+		try {
+			photoServer = new PhotoServer(9999, streamIt);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// 开始读卡
+		cardOper.start();
 	}
 
 	/**
@@ -406,7 +431,7 @@ public class MainActivity extends Activity implements OnInitListener {
 		layDevStatus = (LinearLayout) findViewById(R.id.layDevStatus);
 		layTitle = (TableLayout) findViewById(R.id.layTitle);
 		mainView = (ScrollView) findViewById(R.id.mainView);
-		camView = (ImageView) findViewById(R.id.camView);
+		previewSurface = (SurfaceView) findViewById(R.id.previewSurface);
 		imgLast01 = (ImageView) findViewById(R.id.imgLast01);
 		imgLast02 = (ImageView) findViewById(R.id.imgLast02);
 		imgLast03 = (ImageView) findViewById(R.id.imgLast03);
@@ -485,16 +510,19 @@ public class MainActivity extends Activity implements OnInitListener {
 				}
 			}
 		});
+
 		layTitle.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				mainView.fullScroll(View.FOCUS_UP);
 			}
 		});
+
 		layScrollDown.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				mainView.fullScroll(View.FOCUS_DOWN);
 			}
 		});
+
 		// 系统消息Tab
 		btnTabSysInfo.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -506,6 +534,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				layDevStatus.setVisibility(View.GONE);
 			}
 		});
+
 		// 设备状态Tab
 		btnTabDevStatus.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -517,12 +546,14 @@ public class MainActivity extends Activity implements OnInitListener {
 				layDevStatus.setVisibility(View.VISIBLE);
 			}
 		});
+
 		// 训练状态
 		btnJFMS.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				changeMode(MODE_TRAIN);
 			}
 		});
+
 		// 自由状态
 		btnFJFMS.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -533,7 +564,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						if (txtpsd.getText().toString().toLowerCase().equals(settings.getString("offlinepassword", "").toLowerCase())) {
 							changeMode(MODE_FREE);
 						} else {
-							toashShow("密码错误");
+							toastShow("密码错误");
 						}
 					}
 				}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -544,69 +575,53 @@ public class MainActivity extends Activity implements OnInitListener {
 				alertDialog.show();
 			}
 		});
+
 		imgLast01.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (_lastBmps[0] != null) {
-					camView.setImageBitmap(_lastBmps[0]);
+					// PhotoViewDialog pvd = new
+					// PhotoViewDialog(MainActivity.this);
+					// pvd.setImage(_lastBmps[0]);
+					// pvd.show();
+					// camView.setImageBitmap(_lastBmps[0]);
 				}
 			}
 		});
+
 		imgLast02.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (_lastBmps[1] != null) {
-					camView.setImageBitmap(_lastBmps[1]);
+					// camView.setImageBitmap(_lastBmps[1]);
 				}
 			}
 		});
+
 		imgLast03.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (_lastBmps[2] != null) {
-					camView.setImageBitmap(_lastBmps[2]);
+					// camView.setImageBitmap(_lastBmps[2]);
 				}
 			}
 		});
+
 		imgLast04.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (_lastBmps[3] != null) {
-					camView.setImageBitmap(_lastBmps[3]);
+					// camView.setImageBitmap(_lastBmps[3]);
 				}
 			}
 		});
-	}
 
-	private void cameraView() {
-		if (_camViewFlag) {
-			_camViewFlag = false;
-			try {
-				// camView.setImageBitmap(_camBmp);
-				// Log.i("camera", "camera view");
-				if (Train.IsTraining && !Train.VideoPath.equals("")) {
-					_camIS = _camUrl.openConnection().getInputStream();
-					_camBmp = BitmapFactory.decodeStream(_camIS);
-					_camIS.close();
-					// 保存照片
-					File file = new File(Train.VideoPath + "/" + String.format("%05d.jpg", ++Train.VideoPhotoCount));
-					try {
-						file.createNewFile();
-						BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
-						_camBmp.compress(Bitmap.CompressFormat.JPEG, 50, os);
-						os.flush();
-						os.close();
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+		// 切换摄像头
+		previewSurface.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (_takephotoing) {
+					Toast.makeText(MainActivity.this, "正在拍照,请稍候再切换摄像头", Toast.LENGTH_SHORT);
+				} else {
+					changeCamera();
 				}
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
-			_camViewFlag = true;
-		}
+		});
 	}
 
 	/**
@@ -621,48 +636,10 @@ public class MainActivity extends Activity implements OnInitListener {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		// 打开IC卡读卡器
-		try {
-			fd = Native.auto_init(PATH, BAUD);
-		} catch (Exception e) {
-			speak("IC卡读卡器打开失败");
-			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("IC卡读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					MainActivity.this.finish();
-					System.exit(0);
-				}
-			}).create();
-			alertDialog.show();
-			return;
-		}
-		// 打开RFID读卡器
-		try {
-			if (!NativeRFID.open_fm1702()) {
-				NativeRFID.close_fm1702();
-				if (!NativeRFID.open_fm1702()) {
-					speak("RFID读卡器打开失败");
-					AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("RFID读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int which) {
-							MainActivity.this.finish();
-							System.exit(0);
-						}
-					}).create();
-					alertDialog.show();
-					return;
-				}
-			}
-		} catch (ExceptionInInitializerError e) {
-			speak("RFID读卡器打开失败");
-			AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("RFID读卡器打开失败").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					MainActivity.this.finish();
-					System.exit(0);
-				}
-			}).create();
-			alertDialog.show();
-			e.printStackTrace();
-			return;
-		}
+		// 打开读卡器
+		cardOper = new CardOper(schoolID, cardOnChange);
+		cardOper.openICCard();
+		cardOper.openRfidCard();
 		// 指纹模块
 		try {
 			_fingerprint = new lytfingerprint();
@@ -695,13 +672,9 @@ public class MainActivity extends Activity implements OnInitListener {
 		if (!file.exists()) {
 			file.mkdirs();
 		}
-		try {
-			// 串口摄像头
-			native_camera = new serial_camera();
-		} catch (java.lang.ExceptionInInitializerError e) {
-			e.printStackTrace();
-			native_camera = null;
-		}
+		previewSurfaceHolder = previewSurface.getHolder();
+		previewSurfaceHolder.addCallback(this);
+		previewSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 	}
 
 	/**
@@ -749,6 +722,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				handler.sendEmptyMessage(H_W_TAKE_PHOTO);
 			}
 		}, 30000, settings.getInt("photo_interval", PHOTO_DEF_INTERVAL) * 1000);
+		_timerTakePhoto2 = new Timer();
 		// 上传照片
 		_timerUploadPhoto = new Timer();
 		_timerUploadPhoto.schedule(new TimerTask() {
@@ -776,20 +750,6 @@ public class MainActivity extends Activity implements OnInitListener {
 				}
 			}
 		}, 6000, 1000);
-		// 摄像头预览
-		try {
-			_camUrl = new URL("http://127.0.0.1:9999/shot.jpg");
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-		_camViewFlag = true;
-		_timerCamView = new Timer();
-		_timerCamView.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				handler.sendEmptyMessage(H_W_CAMERAVIEW);
-			}
-		}, 500, 200);
 	}
 
 	/**
@@ -895,58 +855,69 @@ public class MainActivity extends Activity implements OnInitListener {
 	 * 拍照
 	 */
 	private void takephoto() {
-		if (!_takephotoing && Train.IsTraining) {
+		if (_camera != null && !_takephotoing && Train.IsTraining) {
 			_takephotoing = true;
+			streamIt.Screenshot = true;
 			_photoUUID = Train.TrainID;
 			_phototime = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 			_photoSpeed = DeviceInfo.Speed;
 			_photoSenSpeed = DeviceInfo.SenSpeed;
+			_timerTakePhoto2.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					handler.sendEmptyMessage(H_W_TAKE_PHOTO1);
+				}
+			}, 1000);
+		}
+	}
 
-			try {
-				_camIS = _camUrl.openConnection().getInputStream();
-				lastBitmapJoin(BitmapFactory.decodeStream(_camIS));
-				savePhoto(1);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			// 串口摄像头拍照
-			if (native_camera != null) {
-				new AsyncTask<Void, Void, Integer>() {
-					@Override
-					protected Integer doInBackground(Void... args) {
-						return takeSerialPhoto();
-					}
+	private void takephoto1() {
+		if (null != streamIt.yuv420sp) {
+			lastBitmapJoin(streamIt.yuv420sp);
+			savePhoto(_curCamera);
+			changeCamera();
+			_timerTakePhoto2.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					handler.sendEmptyMessage(H_W_TAKE_PHOTO2);
+				}
+			}, 1000);
+		}
+	}
 
-					@Override
-					protected void onPostExecute(Integer result) {
-						_takephotoing = false;
-						if (result == 0) {
-							BitmapFactory.Options options = new BitmapFactory.Options();
-							options.inSampleSize = _inSampleSize;
-							lastBitmapJoin(BitmapFactory.decodeFile("/data/local/tmp/picture.jpg", options));
-							savePhoto(2);
-						} else if (result == 1) {
-							Log.i("serial_camera", "串口初始化失败");
-						} else if (result == 2) {
-							Log.i("serial_camera", "摄像头初始化失败");
-						} else if (result == 3) {
-							Log.i("serial_camera", "发摄像头拍照命令失败");
-						} else if (result == 4) {
-							Log.i("serial_camera", "摄像头传送数据失败");
-						}
-					}
-				}.execute();
+	private void takephoto2() {
+		lastBitmapJoin(streamIt.yuv420sp);
+		savePhoto(_curCamera);
+		changeCamera();
+		_takephotoing = false;
+		streamIt.Screenshot = false;
+	}
+
+	/**
+	 * 切换摄像头
+	 * 
+	 * @param 摄像头路数
+	 */
+	private void changeCamera() {
+		if (_camera != null) {
+			if (_curCamera == 1) {
+				_curCamera = 2;
+				Camera.Parameters parameters = _camera.getParameters();
+				parameters.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+				_camera.setParameters(parameters);
 			} else {
-				_takephotoing = false;
+				_curCamera = 1;
+				Camera.Parameters parameters = _camera.getParameters();
+				parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+				_camera.setParameters(parameters);
 			}
 		}
 	}
 
-	private void lastBitmapJoin(Bitmap bmp) {
+	private void lastBitmapJoin(byte[] yuv420sp) {
 		if (_lastBmps[0] == null) {
-			_lastBmps[0] = bmp;
+			_lastBmps[0] = BitmapFactory.decodeByteArray(yuv420sp, 0, yuv420sp.length);
 			imgLast01.setImageBitmap(_lastBmps[0]);
-			camView.setImageBitmap(_lastBmps[0]);//
 			return;
 		}
 		_lastBmps[3] = _lastBmps[2];
@@ -955,9 +926,8 @@ public class MainActivity extends Activity implements OnInitListener {
 		imgLast03.setImageBitmap(_lastBmps[2]);
 		_lastBmps[1] = _lastBmps[0];
 		imgLast02.setImageBitmap(_lastBmps[1]);
-		_lastBmps[0] = bmp;
+		_lastBmps[0] = BitmapFactory.decodeByteArray(yuv420sp, 0, yuv420sp.length);
 		imgLast01.setImageBitmap(_lastBmps[0]);
-		camView.setImageBitmap(_lastBmps[0]);//
 	}
 
 	private void savePhoto(int i) {
@@ -982,16 +952,46 @@ public class MainActivity extends Activity implements OnInitListener {
 		}
 	}
 
-	private int takeSerialPhoto() {
-		if (native_camera.uart_init0(115200) == 0)
-			return 1;
-		if (native_camera.photo_init() == 0)
-			return 2;
-		if (native_camera.take_photo_cmd() == 0)
-			return 3;
-		if (native_camera.take_photo("/data/local/tmp/picture.jpg") == 0)
-			return 4;
-		return 0;
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		if (_camera != null) {
+			if (_previewing) {
+				_camera.stopPreview();
+			}
+			Camera.Parameters p = _camera.getParameters();
+			p.setPreviewSize(720, 576);
+			p.setPreviewFormat(PixelFormat.YCbCr_420_SP);
+			_camera.setPreviewCallback(streamIt);
+			_camera.setParameters(p);
+			try {
+				_camera.setPreviewDisplay(holder);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			_camera.startPreview();
+			_previewing = true;
+		}
+	}
+
+	public void surfaceCreated(SurfaceHolder holder) {
+		try {
+			_camera = Camera.open();
+			if (_camera == null) {
+				Toast.makeText(MainActivity.this, "摄像头启动失败", Toast.LENGTH_SHORT);
+			}
+		} catch (Exception e) {
+			Toast.makeText(MainActivity.this, "摄像头启动失败", Toast.LENGTH_SHORT);
+			e.printStackTrace();
+		}
+	}
+
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		if (_camera != null) {
+			_camera.setPreviewCallback(null);
+			_camera.stopPreview();
+			_previewing = false;
+			_camera.release();
+			_camera = null;
+		}
 	}
 
 	/**
@@ -1043,7 +1043,7 @@ public class MainActivity extends Activity implements OnInitListener {
 							NativeGPIO.setRelay(false);
 						} else if (cmd.equals("close_oil")) {
 							// 切断油电
-							toashShow("1分钟后将断油电");
+							toastHandleShow("1分钟后将断油电");
 							_relayoff = 60;
 						} else if (cmd.startsWith("call:")) {
 							// 拨号
@@ -1087,9 +1087,9 @@ public class MainActivity extends Activity implements OnInitListener {
 							try {
 								// 设置照片压缩比
 								cmd = cmd.replace("set_photo_size:", "");
-								_inSampleSize = Integer.valueOf(cmd);
+								streamIt.options.inSampleSize = Integer.valueOf(cmd);
 								SharedPreferences.Editor editor = settings.edit();
-								editor.putInt("inSampleSize", _inSampleSize);
+								editor.putInt("inSampleSize", streamIt.options.inSampleSize);
 								editor.commit();
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -1141,30 +1141,28 @@ public class MainActivity extends Activity implements OnInitListener {
 								_initcontext[i + 9] = initschoolid.charAt(i);
 							}
 							showDialog(DL_CARD_INIT);
-							_rfidProcsing = true;
 							new AsyncTask<Void, Void, Integer>() {
 								@Override
 								protected Integer doInBackground(Void... args) {
-									if (NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, _initcontext) == 1) {
+									if (cardOper.WriteRFID(new int[] { 1, 1 }, CardOper.RFID_EARA, _initcontext)) {
 										return 1;
 									}
 									SystemClock.sleep(100);
-									return NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, _initcontext);
+									return cardOper.WriteRFID(new int[] { 1, 1 }, CardOper.RFID_EARA, _initcontext) ? 1 : 0;
 								}
 
 								@Override
 								protected void onPostExecute(Integer result) {
-									dismissDialog(DL_CARD_INIT);
-									_rfidProcsing = false;
 									if (result == 1) {
-										if (NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 0 }) != 1) {
+										if (!cardOper.WriteRFID(new int[] { 10 }, CardOper.RFID_BLOCK, new int[] { 0 })) {
 											SystemClock.sleep(100);
-											NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 0 });
+											cardOper.WriteRFID(new int[] { 10 }, CardOper.RFID_BLOCK, new int[] { 0 });
 										}
-										toashShow("卡初始化成功,请重新插卡");
+										toastShow("卡初始化成功,请重新插卡");
 									} else {
-										toashShow("卡初始化失败,请重试");
+										toastShow("卡初始化失败,请重试");
 									}
+									dismissDialog(DL_CARD_INIT);
 								}
 							}.execute();
 						}
@@ -1176,7 +1174,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						btnTabSysInfo.setTextColor(MainActivity.this.getResources().getColor(R.color.button_checked_text));
 						laySysInfo.setVisibility(View.VISIBLE);
 						layDevStatus.setVisibility(View.GONE);
-						toashShow("收到新短信:" + txtSysInfo.getText().toString());
+						toastShow("收到新短信:" + txtSysInfo.getText().toString());
 					}
 				}
 				if (!_isclosed) {
@@ -1185,6 +1183,68 @@ public class MainActivity extends Activity implements OnInitListener {
 			}
 		}.execute();
 	}
+
+	CardOper.OnChange cardOnChange = new CardOper.OnChange() {
+		public void onLose() {
+			Log.i("gc", "onlose");
+			handler.sendEmptyMessage(H_W_TRAIN_END);
+		}
+
+		public void onFind(String msg) {
+			Log.i("gc", "onfind");
+			if (msg != null) {
+				toastHandleShow(msg);
+			} else {
+				// 判断是否需要验证指纹
+				int ncf = needCheckFinger(Student.IsCoach, Student.CardNo);
+				if (ncf == 0) {// 不需要验证指纹
+					if (!Student.NotNeedFinger) {
+						Student.NotNeedFinger = !Student.NotNeedFinger;
+						cardOper.WriteNotNeedFingerFlag(1);
+					}
+				} else if (ncf == 1) {// 需要验证指纹
+					if (Student.NotNeedFinger) {
+						Student.NotNeedFinger = !Student.NotNeedFinger;
+						cardOper.WriteNotNeedFingerFlag(0);
+					}
+				}
+				handler.post(new Runnable() {
+					public void run() {
+						dismissDialog(DL_CARD_READING);
+					}
+				});
+				if (Student.NotNeedFinger) {
+					if (Student.IsCoach) {
+						if (retry < 3) {
+							handler.sendEmptyMessage(H_W_GET_COACHINFO);
+						} else {
+							handler.sendEmptyMessage(H_W_TRAIN_START);
+						}
+					} else {
+						if (retry < 3) {
+							handler.sendEmptyMessage(H_W_GET_STUDENTINFO);
+						} else {
+							handler.sendEmptyMessage(H_W_TRAIN_START);
+						}
+					}
+				} else {
+					if (Student.HasFinger) {
+						handler.sendEmptyMessage(H_W_DOWN_FINGER);
+					} else {
+						handler.sendEmptyMessage(H_W_WRITE_FINGER);
+					}
+				}
+			}
+		}
+
+		public void onReadStart() {
+			handler.post(new Runnable() {
+				public void run() {
+					showDialog(DL_CARD_READING);
+				}
+			});
+		}
+	};
 
 	/**
 	 * 文字闪烁
@@ -1226,8 +1286,6 @@ public class MainActivity extends Activity implements OnInitListener {
 	 */
 	private String getTimeDiff(Date start, Date end) {
 		long between = (end.getTime() - start.getTime()) / 1000;
-		// long day=between/(24*3600);
-		// long hour = between % (24 * 3600) / 3600;
 		long hour = between / 3600;
 		long minute = between % 3600 / 60;
 		long second = between % 60;
@@ -1235,241 +1293,14 @@ public class MainActivity extends Activity implements OnInitListener {
 	}
 
 	/**
-	 * 读卡型
-	 * 
-	 * @return
-	 */
-	private int readCardType() {
-		if (_readICCard) {
-			_readICCard = !_readICCard;
-			if (Native.chk_24c02(fd) == 0) {
-				return CARD_24C02;
-			}
-		}
-		if (!_readICCard) {
-			_readICCard = !_readICCard;
-			_rfidUID = NativeRFID.read_A();
-			if (_rfidUID == null) {
-				Log.i("rfid", "null");
-			} else {
-				Log.i("rfid", _rfidUID);
-			}
-			if (null != _rfidUID) {
-				if (_rfidUID.charAt(16) == '0') {
-					// _rfidUID = hex2string(_rfidUID.substring(0, 13));
-					return CARD_S50;
-				}
-				if (_rfidUID.charAt(16) == '1') {
-					// _rfidUID = hex2string(_rfidUID.substring(0, 13));
-					return CARD_S70;
-				}
-			}
-		}
-		return NO_CARD;
-	}
-
-	/**
-	 * 读卡
-	 */
-	private void readCard() {
-		if (_cardType == CARD_24C02) {
-			String tmpdata = Native.srd_24c02(fd, 0x08, 0x21);
-			String[] tmpchars = tmpdata.split(" ");
-			if (tmpchars[0].equals("02") && Coach.CardNo.equals("")) {
-				toashShow("请先插教练卡");
-				return;
-			}
-			// 驾校ID
-			String tmpschool = String.valueOf((char) Integer.parseInt(tmpchars[24], 16));
-			for (int i = 25; i < 32; i++) {
-				tmpschool += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
-			}
-			// 兼容老卡
-			if (tmpschool.equals("11111111")) {
-				tmpschool = "001001";
-			}
-			if (!tmpschool.equals(schoolID)) {
-				toashShow("此卡不属于本驾校");
-				return;
-			}
-			// 卡号
-			String tmpCardNo = String.valueOf((char) Integer.parseInt(tmpchars[8], 16));
-			for (int i = 9; i < 16; i++) {
-				tmpCardNo += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
-			}
-			// 卡内剩余时长
-			try {
-				Student.RealBalance = Student.Balance = Integer.parseInt(tmpchars[1].toString() + tmpchars[2].toString(), 16);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			// 姓名
-			String tmpCardName = "";
-			try {
-				tmpCardName = new String(int2bytes(Integer.parseInt(tmpchars[16].toString() + tmpchars[17].toString(), 16)), "GB2312").trim();
-				for (int i = 18; i < 24; i++) {
-					tmpCardName += new String(int2bytes(Integer.parseInt(tmpchars[i].toString() + tmpchars[++i].toString(), 16)), "GB2312").trim();
-				}
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-			if (tmpchars[0].equals("01")) {
-				// 教练卡
-				Coach.CardNo = Student.CardNo = tmpCardNo;
-				Coach.ID = Student.ID = "";
-				Coach.Name = Student.Name = tmpCardName;
-				Coach.IDCardNo = Student.IDCardNo = "";
-				Student.IsCoach = true;
-			} else {
-				// 学员卡
-				Student.CardNo = tmpCardNo;
-				Student.ID = "";
-				Student.Name = tmpCardName;
-				Student.IDCardNo = "";
-				Student.IsCoach = false;
-			}
-			if (!tmpchars[32].equals("01")) {
-				Log.i("finger", "record finger 1");
-				writeFinger();// 第一次使用记录指纹
-			} else {
-				showDialog(DL_DOWN_FINGER);
-				Log.i("finger", "download finger 1");
-				downFinger();// 下载指纹
-			}
-		} else if (_cardType == CARD_S50 || _cardType == CARD_S70) {
-			_rfidProcsing = true;
-			showDialog(DL_CARD_READING);// 提示正在读卡
-			new AsyncTask<Void, Void, Integer>() {
-				@Override
-				protected Integer doInBackground(Void... args) {
-					Log.i("rfid", "read card 1");
-					// 身份信息
-					String tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA);
-					if (null == tmpdata || !tmpdata.endsWith("1")) {
-						SystemClock.sleep(100);// 100毫秒后尝试重新读卡
-						tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA);
-					}
-					if (null == tmpdata) {
-						return 1;
-					}
-					if (!tmpdata.endsWith("1")) {
-						return 1;
-					}
-					String[] tmpchars = tmpdata.split(" ");
-					// 卡类型
-					if (tmpchars[0].equals("02") && Coach.CardNo.equals("")) {
-						return 3;
-					}
-					// 驾校ID
-					String tmpschool = "";
-					for (int i = 9; i < 18; i++) {
-						tmpschool += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
-					}
-					tmpschool = tmpschool.trim();
-					if (!tmpschool.equals(schoolID)) {
-						return 2;
-					}
-					// 卡号
-					String tmpCardNo = "";
-					for (int i = 1; i < 9; i++) {
-						tmpCardNo += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
-					}
-					tmpCardNo = tmpCardNo.trim();
-					// 身份证号
-					String tmpIDCardNo = "";
-					for (int i = 18; i < 36; i++) {
-						tmpIDCardNo += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
-					}
-					tmpIDCardNo = tmpIDCardNo.trim();
-					// 姓名
-					String tmpCardName = "";
-					try {
-						for (int i = 36; i < 46; i++) {
-							tmpCardName += new String(int2bytes(Integer.parseInt(tmpchars[i].toString() + tmpchars[++i].toString(), 16)), "GB2312").trim();
-						}
-					} catch (UnsupportedEncodingException e) {
-						e.printStackTrace();
-					}
-					if (tmpchars[0].equals("01")) {
-						// 教练卡
-						Coach.CardNo = Student.CardNo = tmpCardNo;
-						Coach.ID = Student.ID = "";
-						Coach.Name = Student.Name = tmpCardName;
-						Coach.IDCardNo = Student.IDCardNo = "";
-						Student.IsCoach = true;
-					} else {
-						// 学员卡
-						Student.CardNo = tmpCardNo;
-						Student.ID = "";
-						Student.Name = tmpCardName;
-						Student.IDCardNo = "";
-						Student.IsCoach = false;
-					}
-					Log.i("rfid", "read card 2");
-					// 余额.学时.里程
-					tmpdata = NativeRFID.read_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK);
-					if (null == tmpdata || !tmpdata.endsWith("1")) {
-						SystemClock.sleep(100);// 100毫秒后尝试重新读卡
-						tmpdata = NativeRFID.read_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK);
-					}
-					if (null != tmpdata && tmpdata.endsWith("1")) {
-						tmpchars = tmpdata.split(" ");
-						Student.RealBalance = Student.Balance = Integer.parseInt(tmpchars[0].toString() + tmpchars[1].toString(), 16);
-						Student.TotalTime = Integer.parseInt(tmpchars[2].toString() + tmpchars[3].toString(), 16);
-						Student.TotalMi = Integer.parseInt(tmpchars[4].toString() + tmpchars[5].toString() + tmpchars[6], 16);
-					}
-					// 判断是否有指纹
-					_hasfingerdata = true;
-					Log.i("rfid", "read card 3");
-					tmpdata = NativeRFID.read_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK);
-					if (null == tmpdata || !tmpdata.endsWith("1")) {
-						SystemClock.sleep(100);// 100毫秒后尝试重新读卡
-						tmpdata = NativeRFID.read_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK);
-					}
-					if (null == tmpdata) {
-						return 1;
-					}
-					if (tmpdata.endsWith("1") && !tmpdata.startsWith("01")) {
-						_hasfingerdata = false;
-					}
-					return 0;
-				}
-
-				@Override
-				protected void onPostExecute(Integer result) {
-					_rfidProcsing = false;
-					dismissDialog(DL_CARD_READING);
-					if (result == 0) {
-						if (!_hasfingerdata) {
-							Log.i("finger", "record finger 1");
-							writeFinger();// 第一次使用记录指纹
-						} else {
-							showDialog(DL_DOWN_FINGER);
-							Log.i("finger", "download finger 1");
-							downFinger();// 下载指纹
-						}
-					} else {
-						if (result == 1) {
-							toashShow("读卡失败,请尝试重新插卡");
-						} else if (result == 2) {
-							toashShow("此卡不属于本驾校");
-						} else if (result == 3) {
-							toashShow("请先插教练卡");
-						}
-					}
-				}
-			}.execute();
-		}
-	}
-
-	/**
 	 * 下载指纹
 	 */
 	private void downFinger() {
+		showDialog(DL_DOWN_FINGER);
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
-				Cursor cursor = db.query(MySQLHelper.T_ZXT_FINGER, new String[] { "id" }, "cardno=?", new String[] { Student.CardNo }, null, null, null);
+				Cursor cursor = db.query(MySQLHelper.T_ZXT_FINGER, new String[] { "id" }, "cardno=?", new String[] { (Student.IsCoach ? "01" : "02") + Student.CardNo }, null, null, null);
 				if (cursor.moveToFirst()) {
 					_fingerCurId = cursor.getInt(0);
 					ContentValues tcv = new ContentValues();
@@ -1499,7 +1330,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					}
 				}
 				try {
-					URL url = new URL(server + "/getfinger.ashx?cardno=" + Student.CardNo + "&n=1");
+					URL url = new URL(server + "/getfinger.ashx?cardno=" + Student.CardNo + "&n=1&t=" + (Student.IsCoach ? "1" : "2"));
 					URLConnection connection = url.openConnection();
 					connection.connect();
 					InputStream inputStream = connection.getInputStream();
@@ -1537,7 +1368,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				}
 
 				try {
-					URL url = new URL(server + "/getfinger.ashx?cardno=" + Student.CardNo + "&n=2");
+					URL url = new URL(server + "/getfinger.ashx?cardno=" + Student.CardNo + "&n=2&t=" + (Student.IsCoach ? "1" : "2"));
 					URLConnection connection = url.openConnection();
 					connection.connect();
 					InputStream inputStream = connection.getInputStream();
@@ -1576,12 +1407,12 @@ public class MainActivity extends Activity implements OnInitListener {
 				if (isinsert) {
 					ContentValues tcv = new ContentValues();
 					tcv.put("id", _fingerCurId);
-					tcv.put("cardno", Student.CardNo);
+					tcv.put("cardno", (Student.IsCoach ? "01" : "02") + Student.CardNo);
 					tcv.put("lasttime", dateFormat.format(nowTime));
 					db.insert(MySQLHelper.T_ZXT_FINGER, null, tcv);
 				} else {
 					ContentValues tcv = new ContentValues();
-					tcv.put("cardno", Student.CardNo);
+					tcv.put("cardno", (Student.IsCoach ? "01" : "02") + Student.CardNo);
 					tcv.put("lasttime", dateFormat.format(nowTime));
 					db.update(MySQLHelper.T_ZXT_FINGER, tcv, "id=?", new String[] { String.valueOf(_fingerCurId) });
 				}
@@ -1590,10 +1421,9 @@ public class MainActivity extends Activity implements OnInitListener {
 
 			@Override
 			protected void onPostExecute(Integer result) {
-				_rfidProcsing = false;
 				dismissDialog(DL_DOWN_FINGER);
 				if (result == 0) {
-					toashShow("网络异常,无法下载指纹,请检查网络,然后尝试重新插卡");
+					toastShow("网络异常,无法下载指纹,请检查网络,然后尝试重新插卡");
 				} else if (result == 1) {
 					showStudent(true);
 					showDialog(DL_VALI_FINGER);
@@ -1603,7 +1433,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				} else if (result == 2) {
 					Toast.makeText(MainActivity.this, "写指纹文件时出现异常", Toast.LENGTH_SHORT).show();
 				} else {
-					toashShow("获取指纹信息失败,请尝试重新插卡");
+					toastShow("获取指纹信息失败,请尝试重新插卡");
 				}
 			}
 		}.execute();
@@ -1623,16 +1453,16 @@ public class MainActivity extends Activity implements OnInitListener {
 					}
 					SystemClock.sleep(100);
 				}
-				SystemClock.sleep(50);
+				SystemClock.sleep(100);
 				while (_fingerprint.PSGetImage(_fingerAddress) == PS_NO_FINGER) {
 					if (_fingerFinish) {
 						return 0;
 					}
 					SystemClock.sleep(100);
 				}
-				SystemClock.sleep(50);
+				SystemClock.sleep(10);
 				_fingerprint.PSGenChar(_fingerAddress, CHAR_BUFFER_A);
-				SystemClock.sleep(50);
+				SystemClock.sleep(200);
 				if (_fingerprint.PSSearch(_fingerAddress, CHAR_BUFFER_A, _fingerCurId, 2, 0) == PS_OK) {
 					return 1;
 				}
@@ -1643,7 +1473,7 @@ public class MainActivity extends Activity implements OnInitListener {
 			protected void onPostExecute(Integer result) {
 				dismissDialog(DL_VALI_FINGER);
 				if (result == 1) {
-					toashShow("指纹验证成功");
+					toastShow("指纹验证成功");
 					if (Student.IsCoach) {
 						if (retry < 3) {
 							getCoachInfo();
@@ -1659,11 +1489,11 @@ public class MainActivity extends Activity implements OnInitListener {
 					}
 				} else {
 					if (!_fingerFinish) {
-						toashShow("指纹验证失败,请重新按手指");
+						toastShow("指纹验证失败,请重新按手指");
 						showDialog(DL_VALI_FINGER);
 						valiFinger();
 					} else {
-						toashShow("指纹验证失败,请尝试重新插卡");
+						toastShow("指纹验证失败,请尝试重新插卡");
 						showStudent(false);
 					}
 				}
@@ -1702,66 +1532,23 @@ public class MainActivity extends Activity implements OnInitListener {
 					trainFinish();
 				}
 			}
-			// 判断是否插卡
-			switch (_cardType) {
-			case CARD_24C02:
-				if (Native.chk_24c02(fd) != 0) {
-					trainFinish();
-				}
-				break;
-			case CARD_S50:
-				if (!_rfidProcsing) {
-					_rfidUID = NativeRFID.read_A();
-					if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
-						SystemClock.sleep(100);// 100毫秒后重试一次
-						Log.i("rfid", "re50");
-						_rfidUID = NativeRFID.read_A();
-						if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
-							SystemClock.sleep(100);// 100毫秒后重试一次
-							Log.i("rfid", "re50");
-							_rfidUID = NativeRFID.read_A();
-							if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
-								trainFinish();
-							}
-						}
-					}
-				}
-				break;
-			case CARD_S70:
-				if (!_rfidProcsing) {
-					_rfidUID = NativeRFID.read_A();
-					if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
-						SystemClock.sleep(100);// 100毫秒后重试一次
-						Log.i("rfid", "re70");
-						_rfidUID = NativeRFID.read_A();
-						if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
-							SystemClock.sleep(100);// 100毫秒后重试一次
-							Log.i("rfid", "re70");
-							_rfidUID = NativeRFID.read_A();
-							if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
-								trainFinish();
-							}
-						}
-					}
-				}
-				break;
-			case NO_CARD:
-				_cardType = readCardType();
-				if (_cardType != NO_CARD) {
-					readCard();
-				}
-				break;
-			default:
-				break;
-			}
 
 			if (_relayoff > 0) {
 				_relayoff--;
 				if (_relayoff == 0) {
 					NativeGPIO.setRelay(true);
-					toashShow("油电已断");
+					toastShow("油电已断");
 				}
 			}
+
+			if (photoServer.ConCount == photoServer.PreConCount) {
+				if (!_takephotoing) {
+					streamIt.Screenshot = false;
+				}
+			} else {
+				photoServer.PreConCount = photoServer.ConCount;
+			}
+
 			_secondTimerFlag = true;
 		}
 	}
@@ -1778,7 +1565,7 @@ public class MainActivity extends Activity implements OnInitListener {
 	 */
 	private void trainBegin() {
 		if (DeviceInfo.Mode == MODE_TRAIN && Student.Balance <= 0) {
-			toashShow("卡内余额不足");
+			toastShow("卡内余额不足");
 			return;
 		}
 		String _tmp = "早上好";
@@ -1800,7 +1587,14 @@ public class MainActivity extends Activity implements OnInitListener {
 				txtStartTime.setText("训练开始时间: " + timeFormat.format(Train.StartTime));
 				speak(_tmp + "," + Student.Name + ",卡内余额:" + ((Student.Balance - 1) * PRICE) + "元,剩余" + (Student.Balance - 1) + "分钟,请谨慎驾驶");
 			}
-			writeBalance(Student.Balance - 1);// 重写卡内余额
+			// 重写卡内余额
+			new AsyncTask<Void, Void, Integer>() {
+				@Override
+				protected Integer doInBackground(Void... args) {
+					cardOper.WriteBalance(Student.Balance - 1);
+					return 0;
+				}
+			}.execute();
 			takephoto();// 拍照
 		} else {
 			speak(_tmp + "," + Student.Name);
@@ -1831,7 +1625,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				txtStartTime.setText("本次训练已结束");
 				txtTrainTime.setText("共训练" + getTimeDiff(Train.StartTime, nowTime));
 			}
-			// takephoto();// 拍照
+			takephoto();// 拍照
 			Train.End(db);
 			// 20秒之后隐藏训练信息
 			new Timer().schedule(new TimerTask() {
@@ -1852,34 +1646,7 @@ public class MainActivity extends Activity implements OnInitListener {
 		}
 		Student.Init();
 		showStudent(false);
-		_cardType = NO_CARD;
-	}
-
-	/**
-	 * int转换为byte[]
-	 * 
-	 * @param i
-	 * @return
-	 */
-	private byte[] int2bytes(int i) {
-		byte[] result = new byte[4];
-		result[0] = (byte) ((i >> 24) & 0xFF);
-		result[1] = (byte) ((i >> 16) & 0xFF);
-		result[2] = (byte) ((i >> 8) & 0xFF);
-		result[3] = (byte) (i & 0xFF);
-		return result;
-	}
-
-	private int bytes2int(byte[] b) {
-		int mask = 0xff;
-		int temp = 0;
-		int res = 0;
-		for (int i = 0; i < b.length; i++) {
-			res <<= 8;
-			temp = b[i] & mask;
-			res |= temp;
-		}
-		return res;
+		cardOper.CardType = CardOper.NO_CARD;
 	}
 
 	/**
@@ -1890,11 +1657,18 @@ public class MainActivity extends Activity implements OnInitListener {
 		if (Train.IsTraining) {
 			Train.Update(db);
 
-			writeBalance(Student.RealBalance);// 重写卡内余额
+			// 重写卡内余额
+			new AsyncTask<Void, Void, Integer>() {
+				@Override
+				protected Integer doInBackground(Void... args) {
+					cardOper.WriteBalance(Student.RealBalance);
+					return 0;
+				}
+			}.execute();
 
 			// 余额不足提醒
 			if (Student.RealBalance <= 3) {
-				toashShow("卡内剩余时长不足" + Student.RealBalance + "分钟,请注意");
+				toastShow("卡内剩余时长不足" + Student.RealBalance + "分钟,请注意");
 			}
 		}
 		// 上传训练数据
@@ -1905,69 +1679,6 @@ public class MainActivity extends Activity implements OnInitListener {
 		if (retry < 3 && !_blindspotUploading) {
 			uploadBlindSpot();
 		}
-	}
-
-	/**
-	 * 重写卡内姓名和身份证
-	 */
-	private void writeName() {
-		_rfidProcsing = true;
-		new AsyncTask<Void, Void, Integer>() {
-			@Override
-			protected Integer doInBackground(Void... args) {
-				if (_cardType == CARD_S50 || _cardType == CARD_S70) {
-					_address[0] = 1;
-					_address[1] = 1;
-					_context = new int[48];
-					for (int i = 0; i < _context.length; i++) {
-						_context[i] = ' ';
-					}
-					// 类型：教练卡、学员卡
-					if (Student.IsCoach) {
-						_context[0] = 1;
-					} else {
-						_context[0] = 2;
-					}
-					// 卡号
-					for (int i = 0; i < Student.CardNo.length(); i++) {
-						_context[i + 1] = Student.CardNo.charAt(i);
-					}
-					// 驾校ID
-					for (int i = 0; i < schoolID.length(); i++) {
-						_context[i + 9] = schoolID.charAt(i);
-					}
-					// 身份证号
-					for (int i = 0; i < Student.IDCardNo.length(); i++) {
-						_context[i + 18] = Student.IDCardNo.charAt(i);
-					}
-					// 姓名
-					for (int i = 0; i < Student.Name.length(); i++) {
-						try {
-							int j = bytes2int(String.valueOf(Student.Name.charAt(i)).getBytes("GB2312"));
-							String data = Integer.toHexString(j);
-							while (data.length() < 4) {
-								data = "0" + data;
-							}
-							_context[36 + i * 2] = Integer.parseInt(data.substring(0, 2), 16);
-							_context[37 + i * 2] = Integer.parseInt(data.substring(2), 16);
-						} catch (UnsupportedEncodingException e) {
-							e.printStackTrace();
-						}
-					}
-					if (NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context) == 1) {
-						return 1;
-					}
-					SystemClock.sleep(100);
-					return NativeRFID.write_card(_address, RFID_KEY, RFID_EARA, _context);
-				}
-				return 0;
-			}
-
-			@Override
-			protected void onPostExecute(Integer result) {
-				_rfidProcsing = false;
-			}
-		}.execute();
 	}
 
 	/**
@@ -1995,7 +1706,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					showDialog(DL_FINGER3);
 					recordfinger2();
 				} else {
-					toashShow("采集指纹失败,请尝试重新插卡");
+					toastShow("采集指纹失败,请尝试重新插卡");
 				}
 			}
 		}.execute();
@@ -2017,6 +1728,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					params.put("session", session);// 当前会话
 					params.put("cardno", Student.CardNo);
 					params.put("n", "1");
+					params.put("t", Student.IsCoach ? "1" : "2");// card_type,1:coach,2:student
 					File file = new File(_fingertmppath);
 					FormFile formfile = new FormFile(file.getName(), file, "finger", "application/octet-stream");
 					try {
@@ -2039,9 +1751,9 @@ public class MainActivity extends Activity implements OnInitListener {
 					showDialog(DL_FINGER2);
 					recordfinger3();
 				} else if (result == 0) {
-					toashShow("记录指纹失败,请检查网络");
+					toastShow("记录指纹失败,请检查网络");
 				} else {
-					toashShow("记录指纹失败,请尝试重新插卡");
+					toastShow("记录指纹失败,请尝试重新插卡");
 				}
 			}
 		}.execute();
@@ -2062,7 +1774,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					showDialog(DL_FINGER3);
 					recordfinger4();
 				} else {
-					toashShow("采集指纹失败,请尝试重新插卡");
+					toastShow("采集指纹失败,请尝试重新插卡");
 				}
 			}
 		}.execute();
@@ -2085,6 +1797,7 @@ public class MainActivity extends Activity implements OnInitListener {
 					params.put("session", session);// 当前会话
 					params.put("cardno", Student.CardNo);
 					params.put("n", "2");
+					params.put("t", Student.IsCoach ? "1" : "2");// card_type,1:coach,2:student
 					File file = new File(_fingertmppath);
 					FormFile formfile = new FormFile(file.getName(), file, "finger", "application/octet-stream");
 					try {
@@ -2093,6 +1806,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						e.printStackTrace();
 						return 0;
 					}
+					cardOper.WriteFingerFlag(1);
 					return 1;
 				}
 				return 0;
@@ -2101,30 +1815,12 @@ public class MainActivity extends Activity implements OnInitListener {
 			@Override
 			protected void onPostExecute(Integer result) {
 				dismissDialog(DL_FINGER3);
-				_rfidProcsing = false;
 				if (result == 1) {
-					if (_cardType == CARD_24C02) {
-						if (Native.chk_24c02(fd) == 0) {// AT24C02卡
-							try {
-								Native.swr_24c02(fd, 0x28, 0x01, new int[] { 1 });
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}
-					} else {
-						if (NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 }) != 1) {
-							SystemClock.sleep(100);
-							if (NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 }) != 1) {
-								SystemClock.sleep(100);
-								NativeRFID.write_card(new int[] { 10 }, RFID_KEY, RFID_BLOCK, new int[] { 1 });
-							}
-						}
-					}
-					toashShow("记录指纹成功,请重新插卡");
+					toastShow("记录指纹成功,请重新插卡");
 				} else if (result == 0) {
-					toashShow("记录指纹失败,请检查网络");
+					toastShow("记录指纹失败,请检查网络");
 				} else {
-					toashShow("记录指纹失败,请尝试重新插卡");
+					toastShow("记录指纹失败,请尝试重新插卡");
 				}
 			}
 		}.execute();
@@ -2197,52 +1893,42 @@ public class MainActivity extends Activity implements OnInitListener {
 		return PS_OK;
 	}
 
-	/**
-	 * 重写卡内余额、学时、里程
-	 */
-	private void writeBalance(int balance) {
-		String data = Integer.toHexString(balance);
-		while (data.length() < 4) {
-			data = "0" + data;
+	private int needCheckFinger(Boolean isCoach, String card) {
+		if (retry >= 3) {
+			return -1;
 		}
-		int[] buffYE = new int[4];
-		buffYE[0] = Integer.parseInt(data.substring(0, 2), 16);
-		buffYE[1] = Integer.parseInt(data.substring(2), 16);
-		buffYE[2] = Integer.parseInt(data.substring(0, 2), 16);
-		buffYE[3] = Integer.parseInt(data.substring(2), 16);
-		if (_cardType == CARD_24C02) {
-			if (Native.chk_24c02(fd) == 0) {// AT24C02卡
-				try {
-					Native.swr_24c02(fd, 0x09, 0x04, buffYE);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		} else if (_cardType == CARD_S50 || _cardType == CARD_S70) {
-			int[] buff = new int[7];
-			// 余额
-			buff[0] = buffYE[0];
-			buff[1] = buffYE[1];
-			// 学时
-			data = Integer.toHexString(Student.RealTotalTime);
-			while (data.length() < 4) {
-				data = "0" + data;
-			}
-			buff[2] = Integer.parseInt(data.substring(0, 2), 16);
-			buff[3] = Integer.parseInt(data.substring(2), 16);
-			// 里程
-			data = Integer.toHexString(Student.RealTotalMi);
-			while (data.length() < 6) {
-				data = "0" + data;
-			}
-			buff[4] = Integer.parseInt(data.substring(0, 2), 16);
-			buff[5] = Integer.parseInt(data.substring(2, 4), 16);
-			buff[6] = Integer.parseInt(data.substring(2), 16);
-			if (NativeRFID.write_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK, buff) != 1) {
-				SystemClock.sleep(100);
-				NativeRFID.write_card(new int[] { 8 }, RFID_KEY, RFID_BLOCK, buff);
+		HttpPost httpRequest = new HttpPost(server + "/getcoachinfo.ashx");
+		if (!isCoach) {
+			httpRequest = new HttpPost(server + "/getstudentinfo.ashx");
+		}
+		List<NameValuePair> params = new ArrayList<NameValuePair>(2);
+		params.add(new BasicNameValuePair("action", "checkfinger"));
+		params.add(new BasicNameValuePair("card", card));
+		try {
+			httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+		} catch (UnsupportedEncodingException e) {
+			return -1;
+		}
+		HttpResponse httpResponse;
+		try {
+			httpResponse = new DefaultHttpClient().execute(httpRequest);
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+			return -1;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return -1;
+		}
+		if (httpResponse.getStatusLine().getStatusCode() == 200) {
+			try {
+				return EntityUtils.toString(httpResponse.getEntity()).equals("1") ? 1 : 0;
+			} catch (ParseException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
+		return -1;
 	}
 
 	/**
@@ -2493,7 +2179,7 @@ public class MainActivity extends Activity implements OnInitListener {
 							Coach.CardNo = Student.CardNo = results[1];
 							Coach.ID = Student.ID = results[3];
 							if (!Coach.Name.equals(results[4])) {
-								writeName();// 重写姓名
+								cardOper.WriteName();// 重写姓名
 							}
 							Coach.Name = Student.Name = results[4];
 							Coach.IDCardNo = Student.IDCardNo = results[5];
@@ -2532,7 +2218,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				} else if (result == 2) {
 					versionUpdate();// 更新程序
 				} else if (result == 3) {
-					toashShow(cardresult.split("\\|")[1]);// 提示错误
+					toastShow(cardresult.split("\\|")[1]);// 提示错误
 				}
 			}
 		}.execute();
@@ -2596,7 +2282,7 @@ public class MainActivity extends Activity implements OnInitListener {
 						if (results.length > 1 && results[1].equals(Student.CardNo)) {
 							Student.RealBalance = Student.Balance = Integer.parseInt(results[2]);
 							if (!Student.Name.equals(results[4])) {
-								writeName();// 重写姓名和身份证
+								cardOper.WriteName();// 重写姓名和身份证
 							}
 							Student.ID = results[3];
 							Student.Name = results[4];
@@ -2636,7 +2322,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				} else if (result == 2) {
 					versionUpdate();// 更新程序
 				} else if (result == 3) {
-					toashShow(cardresult.split("\\|")[1]);// 提示错误
+					toastShow(cardresult.split("\\|")[1]);// 提示错误
 				}
 			}
 		}.execute();
@@ -2931,15 +2617,15 @@ public class MainActivity extends Activity implements OnInitListener {
 				txtFJFMS.setTextColor(R.color.button_text);
 				btnJFMS.setBackgroundResource(R.drawable.button_checked_bg);
 				txtJFMS.setTextColor(Color.WHITE);
-				if (_cardType == NO_CARD) {
-					toashShow("已经切换为训练状态,请插卡,否则一分钟后将断油电");
+				if (cardOper.CardType == CardOper.NO_CARD) {
+					toastShow("已经切换为训练状态,请插卡,否则一分钟后将断油电");
 				} else {
-					toashShow("已经切换为训练状态");
+					toastShow("已经切换为训练状态");
 				}
 				// 继电器
 				_relayoff = 60;
 				Train.End(db);
-				_cardType = NO_CARD;
+				cardOper.CardType = CardOper.NO_CARD;
 
 				SharedPreferences.Editor editor = settings.edit();
 				editor.putInt("mode", DeviceInfo.Mode);
@@ -2960,7 +2646,7 @@ public class MainActivity extends Activity implements OnInitListener {
 				txtJFMS.setTextColor(R.color.button_text);
 				btnFJFMS.setBackgroundResource(R.drawable.button_checked_bg);
 				txtFJFMS.setTextColor(Color.WHITE);
-				toashShow("已经切换为自由状态");
+				toastShow("已经切换为自由状态");
 				NativeGPIO.setRelay(false);
 				_relayoff = 0;
 
@@ -2996,30 +2682,23 @@ public class MainActivity extends Activity implements OnInitListener {
 			@Override
 			protected Integer doInBackground(Void... args) {
 				try {
-					/*
-					 * 连接到服务器
-					 */
 					URL url = new URL(server + "/zpad.apk");
 					URLConnection connection = url.openConnection();
 					connection.connect();
 					InputStream inputStream = connection.getInputStream();
-					/*
-					 * 文件的保存路径和和文件名其中ExsunAndroid.apk是在手机SD卡上要保存的路径，如果不存在则新建
-					 */
+
 					String savePath = Environment.getExternalStorageDirectory() + "/download";
 					File file = new File(savePath);
 					if (!file.exists()) {
 						file.mkdir();
 					}
-					String savePathString = Environment.getExternalStorageDirectory() + "/download/" + "zpad.apk";
+					String savePathString = Environment.getExternalStorageDirectory() + "/download/zpad.apk";
 					_downLoadFile = new File(savePathString);
 					if (_downLoadFile.exists()) {
 						_downLoadFile.delete();
 					}
 					_downLoadFile.createNewFile();
-					/*
-					 * 向SD卡中写入文件,用Handle传递线程
-					 */
+
 					OutputStream outputStream = new FileOutputStream(_downLoadFile);
 					_fileLength = connection.getContentLength();
 					handler.sendEmptyMessage(H_W_UPDATEDIALOG_MAX);
@@ -3084,9 +2763,18 @@ public class MainActivity extends Activity implements OnInitListener {
 		}
 	}
 
-	private void toashShow(String str) {
+	private void toastShow(String str) {
 		Toast.makeText(MainActivity.this, str, Toast.LENGTH_SHORT).show();
 		speak(str);
+	}
+
+	private void toastHandleShow(final String str) {
+		handler.post(new Runnable() {
+			public void run() {
+				Toast.makeText(MainActivity.this, str, Toast.LENGTH_SHORT).show();
+				speak(str);
+			}
+		});
 	}
 
 	private void speak(String str) {
@@ -3112,7 +2800,7 @@ public class MainActivity extends Activity implements OnInitListener {
 
 	private void exitConfirm() {
 		final EditText txtpsd = new EditText(MainActivity.this);
-		AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("确定要退出程序？").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+		AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("确定要重启程序？").setIcon(android.R.drawable.ic_menu_help).setView(txtpsd).setPositiveButton("确定", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				int psd = 0;
 				try {
@@ -3122,18 +2810,31 @@ public class MainActivity extends Activity implements OnInitListener {
 				}
 				if (psd == nowTime.getDate() * nowTime.getDay()) {
 					// com.lyt.watchdog.Native.exit(dogfd);
-					MainActivity.this.finish();
-					System.exit(0);
-				} else {
-					return;
+					try {
+						Intent intent = new Intent();
+						intent.setComponent(new ComponentName("cn.whzxt.gps", "cn.whzxt.gps.ZxtService"));
+						stopService(intent);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
+				MainActivity.this.finish();
+				System.exit(0);
 			}
 		}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				return;
 			}
 		}).create();
+		alertDialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+			public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+				if (keyCode == KeyEvent.KEYCODE_HOME)
+					return true;
+				return false;
+			}
+		});
 		alertDialog.show();
+		alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
 	}
 
 	/**
@@ -3243,20 +2944,8 @@ public class MainActivity extends Activity implements OnInitListener {
 		_timerSensor.cancel();
 		_timerSensor.purge();
 		Log.i("zxt", "timer closed");
-		// IC卡读卡器
-		try {
-			Native.ic_exit(fd);
-			Log.i("zxt", "ic card closed");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		// RFID读卡器
-		try {
-			NativeRFID.close_fm1702();
-			Log.i("zxt", "rfid card closed");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// 读卡器
+		cardOper.stop();
 		// TTS语音
 		if (mTts != null) {
 			try {
@@ -3291,9 +2980,6 @@ public class MainActivity extends Activity implements OnInitListener {
 			e.printStackTrace();
 		}
 		// 摄像头
-		if (native_camera != null) {
-			native_camera.uart_close();
-		}
 		if (wakeLock != null) {
 			wakeLock.release();
 		}

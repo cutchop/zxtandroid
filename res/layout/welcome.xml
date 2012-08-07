@@ -12,13 +12,13 @@
         android:layout_marginTop="100dip"
         android:text="驾培智能终端系统"
         android:textAppearance="?android:attr/textAppearanceLarge" />
-
+
     <TextView
         android:id="@+id/txtStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="10dip"
-        android:text="正在连接网络..." />
+        android:text="正在等待系统启动..." />
 
 </LinearLayout>

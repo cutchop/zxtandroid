@@ -168,7 +168,7 @@
                                 android:id="@+id/txtCoachCertificate"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="3dip" />
+                                android:layout_marginTop="3dip" android:layout_marginLeft="10dip"/>
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -311,13 +311,12 @@
                             android:id="@+id/camCanvas"
                             android:layout_width="fill_parent"
                             android:layout_height="220dip" >
-
-                            <ImageView
-                                android:id="@+id/camView"
-                                android:layout_width="match_parent"
-                                android:layout_height="fill_parent"
-                                android:layout_weight="0.3" android:background="#FF000000" android:scaleType="centerCrop"/>
 
+                            <SurfaceView
+                                android:id="@+id/previewSurface"
+                                android:layout_width="match_parent"
+                                android:layout_height="fill_parent" android:layout_weight="0.3" android:clickable="true"/>
+                         
                             <LinearLayout
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"

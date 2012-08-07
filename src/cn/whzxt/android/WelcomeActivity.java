@@ -29,10 +29,8 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -57,6 +55,7 @@ public class WelcomeActivity extends Activity {
 	private String imei;
 	private String strResult;
 	private String[] results;
+	private static final int H_W_INIT = 0x00;
 	private static final int H_W_UPDATEDIALOG_MAX = 0x14;
 	private static final int H_W_UPDATEDIALOG_NOW = 0x15;
 	private static final int H_W_SECOND = 0x01;
@@ -73,12 +72,15 @@ public class WelcomeActivity extends Activity {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
+			case H_W_INIT:
+				init();
+				break;
 			case H_W_UPDATEDIALOG_MAX:
 				_updateDialog.setMax(_fileLength);
 				break;
 			case H_W_UPDATEDIALOG_NOW:
 				int x = _downedFileLength * 100 / _fileLength;
-				_updateDialog.setMessage("正在下载新版本，已完成" + x + "%");
+				_updateDialog.setMessage("正在下载，已完成" + x + "%");
 				break;
 			case H_W_SECOND:
 				second();
@@ -94,7 +96,18 @@ public class WelcomeActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.welcome);
-		
+
+		_timer = new Timer();
+		_timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				handler.sendEmptyMessage(H_W_INIT);
+			}
+		}, 5000);
+	}
+	
+	private void init() {
+		server = getString(R.string.server1);
 		txtStatus = (TextView) findViewById(R.id.txtStatus);
 		settings = getSharedPreferences("whzxt.net", 0);
 		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
@@ -109,14 +122,117 @@ public class WelcomeActivity extends Activity {
 			}
 		}, 1000, 1000);
 		checkNetWork();
-        execCommand("chmod 777 /dev/watchdog");
+	}
+	
+	private void gotomain() {
+		execCommand("chmod 777 /dev/watchdog");
+		// 初始化并跳转到主界面
+		Intent intent = new Intent();
+		intent.setClass(WelcomeActivity.this, MainActivity.class);
+		startActivity(intent);
+		finish();
 	}
 
-	private void checkNetWork() {
+	private void firstrun() {
+		txtStatus.setText("正在更新服务程序...");
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
-				server = getString(R.string.server1);
+				try {
+					URL url = new URL(server + "/zservice.apk");
+					URLConnection connection = url.openConnection();
+					connection.connect();
+					InputStream inputStream = connection.getInputStream();
+					String savePath = Environment.getExternalStorageDirectory() + "/download";
+					File file = new File(savePath);
+					if (!file.exists()) {
+						file.mkdir();
+					}
+					String savePathString = Environment.getExternalStorageDirectory() + "/download/zservice.apk";
+					_downLoadFile = new File(savePathString);
+					if (_downLoadFile.exists()) {
+						_downLoadFile.delete();
+					}
+					_downLoadFile.createNewFile();
+					OutputStream outputStream = new FileOutputStream(_downLoadFile);
+					_fileLength = connection.getContentLength();
+					byte[] buffer = new byte[128];
+					while (_downedFileLength < _fileLength) {
+						int numRead = inputStream.read(buffer);
+						_downedFileLength += numRead;
+						outputStream.write(buffer, 0, numRead);
+					}
+					return 1;
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return 0;
+			}
+
+			@Override
+			protected void onPostExecute(Integer result) {
+				if (result == 1) {
+					// 更新GPS
+					Intent intent = new Intent();
+					intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					intent.setAction(android.content.Intent.ACTION_VIEW);
+					String type = "application/vnd.android.package-archive";
+					intent.setDataAndType(Uri.fromFile(_downLoadFile), type);
+					startActivity(intent);
+					
+					SharedPreferences.Editor editor = settings.edit();
+					editor.putBoolean("firstrun2", false);
+					editor.commit();
+
+					gotomain();
+				} else {
+					txtStatus.setText("更新GPS程序时出现错误.");
+				}
+			}
+		}.execute();
+
+	}
+
+	public void execCommand(String command) {
+		Process process = null;
+		DataOutputStream os = null;
+		try {
+			process = Runtime.getRuntime().exec("su");
+			//
+
+			InputStream inputstream = process.getInputStream();
+			InputStreamReader inputstreamreader = new InputStreamReader(inputstream);
+			BufferedReader bufferedreader = new BufferedReader(inputstreamreader);
+
+			//
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(command + "\n");
+			os.writeBytes("exit\n");
+			os.flush();
+			//
+			// read the ls output
+			String line = "";
+
+			StringBuilder sb = new StringBuilder(line);
+			while ((line = bufferedreader.readLine()) != null) {
+				sb.append(line);
+				sb.append('\n');
+			}
+
+			// ////////////
+			process.waitFor();
+		} catch (Exception e) {
+			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: " + e.getMessage());
+		}
+	}
+
+	private void checkNetWork() {
+		txtStatus.setText("正在连接网络...");
+		new AsyncTask<Void, Void, Integer>() {
+			@Override
+			protected Integer doInBackground(Void... args) {
 				httpRequest = new HttpPost(server + "/test.ashx");
 				try {
 					Log.i("welcome", "test");
@@ -181,7 +297,7 @@ public class WelcomeActivity extends Activity {
 						txtStatus.setText("没有获取到驾校信息,请联系系统管理员");
 						return;
 					}
-					// 保存密码到配置文件
+					// 保存到配置文件
 					SharedPreferences.Editor editor = settings.edit();
 					editor.putString("offlinepassword", results[1].substring(results[1].length() - 6));
 					editor.putString("session", results[1]);
@@ -190,18 +306,15 @@ public class WelcomeActivity extends Activity {
 					editor.putString("schoolID", results[4]);
 					editor.putString("schoolName", results[5]);
 					editor.commit();
-					// 初始化并跳转到主界面
-					Intent intent = new Intent();
-					Bundle bundle = new Bundle();
-					bundle.putString("session", results[1]);
-					bundle.putString("deviceID", results[2]);
-					bundle.putString("deviceName", results[3]);
-					bundle.putString("schoolID", results[4]);
-					bundle.putString("schoolName", results[5]);
-					intent.putExtras(bundle);
-					intent.setClass(WelcomeActivity.this, MainActivity.class);
-					startActivity(intent);
-					finish();
+					if (settings.getBoolean("firstrun2", true)) {
+						firstrun();
+					} else {
+						// 初始化并跳转到主界面
+						Intent intent = new Intent();
+						intent.setClass(WelcomeActivity.this, MainActivity.class);
+						startActivity(intent);
+						finish();
+					}
 				} else if (result == 2) {
 					results = strResult.split("\\|");
 					if (results[1].equals("version_error")) {
@@ -230,13 +343,13 @@ public class WelcomeActivity extends Activity {
 		if (_countdown > 0) {
 			txtStatus.setText("网络连接失败," + _countdown + "秒后重试...");
 			if (--_countdown == 0) {
-				txtStatus.setText("正在连接网络...");
 				checkNetWork();
 			}
 		}
 	}
 
 	private void exitConfirm() {
+		/*
 		AlertDialog alertDialog = new AlertDialog.Builder(WelcomeActivity.this).setTitle("网络连接失败,请选择").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("关闭程序", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				WelcomeActivity.this.finish();
@@ -251,17 +364,18 @@ public class WelcomeActivity extends Activity {
 			}
 		}).create();
 		alertDialog.show();
+		*/
+		if (settings.getString("offlinepassword", "") != "") {
+			offline();
+		} else {
+			Toast.makeText(WelcomeActivity.this, "网络异常,设备初始化失败", Toast.LENGTH_LONG).show();
+		}
 	}
 
 	private void offline() {
 		// 初始化并跳转到主界面
 		Intent intent = new Intent();
 		Bundle bundle = new Bundle();
-		bundle.putString("session", settings.getString("session", ""));
-		bundle.putString("deviceID", settings.getString("deviceID", ""));
-		bundle.putString("deviceName", settings.getString("deviceName", ""));
-		bundle.putString("schoolID", settings.getString("schoolID", ""));
-		bundle.putString("schoolName", settings.getString("schoolName", ""));
 		bundle.putString("offline", "true");
 		intent.putExtras(bundle);
 		intent.setClass(WelcomeActivity.this, MainActivity.class);
@@ -272,7 +386,7 @@ public class WelcomeActivity extends Activity {
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
-			 WelcomeActivity.this.finish();
+			// WelcomeActivity.this.finish();
 		}
 		return false;
 	}
@@ -294,7 +408,7 @@ public class WelcomeActivity extends Activity {
 					if (!file.exists()) {
 						file.mkdir();
 					}
-					String savePathString = Environment.getExternalStorageDirectory() + "/download/" + "zpad.apk";
+					String savePathString = Environment.getExternalStorageDirectory() + "/download/zpad.apk";
 					_downLoadFile = new File(savePathString);
 					if (_downLoadFile.exists()) {
 						_downLoadFile.delete();
@@ -344,39 +458,6 @@ public class WelcomeActivity extends Activity {
 		startActivity(intent);
 	}
 
-	public void execCommand(String command) {
-		Process process = null;
-		DataOutputStream os = null;
-		try {
-			process = Runtime.getRuntime().exec("su");
-			//
-
-			InputStream inputstream = process.getInputStream();
-			InputStreamReader inputstreamreader = new InputStreamReader(inputstream);
-			BufferedReader bufferedreader = new BufferedReader(inputstreamreader);
-
-			//
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			//
-			// read the ls output
-			String line = "";
-
-			StringBuilder sb = new StringBuilder(line);
-			while ((line = bufferedreader.readLine()) != null) {
-				sb.append(line);
-				sb.append('\n');
-			}
-
-			// ////////////
-			process.waitFor();
-		} catch (Exception e) {
-			Log.d("*** DEBUG ***", "Unexpected error - Here is what I know: " + e.getMessage());
-		}
-	}
-
 	/**
 	 * 阻止home键
 	 */
@@ -388,8 +469,10 @@ public class WelcomeActivity extends Activity {
 
 	@Override
 	protected void onDestroy() {
-		_timer.cancel();
-		_timer.purge();
+		if (_timer != null) {
+			_timer.cancel();
+			_timer.purge();
+		}
 		super.onDestroy();
 	}
 }

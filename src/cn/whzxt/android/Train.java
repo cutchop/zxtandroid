@@ -78,8 +78,8 @@ public class Train {
 
 	public static void End(SQLiteDatabase db) {
 		if (IsTraining) {
-			IsTraining = false;
 			Update(db);
+			IsTraining = false;
 			StartTime = null;
 			EndTime = null;
 			TrainID = "";

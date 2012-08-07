@@ -50,7 +50,6 @@ public final class R {
         public static final int btnTabDevStatus=0x7f060029;
         public static final int btnTabSysInfo=0x7f060027;
         public static final int camCanvas=0x7f06001d;
-        public static final int camView=0x7f06001e;
         public static final int imgCoach=0x7f06000e;
         public static final int imgLast01=0x7f06001f;
         public static final int imgLast02=0x7f060020;
@@ -69,6 +68,8 @@ public final class R {
         public static final int layTitle=0x7f060000;
         public static final int layTts=0x7f06003c;
         public static final int mainView=0x7f060008;
+        public static final int photoView=0x7f060044;
+        public static final int previewSurface=0x7f06001e;
         public static final int tableRow1=0x7f060001;
         public static final int tableRow2=0x7f060005;
         public static final int tableRow3=0x7f060006;
@@ -114,7 +115,8 @@ public final class R {
     }
     public static final class layout {
         public static final int main=0x7f030000;
-        public static final int welcome=0x7f030001;
+        public static final int photoview=0x7f030001;
+        public static final int welcome=0x7f030002;
     }
     public static final class string {
         public static final int app_name=0x7f050000;

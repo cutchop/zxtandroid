@@ -49,6 +49,14 @@ public class Student {
 	 * 是否是教练
 	 */
 	public static Boolean IsCoach;
+	/**
+	 * 不需要验证指纹
+	 */
+	public static Boolean NotNeedFinger;
+	/**
+	 * 是否有指纹
+	 */
+	public static Boolean HasFinger;
 
 	/**
 	 * 重置所有属性
@@ -56,6 +64,6 @@ public class Student {
 	public static void Init() {
 		ID = Name = CardNo = IDCardNo = DriverType = "";
 		Balance = RealBalance = TotalMi = RealTotalMi = TotalTime = RealTotalTime = 0;
-		IsCoach = false;
+		HasFinger = NotNeedFinger = IsCoach = false;
 	}
 }
