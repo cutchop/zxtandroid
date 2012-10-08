@@ -2,8 +2,8 @@
 <resources>
     <color name="titlebg">#FFECECEC</color>
     <color name="titleborder">#FF5080D8</color>
-	<color name="titlefontcolor">#FF000000</color>
-	<color name="contentbg">#FFF8F8F8</color>
+	<color name="titlefontcolor">#FFFFFFFF</color>
+	<color name="contentbg">#FF111111</color>
 	<color name="contentborder">#FFC6C6C6</color>
 	<color name="labelfont">#FFFFFFFF</color>
 	<color name="button_press">#8818A2E7</color>
@@ -13,7 +13,7 @@
 	<color name="button_checked_normal">#FF18A2E7</color>
 	<color name="button_checked_text">#FFFFFFFF</color>
     <color name="card_press">#8818A2E7</color>
-    <color name="cardbg">#18A2E7</color>
+    <color name="cardbg">#111111</color>
 	<color name="card_text">#FFFFFFFF</color>
 	<color name="black">#FF000000</color>
 	<color name="white">#FFFFFFFF</color>

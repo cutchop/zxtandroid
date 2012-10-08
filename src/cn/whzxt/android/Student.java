@@ -46,6 +46,10 @@ public class Student {
 	 */
 	public static int RealTotalTime;
 	/**
+	 * 学员当日训练总时长
+	 */
+	public static int TodayTrainTime;
+	/**
 	 * 是否是教练
 	 */
 	public static Boolean IsCoach;
@@ -57,13 +61,19 @@ public class Student {
 	 * 是否有指纹
 	 */
 	public static Boolean HasFinger;
+	
+	/**
+	 * 学员当前科目
+	 */
+	public static int Subject;
 
 	/**
 	 * 重置所有属性
 	 */
 	public static void Init() {
 		ID = Name = CardNo = IDCardNo = DriverType = "";
-		Balance = RealBalance = TotalMi = RealTotalMi = TotalTime = RealTotalTime = 0;
+		Balance = RealBalance = TotalMi = RealTotalMi = TotalTime = RealTotalTime = TodayTrainTime = 0;
 		HasFinger = NotNeedFinger = IsCoach = false;
+		Subject = 0;
 	}
 }

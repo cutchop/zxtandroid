@@ -42,12 +42,16 @@ import android.os.Message;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class WelcomeActivity extends Activity {
 	TextView txtStatus;
+	Button btnRetry;
 	HttpPost httpRequest;
 	HttpResponse httpResponse;
 	SharedPreferences settings;
@@ -98,6 +102,21 @@ public class WelcomeActivity extends Activity {
 		setContentView(R.layout.welcome);
 
 		_timer = new Timer();
+
+		btnRetry = (Button) findViewById(R.id.btnRetry);
+		btnRetry.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				btnRetry.setVisibility(View.GONE);
+				_timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						handler.sendEmptyMessage(H_W_INIT);
+					}
+				}, 5000);
+			}
+		});
+		btnRetry.setVisibility(View.GONE);
+
 		_timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
@@ -105,7 +124,7 @@ public class WelcomeActivity extends Activity {
 			}
 		}, 5000);
 	}
-	
+
 	private void init() {
 		server = getString(R.string.server1);
 		txtStatus = (TextView) findViewById(R.id.txtStatus);
@@ -123,7 +142,7 @@ public class WelcomeActivity extends Activity {
 		}, 1000, 1000);
 		checkNetWork();
 	}
-	
+
 	private void gotomain() {
 		execCommand("chmod 777 /dev/watchdog");
 		// 初始化并跳转到主界面
@@ -181,9 +200,9 @@ public class WelcomeActivity extends Activity {
 					String type = "application/vnd.android.package-archive";
 					intent.setDataAndType(Uri.fromFile(_downLoadFile), type);
 					startActivity(intent);
-					
+
 					SharedPreferences.Editor editor = settings.edit();
-					editor.putBoolean("firstrun2", false);
+					editor.putBoolean("firstrun4", false);
 					editor.commit();
 
 					gotomain();
@@ -293,7 +312,7 @@ public class WelcomeActivity extends Activity {
 				if (result == 1) {
 					txtStatus.setText("网络连接成功");
 					results = strResult.split("\\|");
-					if (results.length < 5) {
+					if (results.length < 7) {
 						txtStatus.setText("没有获取到驾校信息,请联系系统管理员");
 						return;
 					}
@@ -305,10 +324,52 @@ public class WelcomeActivity extends Activity {
 					editor.putString("deviceName", results[3]);
 					editor.putString("schoolID", results[4]);
 					editor.putString("schoolName", results[5]);
+					editor.putBoolean("jdq_ck", results[6].equals("0"));
+					if (results.length > 9) {
+						editor.putInt("camera", Integer.parseInt(results[7]));
+						editor.putFloat("sts", Float.parseFloat(results[8]));
+						editor.putInt("gst", Integer.parseInt(results[9]));
+					}
+					if (results.length > 10) {
+						try {
+							editor.putInt("s2_min_time", Integer.parseInt(results[10].split(",")[0]));
+							editor.putInt("s2_max_time", Integer.parseInt(results[10].split(",")[1]));
+							editor.putInt("s2_day_time", Integer.parseInt(results[10].split(",")[2]));
+							editor.putInt("s3_min_time", Integer.parseInt(results[10].split(",")[3]));
+							editor.putInt("s3_max_time", Integer.parseInt(results[10].split(",")[4]));
+							editor.putInt("s3_day_time", Integer.parseInt(results[10].split(",")[5]));
+						} catch (NumberFormatException e) {
+							e.printStackTrace();
+						} catch (ArrayIndexOutOfBoundsException e) {
+							e.printStackTrace();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+					if (results.length > 11) {
+						editor.putString("schoolName", results[11]);
+					}
 					editor.commit();
-					if (settings.getBoolean("firstrun2", true)) {
+					if (settings.getBoolean("firstrun4", true)) {
 						firstrun();
 					} else {
+						if (settings.getBoolean("clearcache", true)) {
+							// 清空头像缓存
+							File file = new File("/sdcard/ZxtCache");
+							if (file.exists() && file.isDirectory()) {
+								String[] tempList = file.list();
+								File tmpFile = null;
+								for (int i = 0; i < tempList.length; i++) {
+									tmpFile = new File("/sdcard/ZxtCache/" + tempList[i]);
+									if (tmpFile.isFile()) {
+										tmpFile.delete();
+									}
+								}
+							}
+							editor = settings.edit();
+							editor.putBoolean("clearcache", false);
+							editor.commit();
+						}
 						// 初始化并跳转到主界面
 						Intent intent = new Intent();
 						intent.setClass(WelcomeActivity.this, MainActivity.class);
@@ -325,6 +386,7 @@ public class WelcomeActivity extends Activity {
 						downloadAPK();
 					} else {
 						txtStatus.setText(results[1]);
+						btnRetry.setVisibility(View.VISIBLE);
 						Toast.makeText(WelcomeActivity.this, results[1], Toast.LENGTH_SHORT).show();
 					}
 				} else {
@@ -350,25 +412,24 @@ public class WelcomeActivity extends Activity {
 
 	private void exitConfirm() {
 		/*
-		AlertDialog alertDialog = new AlertDialog.Builder(WelcomeActivity.this).setTitle("网络连接失败,请选择").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("关闭程序", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				WelcomeActivity.this.finish();
-			}
-		}).setNegativeButton("离线模式", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				if (settings.getString("offlinepassword", "") != "") {
-					offline();
-				} else {
-					Toast.makeText(WelcomeActivity.this, "设备尚未初始化,不能使用离线模式", Toast.LENGTH_LONG).show();
-				}
-			}
-		}).create();
-		alertDialog.show();
-		*/
+		 * AlertDialog alertDialog = new
+		 * AlertDialog.Builder(WelcomeActivity.this
+		 * ).setTitle("网络连接失败,请选择").setIcon
+		 * (android.R.drawable.ic_menu_help).setPositiveButton("关闭程序", new
+		 * DialogInterface.OnClickListener() { public void
+		 * onClick(DialogInterface dialog, int which) {
+		 * WelcomeActivity.this.finish(); } }).setNegativeButton("离线模式", new
+		 * DialogInterface.OnClickListener() { public void
+		 * onClick(DialogInterface dialog, int which) { if
+		 * (settings.getString("offlinepassword", "") != "") { offline(); } else
+		 * { Toast.makeText(WelcomeActivity.this, "设备尚未初始化,不能使用离线模式",
+		 * Toast.LENGTH_LONG).show(); } } }).create(); alertDialog.show();
+		 */
 		if (settings.getString("offlinepassword", "") != "") {
 			offline();
 		} else {
 			Toast.makeText(WelcomeActivity.this, "网络异常,设备初始化失败", Toast.LENGTH_LONG).show();
+			WelcomeActivity.this.finish();
 		}
 	}
 

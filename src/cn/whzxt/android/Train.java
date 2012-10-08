@@ -19,6 +19,18 @@ public class Train {
 	public static String TrainID = "";
 	public static final String VideoBasePath = "/mnt/sdcard2/zxtvideo/";
 	/**
+	 * 训练超时提醒次数
+	 */
+	public static int TIMEOUTALERT = 1;
+	/**
+	 * 训练超时已提醒次数(本次训练)
+	 */
+	public static int Tocalert = 0;
+	/**
+	 * 训练超时已提醒次数(当日训练)
+	 */
+	public static int Totalert = 0;
+	/**
 	 * 本次训练的视频路径
 	 */
 	public static String VideoPath = "";
@@ -83,6 +95,8 @@ public class Train {
 			StartTime = null;
 			EndTime = null;
 			TrainID = "";
+			Tocalert = 0;
+			Totalert = 0;
 		}
 	}
 }
