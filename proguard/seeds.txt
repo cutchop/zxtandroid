@@ -1,0 +1,181 @@
+cn.whzxt.android.BootUpReceiver
+cn.whzxt.android.MainActivity
+cn.whzxt.android.Native
+cn.whzxt.android.Native: int auto_init(java.lang.String,int)
+cn.whzxt.android.Native: int ic_exit(int)
+cn.whzxt.android.Native: java.lang.String srd_4442(int,int,int)
+cn.whzxt.android.Native: int swr_4442(int,int,int,int[])
+cn.whzxt.android.Native: int csc_4442(int,int,int[])
+cn.whzxt.android.Native: int wsc_4442(int,int,int[])
+cn.whzxt.android.Native: int chk_4442(int)
+cn.whzxt.android.Native: java.lang.String srd_102(int,int,int,int)
+cn.whzxt.android.Native: int swr_102(int,int,int,int,int[])
+cn.whzxt.android.Native: int csc_102(int,int,int[])
+cn.whzxt.android.Native: int wsc_102(int,int,int[])
+cn.whzxt.android.Native: int chk_102(int)
+cn.whzxt.android.Native: int cesc_102(int,int,int,int[])
+cn.whzxt.android.Native: int wesc_102(int,int,int,int[])
+cn.whzxt.android.Native: int ser_102(int,int,int,int)
+cn.whzxt.android.Native: java.lang.String srd_24c02(int,int,int)
+cn.whzxt.android.Native: int swr_24c02(int,int,int,int[])
+cn.whzxt.android.Native: int chk_24c02(int)
+cn.whzxt.android.NativeGPIO
+cn.whzxt.android.NativeGPIO: boolean setRelay(boolean)
+cn.whzxt.android.NativeGPIO: int getAccState()
+cn.whzxt.android.NativeGPIO: int getRotateSpeed(int,int)
+cn.whzxt.android.NativeGPIO: int readmile()
+cn.whzxt.android.NativeGPIO: boolean disableRotateSpeed(int)
+cn.whzxt.android.NativeRFID
+cn.whzxt.android.NativeRFID: boolean open_fm1702()
+cn.whzxt.android.NativeRFID: void select_type(int)
+cn.whzxt.android.NativeRFID: void close_fm1702()
+cn.whzxt.android.NativeRFID: java.lang.String read_A()
+cn.whzxt.android.NativeRFID: java.lang.String read_B()
+cn.whzxt.android.NativeRFID: int set_key(int[])
+cn.whzxt.android.NativeRFID: java.lang.String read_card(int[],int[],int)
+cn.whzxt.android.NativeRFID: int write_card(int[],int[],int,int[])
+cn.whzxt.android.NetImageView
+cn.whzxt.android.NetImageView: NetImageView(android.content.Context)
+cn.whzxt.android.NetImageView: NetImageView(android.content.Context,android.util.AttributeSet)
+cn.whzxt.android.NetImageView: NetImageView(android.content.Context,android.util.AttributeSet,int)
+cn.whzxt.android.NetImageView: void setImageUrl(java.lang.String)
+cn.whzxt.android.R$color: int black
+cn.whzxt.android.R$color: int button_checked_normal
+cn.whzxt.android.R$color: int button_checked_press
+cn.whzxt.android.R$color: int button_checked_text
+cn.whzxt.android.R$color: int button_normal
+cn.whzxt.android.R$color: int button_press
+cn.whzxt.android.R$color: int button_text
+cn.whzxt.android.R$color: int card_press
+cn.whzxt.android.R$color: int card_text
+cn.whzxt.android.R$color: int cardbg
+cn.whzxt.android.R$color: int contentbg
+cn.whzxt.android.R$color: int contentborder
+cn.whzxt.android.R$color: int labelfont
+cn.whzxt.android.R$color: int titlebg
+cn.whzxt.android.R$color: int titleborder
+cn.whzxt.android.R$color: int titlefontcolor
+cn.whzxt.android.R$color: int white
+cn.whzxt.android.R$drawable: int bg1
+cn.whzxt.android.R$drawable: int bg2
+cn.whzxt.android.R$drawable: int button_bg
+cn.whzxt.android.R$drawable: int button_checked_bg
+cn.whzxt.android.R$drawable: int card_bg
+cn.whzxt.android.R$drawable: int ic_launcher
+cn.whzxt.android.R$drawable: int photo
+cn.whzxt.android.R$drawable: int tile_black
+cn.whzxt.android.R$drawable: int top_btn_bg_s
+cn.whzxt.android.R$drawable: int transparent
+cn.whzxt.android.R$id: int TextView01
+cn.whzxt.android.R$id: int TextView02
+cn.whzxt.android.R$id: int TextView03
+cn.whzxt.android.R$id: int TextView04
+cn.whzxt.android.R$id: int TextView05
+cn.whzxt.android.R$id: int TextView14
+cn.whzxt.android.R$id: int btnLogger
+cn.whzxt.android.R$id: int btnLoggerReturn
+cn.whzxt.android.R$id: int btnMode
+cn.whzxt.android.R$id: int btnRestart
+cn.whzxt.android.R$id: int btnRetry
+cn.whzxt.android.R$id: int btnReturnToMain
+cn.whzxt.android.R$id: int btnShutdown
+cn.whzxt.android.R$id: int btnSubject
+cn.whzxt.android.R$id: int camCanvas
+cn.whzxt.android.R$id: int flipper
+cn.whzxt.android.R$id: int imgCoach
+cn.whzxt.android.R$id: int imgLast01
+cn.whzxt.android.R$id: int imgLast02
+cn.whzxt.android.R$id: int imgLast03
+cn.whzxt.android.R$id: int imgLast04
+cn.whzxt.android.R$id: int imgStudent
+cn.whzxt.android.R$id: int layCoachInfo
+cn.whzxt.android.R$id: int layCoachTitle
+cn.whzxt.android.R$id: int layScrollDown
+cn.whzxt.android.R$id: int layStudentInfo
+cn.whzxt.android.R$id: int layStudentTitle
+cn.whzxt.android.R$id: int layTitle
+cn.whzxt.android.R$id: int layTts
+cn.whzxt.android.R$id: int photoView
+cn.whzxt.android.R$id: int previewSurface
+cn.whzxt.android.R$id: int scrollView1
+cn.whzxt.android.R$id: int tableRow1
+cn.whzxt.android.R$id: int tableRow5
+cn.whzxt.android.R$id: int textView1
+cn.whzxt.android.R$id: int textView2
+cn.whzxt.android.R$id: int textView3
+cn.whzxt.android.R$id: int textView4
+cn.whzxt.android.R$id: int textView5
+cn.whzxt.android.R$id: int textView6
+cn.whzxt.android.R$id: int textView7
+cn.whzxt.android.R$id: int txtBalance
+cn.whzxt.android.R$id: int txtCoachCard
+cn.whzxt.android.R$id: int txtCoachCertificateLabel
+cn.whzxt.android.R$id: int txtCoachName
+cn.whzxt.android.R$id: int txtDebug
+cn.whzxt.android.R$id: int txtDeviceName
+cn.whzxt.android.R$id: int txtGPSSpeed
+cn.whzxt.android.R$id: int txtGPSStatus
+cn.whzxt.android.R$id: int txtLogger
+cn.whzxt.android.R$id: int txtMode
+cn.whzxt.android.R$id: int txtModeInfo
+cn.whzxt.android.R$id: int txtNetworkStatus
+cn.whzxt.android.R$id: int txtSchoolName
+cn.whzxt.android.R$id: int txtSensor
+cn.whzxt.android.R$id: int txtStatus
+cn.whzxt.android.R$id: int txtStudentCard
+cn.whzxt.android.R$id: int txtStudentName
+cn.whzxt.android.R$id: int txtStudentTitle
+cn.whzxt.android.R$id: int txtSubject
+cn.whzxt.android.R$id: int txtSubjectInfo
+cn.whzxt.android.R$id: int txtSystemTime
+cn.whzxt.android.R$id: int txtTrainTime
+cn.whzxt.android.R$layout: int main
+cn.whzxt.android.R$layout: int photoview
+cn.whzxt.android.R$layout: int push_left_in
+cn.whzxt.android.R$layout: int push_left_out
+cn.whzxt.android.R$layout: int push_right_in
+cn.whzxt.android.R$layout: int push_right_out
+cn.whzxt.android.R$layout: int welcome
+cn.whzxt.android.R$string: int app_name
+cn.whzxt.android.R$string: int bottomcenter
+cn.whzxt.android.R$string: int copyright
+cn.whzxt.android.R$string: int server1
+cn.whzxt.android.R$string: int server2
+cn.whzxt.android.R$string: int version
+cn.whzxt.android.VerticalSeekbar
+cn.whzxt.android.VerticalSeekbar: VerticalSeekbar(android.content.Context)
+cn.whzxt.android.VerticalSeekbar: VerticalSeekbar(android.content.Context,android.util.AttributeSet,int)
+cn.whzxt.android.VerticalSeekbar: VerticalSeekbar(android.content.Context,android.util.AttributeSet)
+cn.whzxt.android.VerticalSeekbar: void setProgressAndThumb(int)
+cn.whzxt.android.VerticalSeekbar: void setMaximum(int)
+cn.whzxt.android.WelcomeActivity
+cn.whzxt.android.lytfingerprint
+cn.whzxt.android.lytfingerprint: int PSOpenDevice(int,int,int,int)
+cn.whzxt.android.lytfingerprint: int PSCloseDevice()
+cn.whzxt.android.lytfingerprint: int PSGetImage(int)
+cn.whzxt.android.lytfingerprint: int PSGenChar(int,int)
+cn.whzxt.android.lytfingerprint: int PSRegModule(int)
+cn.whzxt.android.lytfingerprint: int PSStoreChar(int,int,int)
+cn.whzxt.android.lytfingerprint: int PSSearch(int,int,int,int,int)
+cn.whzxt.android.lytfingerprint: int PSUpImage(int,byte[],int)
+cn.whzxt.android.lytfingerprint: int PSImgData2BMP(byte[],java.lang.String)
+cn.whzxt.android.lytfingerprint: int PSDelChar(int,int,int)
+cn.whzxt.android.lytfingerprint: int PSEmpty(int)
+cn.whzxt.android.lytfingerprint: int getnFinger()
+cn.whzxt.android.lytfingerprint: int PSLoadChar(int,int,int)
+cn.whzxt.android.lytfingerprint: int PSUpChar(int,int,byte[],int,java.lang.String)
+cn.whzxt.android.lytfingerprint: int PSDownChar(int,int,int,int,java.lang.String)
+cn.whzxt.android.lytfingerprint: int Open()
+cn.whzxt.android.lytfingerprint: int Close()
+com.android.serial_camera
+com.android.serial_camera: int uart_init0(int)
+com.android.serial_camera: int photo_init()
+com.android.serial_camera: int take_photo_cmd()
+com.android.serial_camera: int take_photo(java.lang.String)
+com.android.serial_camera: int uart_close()
+com.lyt.watchdog.Native
+com.lyt.watchdog.Native: int init()
+com.lyt.watchdog.Native: int exit(int)
+com.lyt.watchdog.Native: int settimeout(int)
+com.lyt.watchdog.Native: int gettimeout()
+com.lyt.watchdog.Native: int keepalive()

@@ -1,0 +1,156 @@
+android.annotation.SuppressLint
+android.annotation.TargetApi
+cn.whzxt.android.BuildConfig
+cn.whzxt.android.CardOper:
+    public static final java.lang.String MSG_COACH_FIRST
+    public static final java.lang.String MSG_SCHOOL_ERROR
+    public static final java.lang.String MSG_READ_FAILURE
+    public static final int RFID_TYPE_A
+    public static final int RFID_TYPE_B
+    public static final int RFID_BLOCK
+    public static final int RFID_EARA
+    public static final int NO_CARD
+    public static final int CARD_24C02
+    public static final int CARD_S50
+    public static final int CARD_S70
+    private static final java.lang.String PATH
+    private static final int BAUD
+cn.whzxt.android.Coach:
+    3:3:public Coach()
+cn.whzxt.android.DeviceInfo:
+    5:5:public DeviceInfo()
+cn.whzxt.android.FormFile:
+    23:28:public FormFile(java.lang.String,byte[],java.lang.String,java.lang.String)
+    59:60:public void setFilname(java.lang.String)
+    67:68:public void setParameterName(java.lang.String)
+    75:76:public void setContentType(java.lang.String)
+cn.whzxt.android.Logger:
+    7:7:public Logger()
+cn.whzxt.android.MainActivity:
+    private static final int BS_EVERY_MAX
+    private static final int MODE_TRAIN
+    private static final int MODE_FREE
+    private static final int DBVERSION
+    private static final int PRICE
+    private static final int REQ_TTS_STATUS_CHECK
+    private static final int _fingerAddress
+    private static final int CHAR_BUFFER_A
+    private static final int CHAR_BUFFER_B
+    private static final char PS_OK
+    private static final char PS_NO_FINGER
+    private static final java.lang.String PHOTO_PATH
+    private static final int PHOTO_DEF_INTERVAL
+    private static final int DL_CARD_READING
+    private static final int DL_DOWN_FINGER
+    private static final int DL_VALI_FINGER
+    private static final int DL_CARD_INIT
+    private static final int DL_FINGER1
+    private static final int DL_FINGER2
+    private static final int DL_FINGER3
+    private static final int DL_GET_COACH
+    private static final int DL_GET_STUDENT
+    private static final int DL_LOAD_TTSBUTTON
+    private static final int H_W_UPLOAD
+    private static final int H_W_SECOND
+    private static final int H_W_MINUTE
+    private static final int H_W_TAKE_PHOTO
+    private static final int H_W_TAKE_PHOTO1
+    private static final int H_W_TAKE_PHOTO2
+    private static final int H_W_UPLOAD_PHOTO
+    private static final int H_W_HIDE_TRAININFO
+    private static final int H_W_SHOW_SENSOR
+    private static final int H_W_UPDATEDIALOG_MAX
+    private static final int H_W_UPDATEDIALOG_NOW
+    private static final int H_W_TRAIN_START
+    private static final int H_W_TRAIN_END
+    private static final int H_W_GET_COACHINFO
+    private static final int H_W_GET_STUDENTINFO
+    private static final int H_W_DOWN_FINGER
+    private static final int H_W_WRITE_FINGER
+cn.whzxt.android.MySQLHelper:
+    public static final java.lang.String T_ZXT_USE_DATA
+    public static final java.lang.String T_ZXT_MODE_CHANGE
+    public static final java.lang.String T_ZXT_GPS_DATA
+    public static final java.lang.String T_ZXT_TTS
+    public static final java.lang.String T_ZXT_FINGER
+cn.whzxt.android.NanoHTTPD:
+    public static final java.lang.String HTTP_OK
+    public static final java.lang.String HTTP_PARTIALCONTENT
+    public static final java.lang.String HTTP_RANGE_NOT_SATISFIABLE
+    public static final java.lang.String HTTP_REDIRECT
+    public static final java.lang.String HTTP_FORBIDDEN
+    public static final java.lang.String HTTP_NOTFOUND
+    public static final java.lang.String HTTP_BADREQUEST
+    public static final java.lang.String HTTP_INTERNALERROR
+    public static final java.lang.String HTTP_NOTIMPLEMENTED
+    public static final java.lang.String MIME_PLAINTEXT
+    public static final java.lang.String MIME_HTML
+    public static final java.lang.String MIME_DEFAULT_BINARY
+    public static final java.lang.String MIME_XML
+    private static final java.lang.String LICENCE
+    262:267:public void stop()
+    275:308:public static void main(java.lang.String[])
+cn.whzxt.android.NanoHTTPD$Response:
+    135:137:public NanoHTTPD$Response(cn.whzxt.android.NanoHTTPD)
+cn.whzxt.android.Native:
+    3:3:public Native()
+    public static native java.lang.String srd_4442(int,int,int)
+    public static native int swr_4442(int,int,int,int[])
+    public static native int csc_4442(int,int,int[])
+    public static native int wsc_4442(int,int,int[])
+    public static native int chk_4442(int)
+    public static native java.lang.String srd_102(int,int,int,int)
+    public static native int swr_102(int,int,int,int,int[])
+    public static native int csc_102(int,int,int[])
+    public static native int wsc_102(int,int,int[])
+    public static native int chk_102(int)
+    public static native int cesc_102(int,int,int,int[])
+    public static native int wesc_102(int,int,int,int[])
+    public static native int ser_102(int,int,int,int)
+cn.whzxt.android.NativeGPIO:
+    3:3:public NativeGPIO()
+    public static native int readmile()
+    public static native boolean disableRotateSpeed(int)
+cn.whzxt.android.NativeRFID:
+    3:3:public NativeRFID()
+    public static native java.lang.String read_B()
+    public static native int set_key(int[])
+cn.whzxt.android.NetImageViewCache:
+    private static final java.lang.String CACHE_FILE
+cn.whzxt.android.PhotoViewDialog
+cn.whzxt.android.R
+cn.whzxt.android.R$attr
+cn.whzxt.android.R$color
+cn.whzxt.android.R$drawable
+cn.whzxt.android.R$id
+cn.whzxt.android.R$layout
+cn.whzxt.android.R$string
+cn.whzxt.android.SocketHttpRequester:
+    17:17:public SocketHttpRequester()
+cn.whzxt.android.Student:
+    3:3:public Student()
+cn.whzxt.android.Train:
+    public static final java.lang.String VideoBasePath
+    11:11:public Train()
+cn.whzxt.android.VerticalSeekbar:
+    71:71:public synchronized int getMaximum()
+cn.whzxt.android.WelcomeActivity:
+    private static final int H_W_INIT
+    private static final int H_W_UPDATEDIALOG_MAX
+    private static final int H_W_UPDATEDIALOG_NOW
+    private static final int H_W_SECOND
+    private static final int RetryCount
+    private static final int RetryTime
+cn.whzxt.android.lytfingerprint:
+    public native int PSUpImage(int,byte[],int)
+    public native int PSImgData2BMP(byte[],java.lang.String)
+    public native int PSDelChar(int,int,int)
+    public native int PSEmpty(int)
+    public native int getnFinger()
+    public native int PSLoadChar(int,int,int)
+com.android.serial_camera
+com.lyt.watchdog.Native:
+    3:3:public Native()
+    public static native int exit(int)
+    public static native int gettimeout()
+    public static native int keepalive()

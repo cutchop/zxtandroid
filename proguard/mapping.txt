@@ -1,0 +1,912 @@
+cn.whzxt.android.BootUpReceiver -> cn.whzxt.android.BootUpReceiver:
+    void onReceive(android.content.Context,android.content.Intent) -> onReceive
+cn.whzxt.android.CardOper -> cn.whzxt.android.a:
+    int CardType -> a
+    java.lang.Boolean _stop -> c
+    cn.whzxt.android.CardOper$OnChange onchang -> d
+    java.lang.String schoolID -> e
+    int[] RFID_KEY -> f
+    int fd -> g
+    java.lang.String _rfidUID -> h
+    java.lang.Object lock -> b
+    java.lang.Thread _thread -> i
+    java.util.Queue rfidOpers -> j
+    void openICCard() -> a
+    void openRfidCard() -> b
+    void selectRfidType(int) -> a
+    void start() -> c
+    void run() -> run
+    int readCardType() -> g
+    java.lang.String read() -> h
+    java.lang.String CardInit(java.lang.String,java.lang.String,java.lang.String) -> a
+    void WriteIC(int,int,int[]) -> a
+    java.lang.Boolean checkCardNo() -> d
+    java.lang.Boolean WriteFingerFlag(int) -> b
+    java.lang.Boolean WriteNotNeedFingerFlag(int) -> c
+    void WriteBalance(int) -> d
+    java.lang.Boolean WriteName() -> e
+    byte[] int2bytes(int) -> e
+    int bytes2int(byte[]) -> a
+    void stop() -> f
+cn.whzxt.android.CardOper$1 -> cn.whzxt.android.b:
+    cn.whzxt.android.CardOper this$0 -> a
+    void onFinish(int) -> a
+    void onStart() -> a
+    void onFinish(java.lang.String) -> a
+cn.whzxt.android.CardOper$2 -> cn.whzxt.android.c:
+    cn.whzxt.android.CardOper this$0 -> a
+    void onFinish(int) -> a
+    void onStart() -> a
+    void onFinish(java.lang.String) -> a
+cn.whzxt.android.CardOper$3 -> cn.whzxt.android.d:
+    cn.whzxt.android.CardOper this$0 -> a
+    void onFinish(int) -> a
+    void onStart() -> a
+    void onFinish(java.lang.String) -> a
+cn.whzxt.android.CardOper$4 -> cn.whzxt.android.e:
+    cn.whzxt.android.CardOper this$0 -> a
+    void onFinish(int) -> a
+    void onStart() -> a
+    void onFinish(java.lang.String) -> a
+cn.whzxt.android.CardOper$OnChange -> cn.whzxt.android.f:
+    void onReadStart() -> a
+    void onFind(java.lang.String) -> a
+    void onLose() -> b
+cn.whzxt.android.Coach -> cn.whzxt.android.g:
+    java.lang.String ID -> a
+    java.lang.String Name -> b
+    java.lang.String CardNo -> c
+    java.lang.String IDCardNo -> d
+    java.lang.String Certificate -> e
+    void Init() -> a
+cn.whzxt.android.DeviceInfo -> cn.whzxt.android.h:
+    double Longitude -> a
+    double Latitude -> b
+    java.util.Date GPSTime -> c
+    int Speed -> d
+    int SenSpeed -> e
+    int Mileage -> f
+    int SenMileage -> g
+    int Mode -> h
+    int Subject -> i
+cn.whzxt.android.FormFile -> cn.whzxt.android.i:
+    byte[] data -> a
+    java.io.InputStream inStream -> b
+    java.io.File file -> c
+    java.lang.String filname -> d
+    java.lang.String parameterName -> e
+    java.lang.String contentType -> f
+    java.io.File getFile() -> a
+    java.io.InputStream getInStream() -> b
+    byte[] getData() -> c
+    java.lang.String getFilname() -> d
+    java.lang.String getParameterName() -> e
+    java.lang.String getContentType() -> f
+cn.whzxt.android.Logger -> cn.whzxt.android.j:
+    java.text.SimpleDateFormat dateFormat -> a
+    int MAX -> b
+    java.util.LinkedList logs -> c
+    void Write(java.lang.String) -> a
+    void Write(int[]) -> a
+    java.lang.String Read() -> a
+cn.whzxt.android.MainActivity -> cn.whzxt.android.MainActivity:
+    android.widget.TextView txtSchoolName -> c
+    android.widget.TextView txtDeviceName -> d
+    android.widget.TextView txtSystemTime -> e
+    android.widget.TextView txtStudentTitle -> f
+    android.widget.TextView txtStatus -> g
+    android.widget.TextView txtGPSSpeed -> h
+    android.widget.TextView txtSensor -> i
+    android.widget.TextView txtCoachName -> j
+    android.widget.TextView txtCoachCard -> k
+    android.widget.TextView txtStudentName -> l
+    android.widget.TextView txtStudentCard -> m
+    android.widget.TextView txtTrainTime -> n
+    android.widget.TextView txtBalance -> o
+    android.widget.TextView txtNetworkStatus -> p
+    android.widget.TextView txtGPSStatus -> q
+    android.widget.TextView txtLogger -> r
+    android.widget.TextView txtDebug -> s
+    android.widget.TextView txtMode -> t
+    android.widget.TextView txtModeInfo -> u
+    android.widget.TextView txtSubject -> v
+    android.widget.TextView txtSubjectInfo -> w
+    android.widget.LinearLayout btnSubject -> x
+    android.widget.LinearLayout btnRestart -> y
+    android.widget.LinearLayout btnShutdown -> z
+    android.widget.LinearLayout btnReturnToMain -> A
+    cn.whzxt.android.NetImageView imgCoach -> B
+    cn.whzxt.android.NetImageView imgStudent -> C
+    android.widget.ImageView imgLast01 -> D
+    android.widget.ImageView imgLast02 -> E
+    android.widget.ImageView imgLast03 -> F
+    android.widget.ImageView imgLast04 -> G
+    android.widget.LinearLayout layCoachTitle -> H
+    android.widget.LinearLayout layStudentTitle -> I
+    android.widget.LinearLayout btnMode -> J
+    android.widget.LinearLayout btnLogger -> K
+    android.widget.LinearLayout btnLoggerReturn -> L
+    android.widget.LinearLayout layTts -> M
+    android.widget.LinearLayout layScrollDown -> N
+    android.widget.ViewFlipper flipper -> O
+    android.view.GestureDetector detector -> P
+    android.view.SurfaceView previewSurface -> Q
+    android.view.SurfaceHolder previewSurfaceHolder -> R
+    java.lang.String deviceID -> S
+    java.lang.String deviceName -> T
+    java.lang.String schoolID -> U
+    java.lang.String schoolName -> V
+    java.lang.String session -> W
+    java.lang.String server -> X
+    java.lang.String uploadresult -> Y
+    java.lang.String cardresult -> Z
+    java.lang.String usedataresult -> aa
+    java.lang.String ttsdataresult -> ab
+    java.util.Date nowTime -> ac
+    int retry -> ad
+    java.text.SimpleDateFormat dateFormat -> ae
+    java.text.SimpleDateFormat timeFormat -> af
+    android.location.LocationManager locationManager -> ag
+    java.util.Timer _timerUpload -> ah
+    java.util.Timer _timerSecond -> ai
+    java.util.Timer _timerMinute -> aj
+    java.util.Timer _timerCamera -> ak
+    java.util.Timer _timerUploadPhoto -> al
+    java.util.Timer _timerSensor -> am
+    java.util.Timer _timerTakePhoto2 -> an
+    android.content.SharedPreferences settings -> ao
+    cn.whzxt.android.MySQLHelper sqlHelper -> ap
+    android.database.sqlite.SQLiteDatabase db -> aq
+    java.lang.Boolean _usedataUploading -> ar
+    java.lang.Boolean _blindspotUploading -> as
+    java.util.HashMap _hashTts -> at
+    java.lang.String _ttsVer -> au
+    java.lang.String _tcpMsg -> av
+    android.graphics.Paint _markPaint -> aw
+    int _uploadblindSpotCount -> ax
+    int _relayoff -> ay
+    java.lang.Boolean _jdq_ck -> az
+    long _gpstime_now -> aA
+    long _gpstime_pre -> aB
+    float _sts -> aC
+    java.net.ServerSocket socket -> aD
+    java.net.Socket client -> aE
+    int s2_min_time -> aF
+    int s2_max_time -> aG
+    int s2_day_time -> aH
+    int s3_min_time -> aI
+    int s3_max_time -> aJ
+    int s3_day_time -> aK
+    float NMDIVIDED -> aL
+    cn.whzxt.android.CardOper cardOper -> aM
+    android.speech.tts.TextToSpeech mTts -> aN
+    cn.whzxt.android.lytfingerprint _fingerprint -> aO
+    java.lang.String _fingertmppath -> aP
+    int _fingerCurId -> aQ
+    java.lang.Boolean _fingerFinish -> aR
+    int _fingerRetry -> aS
+    android.hardware.Camera _camera -> aT
+    int _curCamera -> aU
+    java.lang.Boolean _previewing -> aV
+    java.lang.Boolean _photouploading -> aW
+    java.lang.Boolean _takephotoing -> aX
+    java.lang.String _phototime -> aY
+    java.lang.String _photoUUID -> aZ
+    int _photoSpeed -> ba
+    int _photoSenSpeed -> bb
+    android.graphics.Bitmap[] _lastBmps -> bc
+    cn.whzxt.android.StreamIt streamIt -> bd
+    cn.whzxt.android.PhotoServer photoServer -> be
+    int cameracount -> bf
+    android.os.PowerManager$WakeLock wakeLock -> bg
+    android.app.ProgressDialog _updateDialog -> bh
+    java.io.File _downLoadFile -> bi
+    int _fileLength -> bj
+    int _downedFileLength -> bk
+    java.lang.Boolean _isclosed -> bl
+    java.lang.Boolean _sensorTimerFlag -> bm
+    java.lang.Boolean _secondTimerFlag -> bn
+    java.lang.Boolean _ttsButtonLoaded -> bo
+    android.os.Handler handler -> a
+    cn.whzxt.android.CardOper$OnChange cardOnChange -> b
+    android.location.LocationListener locationListener -> bp
+    void onInit(int) -> onInit
+    void onActivityResult(int,int,android.content.Intent) -> onActivityResult
+    void onCreate(android.os.Bundle) -> onCreate
+    void initView() -> a
+    void initMoudle() -> b
+    void initTimer() -> c
+    void ttsButtonInit() -> d
+    void takephoto() -> e
+    void takephoto1() -> f
+    void takephoto2() -> g
+    void changeCamera() -> h
+    void lastBitmapJoin(byte[]) -> a
+    void savePhoto(int) -> a
+    void surfaceChanged(android.view.SurfaceHolder,int,int,int) -> surfaceChanged
+    void surfaceCreated(android.view.SurfaceHolder) -> surfaceCreated
+    void surfaceDestroyed(android.view.SurfaceHolder) -> surfaceDestroyed
+    void socketListen() -> i
+    java.lang.String getTimeDiff(java.util.Date,java.util.Date) -> a
+    java.lang.String getTimeDiff2(java.util.Date,java.util.Date) -> b
+    void downFinger() -> j
+    void valiFinger() -> k
+    void second() -> l
+    void showSensor() -> m
+    void trainBegin() -> n
+    void trainFinish() -> o
+    void minute() -> p
+    void writeFinger() -> q
+    void recordfinger1() -> r
+    void recordfinger2() -> s
+    void recordfinger3() -> t
+    void recordfinger4() -> u
+    int fingertocontext() -> v
+    int checkFinger(java.lang.Boolean,java.lang.String) -> a
+    void uploadBlindSpot() -> w
+    void uploadUseData() -> x
+    void uploadPhoto() -> y
+    void getCoachInfo() -> z
+    void getStudentInfo() -> A
+    void upload() -> B
+    void logupload() -> C
+    void showCoach(java.lang.Boolean) -> a
+    void showStudent(java.lang.Boolean) -> b
+    void hideTrainInfo() -> D
+    void changeMode(int) -> b
+    void versionUpdate() -> E
+    void downloadAPK() -> F
+    void installFile(java.io.File) -> a
+    java.lang.String getNowTime() -> G
+    void changeServer() -> H
+    void toastShow(java.lang.String) -> a
+    void toastHandleShow(java.lang.String) -> b
+    void speak(java.lang.String) -> c
+    boolean onKeyDown(int,android.view.KeyEvent) -> onKeyDown
+    void exitConfirm() -> I
+    void onAttachedToWindow() -> onAttachedToWindow
+    android.app.Dialog onCreateDialog(int,android.os.Bundle) -> onCreateDialog
+    boolean onDown(android.view.MotionEvent) -> onDown
+    void onLongPress(android.view.MotionEvent) -> onLongPress
+    boolean onScroll(android.view.MotionEvent,android.view.MotionEvent,float,float) -> onScroll
+    void onShowPress(android.view.MotionEvent) -> onShowPress
+    boolean onSingleTapUp(android.view.MotionEvent) -> onSingleTapUp
+    boolean onTouchEvent(android.view.MotionEvent) -> onTouchEvent
+    boolean onFling(android.view.MotionEvent,android.view.MotionEvent,float,float) -> onFling
+    void onDestroy() -> onDestroy
+    void access$0(cn.whzxt.android.MainActivity) -> a
+    void access$1(cn.whzxt.android.MainActivity) -> b
+    void access$2(cn.whzxt.android.MainActivity) -> c
+    void access$3(cn.whzxt.android.MainActivity) -> d
+    void access$4(cn.whzxt.android.MainActivity) -> e
+    void access$5(cn.whzxt.android.MainActivity) -> f
+    void access$6(cn.whzxt.android.MainActivity) -> g
+    void access$7(cn.whzxt.android.MainActivity) -> h
+    void access$8(cn.whzxt.android.MainActivity) -> i
+    android.app.ProgressDialog access$9(cn.whzxt.android.MainActivity) -> j
+    int access$10(cn.whzxt.android.MainActivity) -> k
+    int access$11(cn.whzxt.android.MainActivity) -> l
+    void access$12(cn.whzxt.android.MainActivity) -> m
+    void access$13(cn.whzxt.android.MainActivity) -> n
+    void access$14(cn.whzxt.android.MainActivity) -> o
+    void access$15(cn.whzxt.android.MainActivity) -> p
+    void access$16(cn.whzxt.android.MainActivity,int) -> a
+    void access$17(cn.whzxt.android.MainActivity) -> q
+    void access$18(cn.whzxt.android.MainActivity) -> r
+    void access$19(cn.whzxt.android.MainActivity,java.lang.String) -> a
+    int access$20(cn.whzxt.android.MainActivity,java.lang.Boolean,java.lang.String) -> a
+    cn.whzxt.android.CardOper access$21(cn.whzxt.android.MainActivity) -> s
+    int access$22(cn.whzxt.android.MainActivity) -> t
+    void access$23(cn.whzxt.android.MainActivity,long) -> a
+    float access$24(cn.whzxt.android.MainActivity) -> u
+    android.widget.TextView access$25(cn.whzxt.android.MainActivity) -> v
+    android.widget.TextView access$26(cn.whzxt.android.MainActivity) -> w
+    android.widget.TextView access$27(cn.whzxt.android.MainActivity) -> x
+    android.content.SharedPreferences access$28(cn.whzxt.android.MainActivity) -> y
+    void access$29(cn.whzxt.android.MainActivity,java.lang.String) -> b
+    void access$30(cn.whzxt.android.MainActivity,java.lang.String) -> c
+    java.lang.Boolean access$31(cn.whzxt.android.MainActivity) -> z
+    void access$32(cn.whzxt.android.MainActivity) -> A
+    android.widget.ViewFlipper access$33(cn.whzxt.android.MainActivity) -> B
+    void access$34(cn.whzxt.android.MainActivity,int) -> b
+    void access$35(cn.whzxt.android.MainActivity) -> C
+    android.widget.TextView access$36(cn.whzxt.android.MainActivity) -> D
+    android.graphics.Bitmap[] access$37(cn.whzxt.android.MainActivity) -> E
+    java.lang.Boolean access$38(cn.whzxt.android.MainActivity) -> F
+    void access$39(cn.whzxt.android.MainActivity) -> G
+    java.lang.Boolean access$40(cn.whzxt.android.MainActivity) -> H
+    void access$41(cn.whzxt.android.MainActivity,java.lang.Boolean) -> a
+    float access$42(cn.whzxt.android.MainActivity) -> I
+    android.database.sqlite.SQLiteDatabase access$43(cn.whzxt.android.MainActivity) -> J
+    void access$44(cn.whzxt.android.MainActivity,java.lang.String) -> d
+    java.lang.String access$45(cn.whzxt.android.MainActivity) -> K
+    java.lang.String access$46(cn.whzxt.android.MainActivity) -> L
+    java.lang.String access$47(cn.whzxt.android.MainActivity) -> M
+    java.lang.String access$48(cn.whzxt.android.MainActivity) -> N
+    java.lang.String access$49(cn.whzxt.android.MainActivity) -> O
+    void access$50(cn.whzxt.android.MainActivity,java.lang.String) -> e
+    java.lang.String access$51(cn.whzxt.android.MainActivity) -> P
+    java.util.HashMap access$52(cn.whzxt.android.MainActivity) -> Q
+    android.widget.LinearLayout access$53(cn.whzxt.android.MainActivity) -> R
+    void access$54(cn.whzxt.android.MainActivity,java.lang.Boolean) -> b
+    void access$55(cn.whzxt.android.MainActivity,java.lang.String) -> f
+    java.net.ServerSocket access$56(cn.whzxt.android.MainActivity) -> S
+    void access$57(cn.whzxt.android.MainActivity,java.net.Socket) -> a
+    java.net.Socket access$58(cn.whzxt.android.MainActivity) -> T
+    java.lang.String access$59(cn.whzxt.android.MainActivity) -> U
+    java.lang.Boolean access$60(cn.whzxt.android.MainActivity) -> V
+    void access$61(cn.whzxt.android.MainActivity,int) -> c
+    cn.whzxt.android.StreamIt access$62(cn.whzxt.android.MainActivity) -> W
+    java.util.Timer access$63(cn.whzxt.android.MainActivity) -> X
+    void access$64(cn.whzxt.android.MainActivity,java.util.Timer) -> a
+    void access$65(cn.whzxt.android.MainActivity,java.lang.Boolean) -> c
+    void access$66(cn.whzxt.android.MainActivity) -> Y
+    android.widget.TextView access$67(cn.whzxt.android.MainActivity) -> Z
+    java.lang.Boolean access$68(cn.whzxt.android.MainActivity) -> aa
+    void access$69(cn.whzxt.android.MainActivity) -> ab
+    void access$70(cn.whzxt.android.MainActivity,int) -> d
+    java.text.SimpleDateFormat access$71(cn.whzxt.android.MainActivity) -> ac
+    java.util.Date access$72(cn.whzxt.android.MainActivity) -> ad
+    int access$73(cn.whzxt.android.MainActivity) -> ae
+    java.lang.String access$74(cn.whzxt.android.MainActivity) -> af
+    cn.whzxt.android.lytfingerprint access$75(cn.whzxt.android.MainActivity) -> ag
+    void access$76(cn.whzxt.android.MainActivity,java.lang.Boolean) -> d
+    void access$77(cn.whzxt.android.MainActivity) -> ah
+    java.lang.Boolean access$78(cn.whzxt.android.MainActivity) -> ai
+    int access$79(cn.whzxt.android.MainActivity) -> aj
+    int access$80(cn.whzxt.android.MainActivity) -> ak
+    void access$81(cn.whzxt.android.MainActivity) -> al
+    void access$82(cn.whzxt.android.MainActivity) -> am
+    void access$83(cn.whzxt.android.MainActivity) -> an
+    int access$84(cn.whzxt.android.MainActivity) -> ao
+    void access$85(cn.whzxt.android.MainActivity,int) -> e
+    void access$86(cn.whzxt.android.MainActivity,java.lang.String) -> g
+    java.lang.String access$87(cn.whzxt.android.MainActivity) -> ap
+    void access$88(cn.whzxt.android.MainActivity,java.lang.Boolean) -> e
+    void access$89(cn.whzxt.android.MainActivity,java.lang.Boolean) -> f
+    java.lang.String access$90(cn.whzxt.android.MainActivity) -> aq
+    void access$91(cn.whzxt.android.MainActivity,java.lang.Boolean) -> g
+    void access$92(cn.whzxt.android.MainActivity,int) -> f
+    void access$93(cn.whzxt.android.MainActivity) -> ar
+    void access$94(cn.whzxt.android.MainActivity,java.lang.String) -> h
+    java.lang.String access$95(cn.whzxt.android.MainActivity) -> as
+    void access$96(cn.whzxt.android.MainActivity,java.lang.Boolean) -> h
+    void access$97(cn.whzxt.android.MainActivity) -> at
+    void access$98(cn.whzxt.android.MainActivity,java.lang.String) -> i
+    java.lang.String access$99(cn.whzxt.android.MainActivity) -> au
+    android.widget.TextView access$100(cn.whzxt.android.MainActivity) -> av
+    void access$101(cn.whzxt.android.MainActivity,android.app.ProgressDialog) -> a
+    void access$102(cn.whzxt.android.MainActivity) -> aw
+    void access$103(cn.whzxt.android.MainActivity,java.io.File) -> a
+    java.io.File access$104(cn.whzxt.android.MainActivity) -> ax
+    void access$105(cn.whzxt.android.MainActivity,int) -> g
+    void access$106(cn.whzxt.android.MainActivity,int) -> h
+    void access$107(cn.whzxt.android.MainActivity,java.io.File) -> b
+cn.whzxt.android.MainActivity$1 -> cn.whzxt.android.k:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void handleMessage(android.os.Message) -> handleMessage
+cn.whzxt.android.MainActivity$10 -> cn.whzxt.android.l:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$11 -> cn.whzxt.android.m:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$12 -> cn.whzxt.android.n:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$13 -> cn.whzxt.android.o:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$14 -> cn.whzxt.android.p:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$15 -> cn.whzxt.android.q:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$16 -> cn.whzxt.android.r:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$17 -> cn.whzxt.android.s:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$18 -> cn.whzxt.android.t:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$19 -> cn.whzxt.android.u:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$2 -> cn.whzxt.android.v:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onLose() -> b
+    void onFind(java.lang.String) -> a
+    void onReadStart() -> a
+    cn.whzxt.android.MainActivity access$0(cn.whzxt.android.MainActivity$2) -> a
+cn.whzxt.android.MainActivity$2$1 -> cn.whzxt.android.w:
+    cn.whzxt.android.MainActivity$2 this$1 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$2$2 -> cn.whzxt.android.x:
+    cn.whzxt.android.MainActivity$2 this$1 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$2$3 -> cn.whzxt.android.y:
+    cn.whzxt.android.MainActivity$2 this$1 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$20 -> cn.whzxt.android.z:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$21 -> cn.whzxt.android.aa:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$22 -> cn.whzxt.android.ab:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$23 -> cn.whzxt.android.ac:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$24 -> cn.whzxt.android.ad:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$25 -> cn.whzxt.android.ae:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$26 -> cn.whzxt.android.af:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+    cn.whzxt.android.MainActivity access$2(cn.whzxt.android.MainActivity$26) -> a
+cn.whzxt.android.MainActivity$26$1 -> cn.whzxt.android.ag:
+    cn.whzxt.android.MainActivity$26 this$1 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$27 -> cn.whzxt.android.ah:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$28 -> cn.whzxt.android.ai:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$29 -> cn.whzxt.android.aj:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+    cn.whzxt.android.MainActivity access$2(cn.whzxt.android.MainActivity$29) -> a
+cn.whzxt.android.MainActivity$29$1 -> cn.whzxt.android.ak:
+    cn.whzxt.android.MainActivity$29 this$1 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$3 -> cn.whzxt.android.al:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onLocationChanged(android.location.Location) -> onLocationChanged
+    void onProviderDisabled(java.lang.String) -> onProviderDisabled
+    void onProviderEnabled(java.lang.String) -> onProviderEnabled
+    void onStatusChanged(java.lang.String,int,android.os.Bundle) -> onStatusChanged
+cn.whzxt.android.MainActivity$30 -> cn.whzxt.android.am:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$31 -> cn.whzxt.android.an:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$32 -> cn.whzxt.android.ao:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$33 -> cn.whzxt.android.ap:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.MainActivity$34 -> cn.whzxt.android.aq:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$35 -> cn.whzxt.android.ar:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$36 -> cn.whzxt.android.as:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$37 -> cn.whzxt.android.at:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$38 -> cn.whzxt.android.au:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$39 -> cn.whzxt.android.av:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$4 -> cn.whzxt.android.aw:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$40 -> cn.whzxt.android.ax:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$41 -> cn.whzxt.android.ay:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$42 -> cn.whzxt.android.az:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$43 -> cn.whzxt.android.ba:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$44 -> cn.whzxt.android.bb:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$45 -> cn.whzxt.android.bc:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$46 -> cn.whzxt.android.bd:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$47 -> cn.whzxt.android.be:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$48 -> cn.whzxt.android.bf:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.MainActivity$49 -> cn.whzxt.android.bg:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.String val$str -> b
+    void run() -> run
+cn.whzxt.android.MainActivity$5 -> cn.whzxt.android.bh:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$50 -> cn.whzxt.android.bi:
+    cn.whzxt.android.MainActivity this$0 -> a
+    java.lang.String val$nextStr -> b
+    void run() -> run
+cn.whzxt.android.MainActivity$51 -> cn.whzxt.android.bj:
+    cn.whzxt.android.MainActivity this$0 -> a
+    android.widget.EditText val$txtpsd -> b
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$52 -> cn.whzxt.android.bk:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$53 -> cn.whzxt.android.bl:
+    cn.whzxt.android.MainActivity this$0 -> a
+    boolean onKey(android.content.DialogInterface,int,android.view.KeyEvent) -> onKey
+cn.whzxt.android.MainActivity$6 -> cn.whzxt.android.bm:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+    cn.whzxt.android.MainActivity access$0(cn.whzxt.android.MainActivity$6) -> a
+cn.whzxt.android.MainActivity$6$1 -> cn.whzxt.android.bn:
+    cn.whzxt.android.MainActivity$6 this$1 -> a
+    android.widget.EditText val$txtpsd -> b
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$6$2 -> cn.whzxt.android.bo:
+    cn.whzxt.android.MainActivity$6 this$1 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$6$3 -> cn.whzxt.android.bp:
+    cn.whzxt.android.MainActivity$6 this$1 -> a
+    boolean onKey(android.content.DialogInterface,int,android.view.KeyEvent) -> onKey
+cn.whzxt.android.MainActivity$7 -> cn.whzxt.android.bq:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$8 -> cn.whzxt.android.br:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$9 -> cn.whzxt.android.bs:
+    cn.whzxt.android.MainActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+cn.whzxt.android.MainActivity$9$1 -> cn.whzxt.android.bt:
+    cn.whzxt.android.MainActivity$9 this$1 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$9$2 -> cn.whzxt.android.bu:
+    cn.whzxt.android.MainActivity$9 this$1 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$9$3 -> cn.whzxt.android.bv:
+    cn.whzxt.android.MainActivity$9 this$1 -> a
+    boolean onKey(android.content.DialogInterface,int,android.view.KeyEvent) -> onKey
+cn.whzxt.android.MySQLHelper -> cn.whzxt.android.bw:
+    void onCreate(android.database.sqlite.SQLiteDatabase) -> onCreate
+    void onUpgrade(android.database.sqlite.SQLiteDatabase,int,int) -> onUpgrade
+cn.whzxt.android.NanoHTTPD -> cn.whzxt.android.bx:
+    int myTcpPort -> a
+    java.net.ServerSocket myServerSocket -> b
+    java.lang.Thread myThread -> c
+    java.io.File myRootDir -> d
+    java.util.Hashtable theMimeTypes -> e
+    java.text.SimpleDateFormat gmtFrmt -> f
+    cn.whzxt.android.NanoHTTPD$Response serve(java.lang.String,java.lang.String,java.util.Properties,java.util.Properties,java.util.Properties) -> a
+    void serveDone(cn.whzxt.android.NanoHTTPD$Response) -> a
+    java.lang.String encodeUri(java.lang.String) -> a
+    cn.whzxt.android.NanoHTTPD$Response serveFile(java.lang.String,java.util.Properties,java.io.File,boolean) -> a
+    java.text.SimpleDateFormat access$0() -> a
+    java.net.ServerSocket access$1(cn.whzxt.android.NanoHTTPD) -> a
+cn.whzxt.android.NanoHTTPD$1 -> cn.whzxt.android.by:
+    cn.whzxt.android.NanoHTTPD this$0 -> a
+    void run() -> run
+cn.whzxt.android.NanoHTTPD$2 -> cn.whzxt.android.bz:
+    cn.whzxt.android.NanoHTTPD this$0 -> a
+    long val$dataLen -> b
+    int available() -> available
+cn.whzxt.android.NanoHTTPD$HTTPSession -> cn.whzxt.android.ca:
+    java.net.Socket mySocket -> b
+    cn.whzxt.android.NanoHTTPD this$0 -> a
+    void run() -> run
+    void decodeHeader(java.io.BufferedReader,java.util.Properties,java.util.Properties,java.util.Properties) -> a
+    void decodeMultipartData(java.lang.String,byte[],java.io.BufferedReader,java.util.Properties,java.util.Properties) -> a
+    int[] getBoundaryPositions(byte[],byte[]) -> a
+    java.lang.String saveTmpFile(byte[],int,int) -> a
+    int stripMultipartHeaders(byte[],int) -> a
+    java.lang.String decodePercent(java.lang.String) -> a
+    void decodeParms(java.lang.String,java.util.Properties) -> a
+    void sendError(java.lang.String,java.lang.String) -> a
+    void sendResponse(java.lang.String,java.lang.String,java.util.Properties,java.io.InputStream,boolean) -> a
+cn.whzxt.android.NanoHTTPD$Response -> cn.whzxt.android.cb:
+    java.lang.String status -> a
+    java.lang.String mimeType -> b
+    java.io.InputStream data -> c
+    java.util.Properties header -> d
+    boolean isStreaming -> e
+    cn.whzxt.android.NanoHTTPD this$0 -> f
+    void addHeader(java.lang.String,java.lang.String) -> a
+cn.whzxt.android.Native -> cn.whzxt.android.Native:
+    int auto_init(java.lang.String,int) -> auto_init
+    int ic_exit(int) -> ic_exit
+    java.lang.String srd_24c02(int,int,int) -> srd_24c02
+    int swr_24c02(int,int,int,int[]) -> swr_24c02
+    int chk_24c02(int) -> chk_24c02
+cn.whzxt.android.NativeGPIO -> cn.whzxt.android.NativeGPIO:
+    boolean setRelay(boolean) -> setRelay
+    int getAccState() -> getAccState
+    int getRotateSpeed(int,int) -> getRotateSpeed
+cn.whzxt.android.NativeRFID -> cn.whzxt.android.NativeRFID:
+    boolean open_fm1702() -> open_fm1702
+    void select_type(int) -> select_type
+    void close_fm1702() -> close_fm1702
+    java.lang.String read_A() -> read_A
+    java.lang.String read_card(int[],int[],int) -> read_card
+    int write_card(int[],int[],int,int[]) -> write_card
+cn.whzxt.android.NetImageView -> cn.whzxt.android.NetImageView:
+    java.lang.String mPicUrl -> a
+    void setImageUrl(java.lang.String) -> setImageUrl
+    void loadImage(java.lang.String) -> a
+    byte[] getBytesFromStream(java.io.InputStream) -> a
+    byte[] access$0(cn.whzxt.android.NetImageView,java.io.InputStream) -> a
+    java.lang.String access$1(cn.whzxt.android.NetImageView) -> a
+cn.whzxt.android.NetImageView$NetImageDownLoad -> cn.whzxt.android.cc:
+    cn.whzxt.android.NetImageView this$0 -> a
+    void onPreExecute() -> onPreExecute
+    android.graphics.Bitmap doInBackground(java.lang.String[]) -> a
+    void onPostExecute(android.graphics.Bitmap) -> a
+    void onProgressUpdate(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+    void onProgressUpdate(java.lang.Object[]) -> onProgressUpdate
+cn.whzxt.android.NetImageViewCache -> cn.whzxt.android.cd:
+    cn.whzxt.android.NetImageViewCache mNetImageViewCache -> a
+    cn.whzxt.android.NetImageViewCache getInstance() -> a
+    boolean isBitmapExit(java.lang.String) -> a
+    boolean isLocalHasBmp(java.lang.String) -> b
+    boolean cacheBmpToMemory(java.io.File,java.lang.String) -> a
+    byte[] getBytesFromStream(java.io.InputStream) -> a
+    java.lang.String isCacheFileIsExit() -> b
+    java.lang.String changeUrlToName(java.lang.String) -> c
+    android.graphics.Bitmap put(java.lang.String,android.graphics.Bitmap) -> a
+    android.graphics.Bitmap put(java.lang.String,android.graphics.Bitmap,boolean) -> a
+    java.lang.Object put(java.lang.Object,java.lang.Object) -> put
+cn.whzxt.android.PhotoServer -> cn.whzxt.android.ce:
+    cn.whzxt.android.StreamIt streamIt -> c
+    int ConCount -> a
+    int PreConCount -> b
+    cn.whzxt.android.NanoHTTPD$Response serve(java.lang.String,java.lang.String,java.util.Properties,java.util.Properties,java.util.Properties) -> a
+cn.whzxt.android.RfidOper -> cn.whzxt.android.cf:
+    int TYPE_READ -> a
+    int TYPE_WRITE -> b
+    int operType -> c
+    int[] address -> d
+    int kind -> e
+    int[] content -> f
+    cn.whzxt.android.RfidOper$Callback callback -> g
+cn.whzxt.android.RfidOper$Callback -> cn.whzxt.android.cg:
+    void onStart() -> a
+    void onFinish(java.lang.String) -> a
+    void onFinish(int) -> a
+cn.whzxt.android.SocketHttpRequester -> cn.whzxt.android.ch:
+    java.lang.Boolean post(java.lang.String,java.util.Map,cn.whzxt.android.FormFile[]) -> a
+    java.lang.Boolean post(java.lang.String,java.util.Map,cn.whzxt.android.FormFile) -> a
+cn.whzxt.android.StreamIt -> cn.whzxt.android.ci:
+    java.lang.Boolean Screenshot -> a
+    android.graphics.BitmapFactory$Options options -> b
+    java.io.ByteArrayOutputStream output_stream -> d
+    byte[] yuv420sp -> c
+    byte[] tempBytes -> e
+    android.graphics.YuvImage yuv_image -> f
+    android.graphics.Rect rect -> g
+    int w -> h
+    int h -> i
+    int format -> j
+    android.hardware.Camera$Parameters parameters -> k
+    void onPreviewFrame(byte[],android.hardware.Camera) -> onPreviewFrame
+cn.whzxt.android.Student -> cn.whzxt.android.cj:
+    java.lang.String ID -> a
+    java.lang.String Name -> b
+    java.lang.String CardNo -> c
+    java.lang.String IDCardNo -> d
+    java.lang.String DriverType -> e
+    int Balance -> f
+    int RealBalance -> g
+    int TotalMi -> h
+    int RealTotalMi -> i
+    int TotalTime -> j
+    int RealTotalTime -> k
+    int TodayTrainTime -> l
+    java.lang.Boolean IsCoach -> m
+    java.lang.Boolean NotNeedFinger -> n
+    java.lang.Boolean HasFinger -> o
+    int Subject -> p
+    void Init() -> a
+cn.whzxt.android.Train -> cn.whzxt.android.ck:
+    java.text.SimpleDateFormat dateFormat -> l
+    java.util.Date StartTime -> a
+    java.util.Date EndTime -> b
+    int StartMileage -> c
+    int StartSenMileage -> d
+    java.lang.Boolean IsTraining -> e
+    java.lang.String TrainID -> f
+    int TIMEOUTALERT -> g
+    int Tocalert -> h
+    int Totalert -> i
+    java.lang.String VideoPath -> j
+    int VideoPhotoCount -> k
+    void Start(android.database.sqlite.SQLiteDatabase) -> a
+    void Update(android.database.sqlite.SQLiteDatabase) -> b
+    void End(android.database.sqlite.SQLiteDatabase) -> c
+cn.whzxt.android.VerticalSeekbar -> cn.whzxt.android.VerticalSeekbar:
+    void onSizeChanged(int,int,int,int) -> onSizeChanged
+    void onMeasure(int,int) -> onMeasure
+    void onDraw(android.graphics.Canvas) -> onDraw
+    boolean onTouchEvent(android.view.MotionEvent) -> onTouchEvent
+    void setProgressAndThumb(int) -> setProgressAndThumb
+    void setMaximum(int) -> setMaximum
+cn.whzxt.android.WelcomeActivity -> cn.whzxt.android.WelcomeActivity:
+    android.widget.TextView txtStatus -> a
+    android.widget.Button btnRetry -> b
+    org.apache.http.client.methods.HttpPost httpRequest -> c
+    org.apache.http.HttpResponse httpResponse -> d
+    android.content.SharedPreferences settings -> e
+    java.lang.String server -> g
+    java.lang.String imei -> h
+    java.lang.String strResult -> i
+    java.lang.String[] results -> j
+    android.app.ProgressDialog _updateDialog -> k
+    java.io.File _downLoadFile -> l
+    int _fileLength -> m
+    int _downedFileLength -> n
+    int _retry -> o
+    int _countdown -> p
+    java.util.Timer _timer -> q
+    android.os.Handler handler -> f
+    void onCreate(android.os.Bundle) -> onCreate
+    void init() -> a
+    void gotomain() -> b
+    void firstrun() -> c
+    void execCommand(java.lang.String) -> a
+    void checkNetWork() -> d
+    void second() -> e
+    void exitConfirm() -> f
+    void offline() -> g
+    boolean onKeyDown(int,android.view.KeyEvent) -> onKeyDown
+    void downloadAPK() -> h
+    void installFile(java.io.File) -> a
+    void onAttachedToWindow() -> onAttachedToWindow
+    void onDestroy() -> onDestroy
+    void access$0(cn.whzxt.android.WelcomeActivity) -> a
+    android.app.ProgressDialog access$1(cn.whzxt.android.WelcomeActivity) -> b
+    int access$2(cn.whzxt.android.WelcomeActivity) -> c
+    int access$3(cn.whzxt.android.WelcomeActivity) -> d
+    void access$4(cn.whzxt.android.WelcomeActivity) -> e
+    java.util.Timer access$5(cn.whzxt.android.WelcomeActivity) -> f
+    java.lang.String access$6(cn.whzxt.android.WelcomeActivity) -> g
+    void access$7(cn.whzxt.android.WelcomeActivity,java.io.File) -> a
+    java.io.File access$8(cn.whzxt.android.WelcomeActivity) -> h
+    void access$9(cn.whzxt.android.WelcomeActivity,int) -> a
+    void access$10(cn.whzxt.android.WelcomeActivity,int) -> b
+    void access$11(cn.whzxt.android.WelcomeActivity) -> i
+    void access$12(cn.whzxt.android.WelcomeActivity,java.lang.String) -> a
+    java.lang.String access$13(cn.whzxt.android.WelcomeActivity) -> j
+    void access$14(cn.whzxt.android.WelcomeActivity,java.lang.String) -> b
+    java.lang.String access$15(cn.whzxt.android.WelcomeActivity) -> k
+    void access$16(cn.whzxt.android.WelcomeActivity,java.lang.String[]) -> a
+    java.lang.String[] access$17(cn.whzxt.android.WelcomeActivity) -> l
+    void access$18(cn.whzxt.android.WelcomeActivity) -> m
+    void access$19(cn.whzxt.android.WelcomeActivity,android.app.ProgressDialog) -> a
+    void access$20(cn.whzxt.android.WelcomeActivity) -> n
+    int access$21(cn.whzxt.android.WelcomeActivity) -> o
+    void access$22(cn.whzxt.android.WelcomeActivity,int) -> c
+    void access$23(cn.whzxt.android.WelcomeActivity,int) -> d
+    void access$24(cn.whzxt.android.WelcomeActivity) -> p
+    void access$25(cn.whzxt.android.WelcomeActivity,java.io.File) -> b
+cn.whzxt.android.WelcomeActivity$1 -> cn.whzxt.android.cl:
+    cn.whzxt.android.WelcomeActivity this$0 -> a
+    void handleMessage(android.os.Message) -> handleMessage
+cn.whzxt.android.WelcomeActivity$2 -> cn.whzxt.android.cm:
+    cn.whzxt.android.WelcomeActivity this$0 -> a
+    void onClick(android.view.View) -> onClick
+    cn.whzxt.android.WelcomeActivity access$0(cn.whzxt.android.WelcomeActivity$2) -> a
+cn.whzxt.android.WelcomeActivity$2$1 -> cn.whzxt.android.cn:
+    cn.whzxt.android.WelcomeActivity$2 this$1 -> a
+    void run() -> run
+cn.whzxt.android.WelcomeActivity$3 -> cn.whzxt.android.co:
+    cn.whzxt.android.WelcomeActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.WelcomeActivity$4 -> cn.whzxt.android.cp:
+    cn.whzxt.android.WelcomeActivity this$0 -> a
+    void run() -> run
+cn.whzxt.android.WelcomeActivity$5 -> cn.whzxt.android.cq:
+    cn.whzxt.android.WelcomeActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.WelcomeActivity$6 -> cn.whzxt.android.cr:
+    cn.whzxt.android.WelcomeActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.WelcomeActivity$7 -> cn.whzxt.android.cs:
+    cn.whzxt.android.WelcomeActivity this$0 -> a
+    java.lang.Integer doInBackground(java.lang.Void[]) -> a
+    void onPostExecute(java.lang.Integer) -> a
+    void onPostExecute(java.lang.Object) -> onPostExecute
+    java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
+cn.whzxt.android.lytfingerprint -> cn.whzxt.android.lytfingerprint:
+    int PSOpenDevice(int,int,int,int) -> PSOpenDevice
+    int PSCloseDevice() -> PSCloseDevice
+    int PSGetImage(int) -> PSGetImage
+    int PSGenChar(int,int) -> PSGenChar
+    int PSRegModule(int) -> PSRegModule
+    int PSStoreChar(int,int,int) -> PSStoreChar
+    int PSSearch(int,int,int,int,int) -> PSSearch
+    int PSUpChar(int,int,byte[],int,java.lang.String) -> PSUpChar
+    int PSDownChar(int,int,int,int,java.lang.String) -> PSDownChar
+    int Open() -> Open
+    int Close() -> Close
+com.lyt.watchdog.Native -> com.lyt.watchdog.Native:
+    int init() -> init
+    int settimeout(int) -> settimeout
