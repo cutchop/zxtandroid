@@ -97,31 +97,103 @@
                         android:layout_height="180dp"
                         android:orientation="vertical"
                         android:visibility="visible" android:layout_marginTop="10dp">
-
-                        <cn.whzxt.android.NetImageView
-                            android:id="@+id/imgStudent"
-                            android:layout_width="102dip"
-                            android:layout_height="126dip"
-                            android:layout_gravity="center"
-                            android:src="@drawable/photo" />
-
-                        <TextView
-                            android:id="@+id/txtStudentCard"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dip"
-                            android:paddingLeft="10dp"
-                            android:text="卡号:" android:textColor="#FFFFFF"/>
-
-                        <TextView
-                            android:id="@+id/txtBalance"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dip"
-                            android:paddingLeft="10dp"
-                            android:text="剩余:"
-                            android:textColor="#FFFFFF" />
-
+                        <ViewFlipper
+				            android:id="@+id/flipperStudent"
+				            android:layout_width="fill_parent"
+				            android:layout_height="fill_parent" >
+							<LinearLayout
+							    android:id="@+id/layStudentPhoto"
+							    android:layout_width="fill_parent"
+							    android:layout_height="fill_parent"
+							    android:orientation="vertical">
+							    
+		                        <cn.whzxt.android.NetImageView
+		                            android:id="@+id/imgStudent"
+		                            android:layout_width="102dip"
+		                            android:layout_height="126dip"
+		                            android:layout_gravity="center"
+		                            android:src="@drawable/photo" />
+		
+		                        <TextView
+		                            android:id="@+id/txtStudentCard"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="5dip"
+		                            android:paddingLeft="10dp"
+		                            android:text="卡号:" android:textColor="#FFFFFF"/>
+						
+		                        <TextView
+		                            android:id="@+id/txtBalance"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="5dip"
+		                            android:paddingLeft="10dp"
+		                            android:text="剩余:"
+		                            android:textColor="#FFFFFF" />
+							</LinearLayout>
+							<LinearLayout
+							    android:id="@+id/layStudentDetail"
+							    android:layout_width="fill_parent"
+							    android:layout_height="fill_parent"
+							    android:orientation="vertical">
+		                        <TextView
+		                            android:id="@+id/txtDetailStudentCard"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="卡号:"
+		                            android:textColor="#FFFFFF" />		
+		                        <TextView
+		                            android:id="@+id/txtDetailStudentStatus"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="状态:"
+		                            android:textColor="#FFFFFF" />
+		                        <TextView
+		                            android:id="@+id/txtDetailStudentLjlc"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="累计里程:"
+		                            android:textColor="#FFFFFF" />
+		                        <TextView
+		                            android:id="@+id/txtDetailStudentLjxs"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="累计学时:"
+		                            android:textColor="#FFFFFF" />
+		                        <TextView
+		                            android:id="@+id/txtDetailStudentBrlc"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="本日里程:"
+		                            android:textColor="#FFFFFF" />
+		                        <TextView
+		                            android:id="@+id/txtDetailStudentBrxs"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="本日学时:"
+		                            android:textColor="#FFFFFF" />
+		                        <TextView
+		                            android:id="@+id/txtDetailStudentBrsx"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="每日上限:"
+		                            android:textColor="#FFFFFF" />
+							</LinearLayout>
+						</ViewFlipper>
                     </LinearLayout>
 
                     <LinearLayout
@@ -396,7 +468,7 @@
                     android:layout_height="328dp"
                     android:layout_weight="1"
                     android:background="#222126"
-                    android:orientation="vertical" >
+                    android:orientation="vertical">
 
                     <LinearLayout
                         android:id="@+id/layCoachTitle"
@@ -431,32 +503,89 @@
                         android:orientation="vertical"
                         android:visibility="visible" android:layout_marginTop="10dp">
 
-                        <cn.whzxt.android.NetImageView
-                            android:id="@+id/imgCoach"
-                            android:layout_width="102dip"
-                            android:layout_height="126dip"
-                            android:layout_gravity="center"
-                            android:src="@drawable/photo" />
-
-                        <TextView
-                            android:id="@+id/txtCoachCard"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dip"
-                            android:paddingLeft="10dp"
-                            android:text="卡号:"
-                            android:textColor="#FFFFFF" />
-
-                        <TextView
-                            android:id="@+id/txtCoachCertificateLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dip"
-                            android:paddingLeft="10dp"
-                            android:text="等级:"
-                            android:textColor="#FFFFFF" />
+                        <ViewFlipper
+				            android:id="@+id/flipperCoach"
+				            android:layout_width="fill_parent"
+				            android:layout_height="fill_parent" >
+							<LinearLayout
+							    android:id="@+id/layCoachPhoto"
+							    android:layout_width="fill_parent"
+							    android:layout_height="fill_parent"
+							    android:orientation="vertical">
+		                        <cn.whzxt.android.NetImageView
+		                            android:id="@+id/imgCoach"
+		                            android:layout_width="102dip"
+		                            android:layout_height="126dip"
+		                            android:layout_gravity="center"
+		                            android:src="@drawable/photo" />
+		
+		                        <TextView
+		                            android:id="@+id/txtCoachCard"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="5dip"
+		                            android:paddingLeft="10dp"
+		                            android:text="卡号:"
+		                            android:textColor="#FFFFFF" />
+		
+		                        <TextView
+		                            android:id="@+id/txtCoachCertificateLabel"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="5dip"
+		                            android:paddingLeft="10dp"
+		                            android:text="等级:"
+		                            android:textColor="#FFFFFF" />
+		                    </LinearLayout>
+		                    <LinearLayout
+							    android:id="@+id/layCoachDetail"
+							    android:layout_width="fill_parent"
+							    android:layout_height="fill_parent"
+							    android:orientation="vertical">
+		                        <TextView
+		                            android:id="@+id/txtDetailCoachCard"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="卡号:"
+		                            android:textColor="#FFFFFF" />		
+		                        <TextView
+		                            android:id="@+id/txtDetailCoachNo"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="教练证号:"
+		                            android:textColor="#FFFFFF" />	
+		                        <TextView
+		                            android:id="@+id/txtDetailCoachLevel"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="教练等级:"
+		                            android:textColor="#FFFFFF" />
+		                        <TextView
+		                            android:id="@+id/txtDetailCoachBrpx"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="本日培训:"
+		                            android:textColor="#FFFFFF" />
+		                        <TextView
+		                            android:id="@+id/txtDetailCoachBypx"
+		                            android:layout_width="wrap_content"
+		                            android:layout_height="wrap_content"
+		                            android:layout_marginTop="3dip"
+		                            android:paddingLeft="3dp"
+		                            android:text="本月培训:"
+		                            android:textColor="#FFFFFF" />
+		                        </LinearLayout>
+                    </ViewFlipper>
                     </LinearLayout>
-
+                    
                     <LinearLayout
                         android:id="@+id/btnMode"
                         android:layout_width="fill_parent"
@@ -590,6 +719,17 @@
                             android:text="主界面"
                             android:textAppearance="?android:attr/textAppearanceMedium"
                             android:textColor="#FFFFFF" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" android:gravity="center" android:paddingTop="10dp" android:paddingBottom="10dp">
+					<cn.whzxt.android.VerticalSeekBar
+						android:id="@+id/SeekBarVolume"
+					    android:progressDrawable="@drawable/progress_vertical"
+					    android:thumb="@drawable/seek_thumb"
+					    android:layout_height="fill_parent"
+					    android:layout_width="26dip"/>
                     </LinearLayout>
                 </LinearLayout>
 

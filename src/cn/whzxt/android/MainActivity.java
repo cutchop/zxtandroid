@@ -59,6 +59,7 @@ import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -101,13 +102,17 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private TextView txtLogger, txtDebug;
 	private TextView txtMode, txtModeInfo;
 	private TextView txtSubject, txtSubjectInfo;
+	private TextView txtDetailStudentCard, txtDetailStudentStatus;
+	private TextView txtDetailStudentLjxs, txtDetailStudentLjlc, txtDetailStudentBrxs, txtDetailStudentBrlc;
+	private TextView txtDetailStudentBrsx;
+	private TextView txtDetailCoachNo, txtDetailCoachCard, txtDetailCoachLevel, txtDetailCoachBrpx, txtDetailCoachBypx;
 	private LinearLayout btnSubject, btnRestart, btnShutdown, btnReturnToMain;
 	private NetImageView imgCoach, imgStudent;
 	private ImageView imgLast01, imgLast02, imgLast03, imgLast04;
-	private LinearLayout layCoachTitle, layStudentTitle;
+	private LinearLayout layCoachTitle, layStudentTitle, layStudentPhoto, layStudentDetail, layCoachPhoto, layCoachDetail;
 	private LinearLayout btnMode, btnLogger, btnLoggerReturn;
 	private LinearLayout layTts, layScrollDown;
-	private ViewFlipper flipper;
+	private ViewFlipper flipper, flipperStudent, flipperCoach;
 	private GestureDetector detector;
 	private SurfaceView previewSurface;
 	private SurfaceHolder previewSurfaceHolder;
@@ -135,6 +140,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private Boolean _jdq_ck = false;
 	private long _gpstime_now = 0, _gpstime_pre = 0;
 	private float _sts;
+	private Boolean _needFingerImage = false;
 	// private int dogfd = -1;
 
 	private ServerSocket socket = null;
@@ -169,6 +175,8 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private int _fingerCurId;
 	private Boolean _fingerFinish = false;
 	private int _fingerRetry = 0;
+	private byte[] _pImageData = new byte[256 * 288];
+	private int _iImageLength;
 	// 摄像头
 	private Camera _camera;
 	private static final String PHOTO_PATH = "/sdcard/zxtphoto";// 照片保存路径
@@ -216,6 +224,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private static final int H_W_GET_STUDENTINFO = 0x32;
 	private static final int H_W_DOWN_FINGER = 0x33;
 	private static final int H_W_WRITE_FINGER = 0x34;
+	private static final int H_W_TAKE_FINGER_PHOTO = 0x3A;
+	private static final int H_W_SHOW_STUDENT = 0x3B;
+	private static final int H_W_SHOW_COACH = 0x3C;
 	// 程序更新对话框
 	private ProgressDialog _updateDialog;
 	private File _downLoadFile;
@@ -283,6 +294,15 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			case H_W_WRITE_FINGER:
 				writeFinger();
 				break;
+			case H_W_TAKE_FINGER_PHOTO:
+				takeFingerPhotoDelay();
+				break;
+			case H_W_SHOW_STUDENT:
+				showStudent(true);
+				break;
+			case H_W_SHOW_COACH:
+				showCoach(true);
+				break;
 			default:
 				break;
 			}
@@ -295,7 +315,11 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			if (NativeGPIO.getAccState() == 0) {
 				speak("欢迎使用,车载智能驾培终端");
 			} else {
-				speak("欢迎使用,车载智能驾培终端,请插卡并验证指纹,否则一分钟后将断油电");
+				if (DeviceInfo.Mode == MODE_TRAIN) {
+					speak("欢迎使用,车载智能驾培终端,请插卡并验证指纹,否则一分钟后将断油电");
+				} else {
+					speak("欢迎使用,车载智能驾培终端");
+				}
 			}
 		}
 	}
@@ -351,6 +375,12 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		if (settings.getInt("gst", 1) == 1) {
 			NMDIVIDED = 1.0f;
 		}
+		// 是否需要上传指纹图片
+		_needFingerImage = settings.getBoolean("needfingerimage", false);
+		/*
+		 * if (_needFingerImage) { // 获取指纹图片需要用到 for (int i = 0; i < 256 * 288;
+		 * i++) { _pImageData[i] = 5; } }
+		 */
 		// 训练时长限制
 		s2_min_time = settings.getInt("s2_min_time", 5);
 		s2_max_time = settings.getInt("s2_max_time", 30);
@@ -419,7 +449,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		// 定时器
 		initTimer();
 
-		_relayoff = 60;
+		if (DeviceInfo.Mode == MODE_TRAIN) {
+			_relayoff = 60;
+		}
 		// 看门狗
 		// dogfd = com.lyt.watchdog.Native.init();
 		// com.lyt.watchdog.Native.settimeout(6);
@@ -439,12 +471,18 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 */
 	private void initView() {
 		flipper = (ViewFlipper) findViewById(R.id.flipper);
+		flipperStudent = (ViewFlipper) findViewById(R.id.flipperStudent);
+		flipperCoach = (ViewFlipper) findViewById(R.id.flipperCoach);
 		txtSchoolName = (TextView) findViewById(R.id.txtSchoolName);
 		txtDeviceName = (TextView) findViewById(R.id.txtDeviceName);
 		txtSystemTime = (TextView) findViewById(R.id.txtSystemTime);
 		txtStudentTitle = (TextView) findViewById(R.id.txtStudentTitle);
 		layCoachTitle = (LinearLayout) findViewById(R.id.layCoachTitle);
 		layStudentTitle = (LinearLayout) findViewById(R.id.layStudentTitle);
+		layStudentDetail = (LinearLayout) findViewById(R.id.layStudentDetail);
+		layStudentPhoto = (LinearLayout) findViewById(R.id.layStudentPhoto);
+		layCoachDetail = (LinearLayout) findViewById(R.id.layCoachDetail);
+		layCoachPhoto = (LinearLayout) findViewById(R.id.layCoachPhoto);
 		btnMode = (LinearLayout) findViewById(R.id.btnMode);
 		btnSubject = (LinearLayout) findViewById(R.id.btnSubject);
 		btnRestart = (LinearLayout) findViewById(R.id.btnRestart);
@@ -469,6 +507,18 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		txtCoachCard = (TextView) findViewById(R.id.txtCoachCard);
 		txtStudentName = (TextView) findViewById(R.id.txtStudentName);
 		txtStudentCard = (TextView) findViewById(R.id.txtStudentCard);
+		txtDetailStudentCard = (TextView) findViewById(R.id.txtDetailStudentCard);
+		txtDetailStudentStatus = (TextView) findViewById(R.id.txtDetailStudentStatus);
+		txtDetailStudentLjxs = (TextView) findViewById(R.id.txtDetailStudentLjxs);
+		txtDetailStudentLjlc = (TextView) findViewById(R.id.txtDetailStudentLjlc);
+		txtDetailStudentBrxs = (TextView) findViewById(R.id.txtDetailStudentBrxs);
+		txtDetailStudentBrlc = (TextView) findViewById(R.id.txtDetailStudentBrlc);
+		txtDetailStudentBrsx = (TextView) findViewById(R.id.txtDetailStudentBrsx);
+		txtDetailCoachCard = (TextView) findViewById(R.id.txtDetailCoachCard);
+		txtDetailCoachNo = (TextView) findViewById(R.id.txtDetailCoachNo);
+		txtDetailCoachLevel = (TextView) findViewById(R.id.txtDetailCoachLevel);
+		txtDetailCoachBrpx = (TextView) findViewById(R.id.txtDetailCoachBrpx);
+		txtDetailCoachBypx = (TextView) findViewById(R.id.txtDetailCoachBypx);
 		imgCoach = (NetImageView) findViewById(R.id.imgCoach);
 		imgStudent = (NetImageView) findViewById(R.id.imgStudent);
 		txtTrainTime = (TextView) findViewById(R.id.txtTrainTime);
@@ -492,6 +542,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		if (DeviceInfo.Mode == MODE_FREE) {
 			txtMode.setText("自由状态");
 			txtModeInfo.setText("点击切换为训练状态");
+			NativeGPIO.setRelay(_jdq_ck);
 		}
 		showStudent(false);
 		showCoach(!Coach.CardNo.equals(""));
@@ -541,7 +592,25 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		btnMode.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				if (DeviceInfo.Mode == MODE_FREE) {
-					changeMode(MODE_TRAIN);
+					speak("确定要切换为训练状态吗？");
+					AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("确定要切换为训练状态吗？").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							changeMode(MODE_TRAIN);
+						}
+					}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+							return;
+						}
+					}).create();
+					alertDialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+						public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+							if (keyCode == KeyEvent.KEYCODE_HOME)
+								return true;
+							return false;
+						}
+					});
+					alertDialog.show();
+					alertDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
 				} else {
 					speak("请输入密码");
 					final EditText txtpsd = new EditText(MainActivity.this);
@@ -669,6 +738,42 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			}
 		});
 
+		// 点击学员头像显示详细信息
+		layStudentPhoto.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				flipperStudent.setInAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_left_in));
+				flipperStudent.setOutAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_left_out));
+				flipperStudent.setDisplayedChild(1);
+			}
+		});
+
+		// 点击学员详细信息返回学员头像
+		layStudentDetail.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				flipperStudent.setInAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_in));
+				flipperStudent.setOutAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_out));
+				flipperStudent.setDisplayedChild(0);
+			}
+		});
+
+		// 点击教练头像显示详细信息
+		layCoachPhoto.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				flipperCoach.setInAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_in));
+				flipperCoach.setOutAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_out));
+				flipperCoach.setDisplayedChild(1);
+			}
+		});
+
+		// 点击教练详细信息返回学员头像
+		layCoachDetail.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				flipperCoach.setInAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_left_in));
+				flipperCoach.setOutAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_left_out));
+				flipperCoach.setDisplayedChild(0);
+			}
+		});
+
 		// 切换摄像头
 		previewSurface.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
@@ -677,6 +782,28 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				} else {
 					changeCamera();
 				}
+			}
+		});
+
+		// 音量调节
+		AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+		VerticalSeekBar vSeekBar = (VerticalSeekBar) findViewById(R.id.SeekBarVolume);
+		vSeekBar.setMax(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+		vSeekBar.setProgress(am.getStreamVolume(AudioManager.STREAM_MUSIC));
+		vSeekBar.setOnSeekBarChangeListener(new VerticalSeekBar.OnSeekBarChangeListener() {
+
+			public void onStopTrackingTouch(VerticalSeekBar seekBar) {
+				// TODO Auto-generated method stub
+
+			}
+
+			public void onStartTrackingTouch(VerticalSeekBar seekBar) {
+				// TODO Auto-generated method stub
+
+			}
+
+			public void onProgressChanged(VerticalSeekBar seekBar, int progress, boolean fromUser) {
+				((AudioManager) getSystemService(Context.AUDIO_SERVICE)).setStreamVolume(AudioManager.STREAM_MUSIC, seekBar.getProgress(), AudioManager.FLAG_PLAY_SOUND);
 			}
 		});
 	}
@@ -726,6 +853,10 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		}
 		// 初始化摄像头
 		File file = new File(PHOTO_PATH);
+		if (!file.exists()) {
+			file.mkdirs();
+		}
+		file = new File(PHOTO_PATH + "_finger");
 		if (!file.exists()) {
 			file.mkdirs();
 		}
@@ -949,6 +1080,68 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		changeCamera();
 		_takephotoing = false;
 		streamIt.Screenshot = false;
+	}
+
+	/**
+	 * 采集指纹时拍照上传
+	 */
+	private void takeFingerPhoto() {
+		if (_camera != null && !_takephotoing) {
+			_takephotoing = true;
+			streamIt.Screenshot = true;
+			new Timer().schedule(new TimerTask() {
+				@Override
+				public void run() {
+					handler.sendEmptyMessage(H_W_TAKE_FINGER_PHOTO);
+				}
+			}, 1000);
+		}
+	}
+
+	private void takeFingerPhotoDelay() {
+		Bitmap bmp = BitmapFactory.decodeByteArray(streamIt.yuv420sp, 0, streamIt.yuv420sp.length);
+		File file = new File(PHOTO_PATH + "_finger/" + Student.CardNo + ".jpg");
+		try {
+			file.createNewFile();
+			BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(file));
+			bmp.compress(Bitmap.CompressFormat.JPEG, 80, os);
+			os.flush();
+			os.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		_takephotoing = false;
+		streamIt.Screenshot = false;
+		// 上传照片
+		new AsyncTask<Void, Void, Integer>() {
+			@Override
+			protected Integer doInBackground(Void... args) {
+				Map<String, String> params = new HashMap<String, String>();
+				params.put("deviceid", deviceID);// 设备号码
+				params.put("session", session);// 当前会话
+				params.put("f", "t");
+				params.put("card", Student.CardNo);
+				params.put("t", Student.IsCoach ? "1" : "2");
+				File file = new File(PHOTO_PATH + "_finger/" + Student.CardNo + ".jpg");
+				params.put("filename", Student.CardNo + ".jpg");
+				FormFile formfile = new FormFile(file.getName(), file, "image", "application/octet-stream");
+				try {
+					SocketHttpRequester.post(server + "/photoupload.ashx", params, formfile);
+					file.delete();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return 0;
+			}
+
+			@Override
+			protected void onPostExecute(Integer result) {
+			}
+		}.execute();
 	}
 
 	/**
@@ -1203,6 +1396,13 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 									}
 								}
 							}
+						} else if (cmd.startsWith("remove_cache:")) {
+							// 清除单个缓存文件
+							cmd = cmd.replace("remove_cache:", "");
+							File file = new File("/sdcard/ZxtCache/" + server.replace("://", "__") + "_" + cmd + ".bmp");
+							if (file.exists()) {
+								file.delete();
+							}
 						} else if (cmd.startsWith("upload_log")) {
 							// 上传日志
 							logupload();
@@ -1269,12 +1469,14 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 						if (retry < 3) {
 							handler.sendEmptyMessage(H_W_GET_COACHINFO);
 						} else {
+							handler.sendEmptyMessage(H_W_SHOW_COACH);
 							handler.sendEmptyMessage(H_W_TRAIN_START);
 						}
 					} else {
 						if (retry < 3) {
 							handler.sendEmptyMessage(H_W_GET_STUDENTINFO);
 						} else {
+							handler.sendEmptyMessage(H_W_SHOW_STUDENT);
 							handler.sendEmptyMessage(H_W_TRAIN_START);
 						}
 					}
@@ -1585,19 +1787,26 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				if (((nowTime.getTime() - Train.StartTime.getTime()) / 1000) % 60 > 0) {
 					Student.RealBalance--;
 				}
-				Student.RealTotalTime = Student.TotalTime + (Student.Balance - Student.RealBalance);
+				// Student.RealTotalTime = Student.TotalTime + (Student.Balance
+				// - Student.RealBalance);
 				// 显示余额
 				// if (Student.IsCoach) {
 				txtTrainTime.setText(getTimeDiff2(Train.StartTime, nowTime));
-				txtBalance.setText("剩余:" + Student.RealBalance + "分钟");
+				if (Student.IsCharging) {
+					txtBalance.setText("剩余:" + Student.RealBalance + "分钟");
+				} else {
+					txtBalance.setText("");
+				}
 				// } else {
 				// txtTrainTime.setText(getTimeDiff2(Train.StartTime, nowTime));
 				// txtBalance.setText("余额:" + Student.RealBalance * PRICE +
 				// "元");
 				// }
-				if (Student.RealBalance <= 0) {
-					// 结束训练
-					trainFinish();
+				if (Student.IsCharging) {
+					if (Student.RealBalance <= 0) {
+						// 结束训练
+						trainFinish();
+					}
 				}
 			}
 
@@ -1632,7 +1841,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 * 开始训练
 	 */
 	private void trainBegin() {
-		if (DeviceInfo.Mode == MODE_TRAIN && Student.Balance <= 0) {
+		if (DeviceInfo.Mode == MODE_TRAIN && Student.Balance <= 0 && Student.IsCharging) {
 			toastShow("卡内时长不足");
 			return;
 		}
@@ -1675,21 +1884,29 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		}
 		if (DeviceInfo.Mode == MODE_TRAIN) {
 			Train.Start(db);
-			speak(_tmp + "," + Student.Name + ",卡内剩余" + (Student.Balance - 1) + "分钟,请谨慎驾驶");
-			// 重写卡内余额
-			new AsyncTask<Void, Void, Integer>() {
-				@Override
-				protected Integer doInBackground(Void... args) {
-					cardOper.WriteBalance(Student.Balance - 1);
-					return 0;
-				}
-			}.execute();
+			if (Student.IsCharging) {
+				speak(_tmp + "," + Student.Name + ",卡内剩余" + (Student.Balance - 1) + "分钟,请谨慎驾驶");
+				// 重写卡内余额
+				new AsyncTask<Void, Void, Integer>() {
+					@Override
+					protected Integer doInBackground(Void... args) {
+						cardOper.WriteBalance(Student.Balance - 1);
+						return 0;
+					}
+				}.execute();
+			} else {
+				speak(_tmp + "," + Student.Name);
+			}
 			takephoto();// 拍照
 		} else {
 			speak(_tmp + "," + Student.Name);
 			txtTrainTime.setText("自由状态");
 			// if (Student.IsCoach) {
-			txtBalance.setText("剩余:" + Student.RealBalance + "分钟");
+			if (Student.IsCharging) {
+				txtBalance.setText("剩余:" + Student.RealBalance + "分钟");
+			} else {
+				txtBalance.setText("");
+			}
 			// } else {
 			// txtBalance.setText("余额:" + Student.RealBalance * PRICE + "元");
 			// }
@@ -1707,10 +1924,18 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		_fingerFinish = true;
 		if (Train.IsTraining) {
 			if (Student.IsCoach) {
-				speak("本次用车已结束,共使用" + getTimeDiff(Train.StartTime, nowTime) + "," + txtBalance.getText().toString() + ",1分钟后将断油电");
+				if (Student.IsCharging) {
+					speak("本次用车已结束,共使用" + getTimeDiff(Train.StartTime, nowTime) + "," + txtBalance.getText().toString() + ",1分钟后将断油电");
+				} else {
+					speak("本次用车已结束,共使用" + getTimeDiff(Train.StartTime, nowTime) + ",1分钟后将断油电");
+				}
 				txtTrainTime.setText(getTimeDiff2(Train.StartTime, nowTime));
 			} else {
-				speak("本次训练已结束,共训练" + getTimeDiff(Train.StartTime, nowTime) + "," + txtBalance.getText().toString() + ",1分钟后将断油电");
+				if (Student.IsCharging) {
+					speak("本次训练已结束,共训练" + getTimeDiff(Train.StartTime, nowTime) + "," + txtBalance.getText().toString() + ",1分钟后将断油电");
+				} else {
+					speak("本次训练已结束,共训练" + getTimeDiff(Train.StartTime, nowTime) + ",1分钟后将断油电");
+				}
 				txtTrainTime.setText(getTimeDiff2(Train.StartTime, nowTime));
 			}
 			takephoto();// 拍照
@@ -1742,18 +1967,20 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		if (Train.IsTraining) {
 			Train.Update(db);
 
-			// 重写卡内余额
-			new AsyncTask<Void, Void, Integer>() {
-				@Override
-				protected Integer doInBackground(Void... args) {
-					cardOper.WriteBalance(Student.RealBalance);
-					return 0;
-				}
-			}.execute();
+			if (Student.IsCharging) {
+				// 重写卡内余额
+				new AsyncTask<Void, Void, Integer>() {
+					@Override
+					protected Integer doInBackground(Void... args) {
+						cardOper.WriteBalance(Student.RealBalance);
+						return 0;
+					}
+				}.execute();
 
-			// 余额不足提醒
-			if (Student.RealBalance <= 3) {
-				toastShow("卡内剩余时长不足" + Student.RealBalance + "分钟,请注意");
+				// 余额不足提醒
+				if (Student.RealBalance <= 3) {
+					toastShow("卡内剩余时长不足" + Student.RealBalance + "分钟,请注意");
+				}
 			}
 
 			// 超时提醒
@@ -1789,20 +2016,15 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				}
 			}
 
-			// 检查卡号
-			new AsyncTask<Void, Void, Integer>() {
-				@Override
-				protected Integer doInBackground(Void... args) {
-					return cardOper.checkCardNo() ? 1 : 0;
-				}
-
-				@Override
-				protected void onPostExecute(Integer result) {
-					if (result == 0) {
-						trainFinish();
-					}
-				}
-			}.execute();
+			/*
+			 * // 检查卡号 new AsyncTask<Void, Void, Integer>() {
+			 * 
+			 * @Override protected Integer doInBackground(Void... args) { return
+			 * cardOper.checkCardNo() ? 1 : 0; }
+			 * 
+			 * @Override protected void onPostExecute(Integer result) { if
+			 * (result == 0) { trainFinish(); } } }.execute();
+			 */
 		}
 		// 上传训练数据
 		if (retry < 3 && !_usedataUploading) {
@@ -1827,7 +2049,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 */
 	private void writeFinger() {
 		showStudent(true);
-		speak("需要采集指纹,请按右手手指");
+		speak("需要采集指纹,请按右手拇指");
 		showDialog(DL_FINGER1);
 		_fingerFinish = false;
 		recordfinger1();
@@ -1846,6 +2068,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				if (result == PS_OK) {
 					speak("指纹采集完毕,正在记录指纹,请稍候");
 					showDialog(DL_FINGER3);
+					takeFingerPhoto(); // 拍照上传
 					recordfinger2();
 				} else {
 					toastShow("采集指纹失败,请尝试重新插卡");
@@ -1866,6 +2089,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 							return -1;
 						}
 					}
+					// 上传指纹特征码
 					Map<String, String> params = new HashMap<String, String>();
 					params.put("deviceid", deviceID);// 设备号码
 					params.put("session", session);// 当前会话
@@ -1880,6 +2104,16 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 						e.printStackTrace();
 						return 0;
 					}
+					// 上传指纹图片
+					if (_needFingerImage) {
+						file = new File("/data/local/tmp/finger.bmp");
+						formfile = new FormFile(file.getName(), file, "finger", "application/octet-stream");
+						try {
+							SocketHttpRequester.post(server + "/fingerimageupload.ashx", params, formfile);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
 					return 1;
 				}
 				return 0;
@@ -1890,7 +2124,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 				Log.i("zhiwen", new Date().toString());
 				dismissDialog(DL_FINGER3);
 				if (result == 1) {
-					speak("请按左手手指..");
+					speak("请按右手食指..");
 					showDialog(DL_FINGER2);
 					recordfinger3();
 				} else if (result == 0) {
@@ -1950,6 +2184,16 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 					} catch (Exception e) {
 						e.printStackTrace();
 						return 0;
+					}
+					// 上传指纹图片
+					if (_needFingerImage) {
+						file = new File("/data/local/tmp/finger.bmp");
+						formfile = new FormFile(file.getName(), file, "finger", "application/octet-stream");
+						try {
+							SocketHttpRequester.post(server + "/fingerimageupload.ashx", params, formfile);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
 					cardOper.WriteFingerFlag(1);
 					return 1;
@@ -2037,6 +2281,13 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			return -1;
 		}
 		SystemClock.sleep(100);
+		if (_needFingerImage) {
+			// 获取图像
+			for (int i = 0; i < 256 * 288; i++) {
+				_pImageData[i] = 5;
+			}
+			_fingerprint.PSUpImage(_fingerAddress, _pImageData, _iImageLength);
+		}
 		return PS_OK;
 	}
 
@@ -2335,7 +2586,38 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 								Coach.Name = Student.Name = results[4];
 								cardOper.WriteName();// 重写姓名
 							}
-							Coach.Certificate = results[6];// 教练证号
+							if (results.length > 6) {
+								Coach.Certificate = results[6];// 教练证号
+							}
+							if (results.length > 7) {
+								// 是否计费
+								if (results[7].equals("1")) {
+									if (!Student.IsCharging) {
+										Student.IsCharging = true;
+										cardOper.WriteBillingFlag(0);
+									}
+								} else {
+									if (Student.IsCharging) {
+										Student.IsCharging = false;
+										cardOper.WriteBillingFlag(1);//不计费标记
+									}
+								}
+							}
+							if (results.length > 8) {
+								try {
+									Coach.Level = Integer.parseInt(results[8]);
+								} catch (NumberFormatException e) {
+									e.printStackTrace();
+								}
+							}
+							if (results.length > 9) {
+								try {
+									Coach.MonthTotal = Integer.parseInt(results[9].split(",")[0]);
+									Coach.DayTotal = Integer.parseInt(results[9].split(",")[1]);
+								} catch (NumberFormatException e) {
+									e.printStackTrace();
+								}
+							}
 							if (Coach.IDCardNo.equals("无")) {
 								Coach.IDCardNo = "";
 							}
@@ -2456,6 +2738,33 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 									e.printStackTrace();
 								}
 							}
+							if (results.length > 9) {
+								// 是否计费
+								if (results[9].equals("1")) {
+									if (!Student.IsCharging) {
+										Student.IsCharging = true;
+										cardOper.WriteBillingFlag(0);
+									}
+								} else {
+									if (Student.IsCharging) {
+										Student.IsCharging = false;
+										cardOper.WriteBillingFlag(1);//不计费标记
+									}
+								}
+							}
+							if (results.length > 10) {
+								try {
+									Student.TotalTime = Integer.parseInt(results[10].split(",")[0]);
+									Student.TotalMi = Integer.parseInt(results[10].split(",")[1]);
+									Student.TodayTrainTime = Integer.parseInt(results[10].split(",")[2]);
+									Student.TodayTrainMi = Integer.parseInt(results[10].split(",")[3]);
+								} catch (NumberFormatException e) {
+									e.printStackTrace();
+								}
+							}
+							if (results.length > 11) {
+								Student.Status = results[11];
+							}
 							if (Student.IDCardNo.equals("无")) {
 								Student.IDCardNo = "";
 							}
@@ -2495,40 +2804,6 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		}.execute();
 	}
 
-	/**
-	 * 获取累计学时和里程
-	 */
-	/*
-	 * private void getTotalTimeAndMi() { new AsyncTask<Void, Void, Integer>() {
-	 * 
-	 * @Override protected Integer doInBackground(Void... args) { HttpPost
-	 * httpRequest = new HttpPost(server + "/gettimeandmi.ashx");
-	 * List<NameValuePair> params = new ArrayList<NameValuePair>(4);
-	 * params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
-	 * params.add(new BasicNameValuePair("session", session)); // 当前会话
-	 * params.add(new BasicNameValuePair("school", schoolID)); // 驾校ID
-	 * params.add(new BasicNameValuePair("stuid", Student.ID)); // 学员编号 try {
-	 * httpRequest.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8)); }
-	 * catch (UnsupportedEncodingException e) { e.printStackTrace(); return 0; }
-	 * HttpResponse httpResponse; try { httpResponse = new
-	 * DefaultHttpClient().execute(httpRequest); } catch
-	 * (ClientProtocolException e) { e.printStackTrace(); return 0; } catch
-	 * (IOException e) { e.printStackTrace(); return 0; } if
-	 * (httpResponse.getStatusLine().getStatusCode() == 200) { try { cardresult
-	 * = EntityUtils.toString(httpResponse.getEntity()); } catch (ParseException
-	 * e) { e.printStackTrace(); return 0; } catch (IOException e) {
-	 * e.printStackTrace(); return 0; } if (cardresult.startsWith("s|")) {
-	 * String[] results = cardresult.split("\\|"); if (results.length > 1) {
-	 * Student.TotalTime = Integer.parseInt(results[1]); } if (results.length >
-	 * 2) { Student.TotalMi = Integer.parseInt(results[2]); } return 1; } }
-	 * return 0; }
-	 * 
-	 * @Override protected void onPostExecute(Integer result) { if (result == 1)
-	 * { // txtStudentTotalTime.setText("累计学时:" + (Student.TotalTime // / 60) +
-	 * "小时" + (Student.TotalTime % 60) + "分钟"); //
-	 * txtStudentTotalMi.setText("累计里程:" + (Student.TotalMi / // 1000) + "KM");
-	 * } } }.execute(); }
-	 */
 	/**
 	 * 上传GPS数据
 	 */
@@ -2650,10 +2925,11 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		}.execute();
 	}
 
-	private void logupload(){
+	private void logupload() {
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
+				//String systeminfo = "[系统信息:电量";
 				HttpPost httpRequest = new HttpPost(server + "/logupload.ashx");
 				List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
@@ -2683,7 +2959,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			}
 		}.execute();
 	}
-	
+
 	/**
 	 * 显示(隐藏)教练信息
 	 * 
@@ -2706,6 +2982,12 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			if (!Coach.IDCardNo.equals("")) {
 				imgCoach.setImageUrl(server + "/" + Coach.IDCardNo + ".bmp");
 			}
+			// 详细信息
+			txtDetailCoachCard.setText("卡号:" + Coach.CardNo);
+			txtDetailCoachNo.setText("教练证号:" + Coach.Certificate);
+			txtDetailCoachLevel.setText("教练等级:" + Coach.Level);
+			txtDetailCoachBrpx.setText("本日培训:" + Coach.DayTotal + "分钟");
+			txtDetailCoachBypx.setText("本月培训:" + Coach.MonthTotal + "分钟");
 		} else {
 			layCoachTitle.setBackgroundResource(R.drawable.bg1);
 			txtCoachName.setText("");
@@ -2739,6 +3021,18 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			}
 			if (!Student.IDCardNo.equals("")) {
 				imgStudent.setImageUrl(server + "/" + Student.IDCardNo + ".bmp");
+			}
+			// 详细信息
+			txtDetailStudentCard.setText("卡号:" + Student.CardNo);
+			txtDetailStudentStatus.setText("状态:" + Student.Status);
+			txtDetailStudentLjlc.setText("累计里程:" + Student.TotalMi + "米");
+			txtDetailStudentLjxs.setText("累计学时:" + Student.TotalTime + "分钟");
+			txtDetailStudentBrxs.setText("本日学时:" + Student.TodayTrainTime + "分钟");
+			txtDetailStudentBrlc.setText("本日里程:" + Student.TodayTrainMi + "米");
+			if (DeviceInfo.Subject == 2) {
+				txtDetailStudentBrsx.setText("每日上限:" + s2_day_time + "分钟");
+			} else {
+				txtDetailStudentBrsx.setText("每日上限:" + s3_day_time + "分钟");
 			}
 		} else {
 			txtStudentTitle.setText("学员");
@@ -2790,7 +3084,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			if (DeviceInfo.Mode == MODE_TRAIN) {
 				txtTrainTime.setText("训练停止");
 				// if (Student.IsCoach) {
-				txtBalance.setText("剩余:" + Student.RealBalance + "分钟");
+				if (Student.IsCharging) {
+					txtBalance.setText("剩余:" + Student.RealBalance + "分钟");
+				}
 				// } else {
 				// txtBalance.setText("余额:" + Student.RealBalance * PRICE +
 				// "元");
@@ -2814,7 +3110,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	 * 程序更新
 	 */
 	private void versionUpdate() {
-		speak("发现新版本,需要跟新程序");
+		speak("发现新版本,需要耕新、程序");
 		AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).setTitle("发现新版本,需要更新").setIcon(android.R.drawable.ic_menu_help).setPositiveButton("确定", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
 				_updateDialog = new ProgressDialog(MainActivity.this);
@@ -3035,10 +3331,10 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("正在初始化卡,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();
 			break;
 		case DL_FINGER1:
-			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("需要采集指纹,请按右手手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("需要采集指纹,请按右手姆指...").setIcon(android.R.drawable.ic_dialog_info).create();
 			break;
 		case DL_FINGER2:
-			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("请按左手手指...").setIcon(android.R.drawable.ic_dialog_info).create();
+			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("请按右手食指...").setIcon(android.R.drawable.ic_dialog_info).create();
 			break;
 		case DL_FINGER3:
 			dialog = new AlertDialog.Builder(MainActivity.this).setCancelable(false).setTitle("警告").setMessage("指纹采集完毕,正在记录指纹,请稍候...").setIcon(android.R.drawable.ic_dialog_info).create();

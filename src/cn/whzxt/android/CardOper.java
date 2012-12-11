@@ -42,13 +42,15 @@ public class CardOper implements Runnable {
 	private int fd;
 	private String _rfidUID = null;
 
-	public static Object lock = new Object();
+	// public static Object lock = new Object();
 
 	private Thread _thread = null;
 	private Queue<RfidOper> rfidOpers;
+	private Queue<ICOper> icOpers;
 
 	public CardOper(String sc, OnChange oc) {
 		rfidOpers = new LinkedList<RfidOper>();
+		icOpers = new LinkedList<ICOper>();
 		this.schoolID = sc;
 		this.onchang = oc;
 	}
@@ -94,62 +96,58 @@ public class CardOper implements Runnable {
 			switch (CardType) {
 			case CARD_24C02:
 				Logger.Write("检查IC卡(1)");
-				synchronized (lock) {
+				if (Native.chk_24c02(fd) != 0) {
+					SystemClock.sleep(50);
+					Logger.Write("检查IC卡(2)");
 					if (Native.chk_24c02(fd) != 0) {
-						SystemClock.sleep(50);
-						Logger.Write("检查IC卡(2)");
-						if (Native.chk_24c02(fd) != 0) {
-							Logger.Write("没有发现IC卡");
+						Logger.Write("没有发现IC卡");
+						CardType = NO_CARD;
+						onchang.onLose();
+					}
+				}
+				break;
+			case CARD_S50:
+				Logger.Write("检查RFID(1)");
+				_rfidUID = NativeRFID.read_A();
+				if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
+					Logger.Write("检查RFID(2)");
+					_rfidUID = NativeRFID.read_A();
+					if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
+						Logger.Write("检查RFID(3)");
+						_rfidUID = NativeRFID.read_A();
+						if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
+							Logger.Write("没有发现RFID卡");
 							CardType = NO_CARD;
 							onchang.onLose();
 						}
 					}
 				}
 				break;
-			case CARD_S50:
-					Logger.Write("检查RFID(1)");
-					_rfidUID = NativeRFID.read_A();
-					if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
-						Logger.Write("检查RFID(2)");
-						_rfidUID = NativeRFID.read_A();
-						if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
-							Logger.Write("检查RFID(3)");
-							_rfidUID = NativeRFID.read_A();
-							if (_rfidUID == null || _rfidUID.charAt(16) != '0') {
-								Logger.Write("没有发现RFID卡");
-								CardType = NO_CARD;
-								onchang.onLose();
-							}
-						}
-					}
-				break;
 			case CARD_S70:
-					Logger.Write("检查RFID(1)");
+				Logger.Write("检查RFID(1)");
+				_rfidUID = NativeRFID.read_A();
+				if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
+					Logger.Write("检查RFID(2)");
 					_rfidUID = NativeRFID.read_A();
 					if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
-						Logger.Write("检查RFID(2)");
+						Logger.Write("检查RFID(3)");
 						_rfidUID = NativeRFID.read_A();
 						if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
-							Logger.Write("检查RFID(3)");
-							_rfidUID = NativeRFID.read_A();
-							if (_rfidUID == null || _rfidUID.charAt(16) != '1') {
-								Logger.Write("没有发现RFID卡");
-								CardType = NO_CARD;
-								onchang.onLose();
-							}
+							Logger.Write("没有发现RFID卡");
+							CardType = NO_CARD;
+							onchang.onLose();
 						}
 					}
+				}
 				break;
 			case NO_CARD:
-					CardType = readCardType();
+				CardType = readCardType();
 				if (CardType != NO_CARD) {
 					onchang.onReadStart();
 					String msg = null;
-					synchronized (lock) {
-						Logger.Write("开始读卡");
-						msg = read();
-						Logger.Write("读卡完毕");
-					}
+					Logger.Write("开始读卡");
+					msg = read();
+					Logger.Write("读卡完毕");
 					onchang.onFind(msg);
 				}
 				break;
@@ -158,9 +156,23 @@ public class CardOper implements Runnable {
 			}
 			if (CardType == NO_CARD) {
 				rfidOpers.clear();
+				icOpers.clear();
 				SystemClock.sleep(100);
 			} else {
-				if (CardType == CARD_S50 || CardType == CARD_S70) {
+				if (CardType == CARD_24C02) {
+					ICOper oper = icOpers.poll();
+					while (oper != null) {
+						oper.callback.onStart();
+						if (oper.operType == ICOper.TYPE_READ) {
+							String data = Native.srd_24c02(fd, oper.offset, oper.len);
+							oper.callback.onFinish(data);
+						} else {
+							int ret = Native.swr_24c02(fd, oper.offset, oper.len, oper.content);
+							oper.callback.onFinish(ret);
+						}
+						oper = icOpers.poll();
+					}
+				} else if (CardType == CARD_S50 || CardType == CARD_S70) {
 					RfidOper oper = rfidOpers.poll();
 					while (oper != null) {
 						oper.callback.onStart();
@@ -203,7 +215,7 @@ public class CardOper implements Runnable {
 	private String read() {
 		if (CardType == CARD_24C02) {
 			Log.i("gc", "readcard 1");
-			String tmpdata = Native.srd_24c02(fd, 0x08, 0x22);
+			String tmpdata = Native.srd_24c02(fd, 0x08, 0x23);
 			Logger.Write(tmpdata);
 			String[] tmpchars = tmpdata.split(" ");
 			if (tmpchars[0].equals("02") && Coach.CardNo.equals("")) {
@@ -262,6 +274,7 @@ public class CardOper implements Runnable {
 			}
 			Student.HasFinger = tmpchars[32].equals("01");
 			Student.NotNeedFinger = tmpchars[33].equals("01");
+			Student.IsCharging = !tmpchars[34].equals("01");
 		} else if (CardType == CARD_S50 || CardType == CARD_S70) {
 			Log.i("gc", "readcard 1");
 			// 身份信息
@@ -330,6 +343,7 @@ public class CardOper implements Runnable {
 			Log.i("gc", "readcard 2");
 			// 余额.学时.里程
 			tmpdata = NativeRFID.read_card(new int[] { 18 }, RFID_KEY, RFID_BLOCK);
+			Logger.Write(tmpdata);
 			if (null == tmpdata || !tmpdata.endsWith("1")) {
 				SystemClock.sleep(100);// 100毫秒后尝试重新读卡
 				tmpdata = NativeRFID.read_card(new int[] { 18 }, RFID_KEY, RFID_BLOCK);
@@ -343,6 +357,7 @@ public class CardOper implements Runnable {
 			// 判断是否有指纹
 			Log.i("gc", "readcard 3");
 			tmpdata = NativeRFID.read_card(new int[] { 20 }, RFID_KEY, RFID_BLOCK);
+			Logger.Write(tmpdata);
 			if (null == tmpdata || !tmpdata.endsWith("1")) {
 				SystemClock.sleep(100);// 100毫秒后尝试重新读卡
 				tmpdata = NativeRFID.read_card(new int[] { 20 }, RFID_KEY, RFID_BLOCK);
@@ -357,6 +372,7 @@ public class CardOper implements Runnable {
 			// 判断是否需要验证指纹
 			Log.i("gc", "readcard 4");
 			tmpdata = NativeRFID.read_card(new int[] { 21 }, RFID_KEY, RFID_BLOCK);
+			Logger.Write(tmpdata);
 			if (null == tmpdata || !tmpdata.endsWith("1")) {
 				SystemClock.sleep(100);// 100毫秒后尝试重新读卡
 				tmpdata = NativeRFID.read_card(new int[] { 21 }, RFID_KEY, RFID_BLOCK);
@@ -368,6 +384,21 @@ public class CardOper implements Runnable {
 				return MSG_READ_FAILURE;
 			}
 			Student.NotNeedFinger = tmpdata.startsWith("01");
+			// 判断是否计费
+			Log.i("gc", "readcard 5");
+			tmpdata = NativeRFID.read_card(new int[] { 22 }, RFID_KEY, RFID_BLOCK);
+			Logger.Write(tmpdata);
+			if (null == tmpdata || !tmpdata.endsWith("1")) {
+				SystemClock.sleep(100);// 100毫秒后尝试重新读卡
+				tmpdata = NativeRFID.read_card(new int[] { 22 }, RFID_KEY, RFID_BLOCK);
+			}
+			if (null == tmpdata) {
+				return MSG_READ_FAILURE;
+			}
+			if (!tmpdata.endsWith("1")) {
+				return MSG_READ_FAILURE;
+			}
+			Student.IsCharging = !tmpdata.startsWith("01");
 		}
 		return null;
 	}
@@ -382,73 +413,69 @@ public class CardOper implements Runnable {
 	 * @return
 	 */
 	public String CardInit(String type, String cardno, String school) {
-		Logger.Write("等待初始化卡");
-		synchronized (lock) {
-			Logger.Write("开始初始化卡");
-			try {
-				int i = 0;
-				if (CardType == CARD_24C02) {
-					int[] context = new int[32];
-					for (i = 0; i < context.length; i++) {
-						context[i] = ' ';
-					}
-					// 卡型
-					context[0] = 2;
-					if (type.equals("01")) {
-						context[0] = 1;
-					}
-					// 余额
-					context[1] = 0;
-					context[2] = 0;
-					context[3] = 0;
-					context[4] = 0;
-					// 卡号
-					for (i = 0; i < cardno.length(); i++) {
-						context[i + 8] = cardno.charAt(i);
-					}
-					for (i = 0; i < school.length(); i++) {
-						context[i + 24] = school.charAt(i);
-					}
-					if (Native.swr_24c02(fd, 0x08, 0x20, context) != 0) {
-						SystemClock.sleep(100);
-						if (Native.swr_24c02(fd, 0x08, 0x20, context) != 0) {
-							return "卡初始化失败,请重试";
-						}
-					}
-				} else if (CardType == CARD_S50 || CardType == CARD_S70) {
-					int[] context = new int[48];
-					for (i = 0; i < context.length; i++) {
-						context[i] = ' ';
-					}
-					context[0] = 2;
-					if (type.equals("01")) {
-						context[0] = 1;
-					}
-					for (i = 0; i < cardno.length(); i++) {
-						context[i + 1] = cardno.charAt(i);
-					}
-					for (i = 0; i < school.length(); i++) {
-						context[i + 9] = school.charAt(i);
-					}
-					if (NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, context) != 1) {
-						SystemClock.sleep(100);
-						if (NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, context) != 1) {
-							return "卡初始化失败,请重试";
-						}
-					}
-					/*
-					 * if (NativeRFID.write_card(new int[] { 15 }, RFID_KEY,
-					 * RFID_BLOCK, new int[] { 0 }) != 1) {
-					 * SystemClock.sleep(100); if (NativeRFID.write_card(new
-					 * int[] { 15 }, RFID_KEY, RFID_BLOCK, new int[] { 0 }) !=
-					 * 1) { return "卡初始化失败,请重试"; } }
-					 */
+		Logger.Write("开始初始化卡");
+		try {
+			int i = 0;
+			if (CardType == CARD_24C02) {
+				int[] context = new int[32];
+				for (i = 0; i < context.length; i++) {
+					context[i] = ' ';
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
+				// 卡型
+				context[0] = 2;
+				if (type.equals("01")) {
+					context[0] = 1;
+				}
+				// 余额
+				context[1] = 0;
+				context[2] = 0;
+				context[3] = 0;
+				context[4] = 0;
+				// 卡号
+				for (i = 0; i < cardno.length(); i++) {
+					context[i + 8] = cardno.charAt(i);
+				}
+				for (i = 0; i < school.length(); i++) {
+					context[i + 24] = school.charAt(i);
+				}
+				if (Native.swr_24c02(fd, 0x08, 0x20, context) != 0) {
+					SystemClock.sleep(100);
+					if (Native.swr_24c02(fd, 0x08, 0x20, context) != 0) {
+						return "卡初始化失败,请重试";
+					}
+				}
+			} else if (CardType == CARD_S50 || CardType == CARD_S70) {
+				int[] context = new int[48];
+				for (i = 0; i < context.length; i++) {
+					context[i] = ' ';
+				}
+				context[0] = 2;
+				if (type.equals("01")) {
+					context[0] = 1;
+				}
+				for (i = 0; i < cardno.length(); i++) {
+					context[i + 1] = cardno.charAt(i);
+				}
+				for (i = 0; i < school.length(); i++) {
+					context[i + 9] = school.charAt(i);
+				}
+				if (NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, context) != 1) {
+					SystemClock.sleep(100);
+					if (NativeRFID.write_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA, context) != 1) {
+						return "卡初始化失败,请重试";
+					}
+				}
+				/*
+				 * if (NativeRFID.write_card(new int[] { 15 }, RFID_KEY,
+				 * RFID_BLOCK, new int[] { 0 }) != 1) { SystemClock.sleep(100);
+				 * if (NativeRFID.write_card(new int[] { 15 }, RFID_KEY,
+				 * RFID_BLOCK, new int[] { 0 }) != 1) { return "卡初始化失败,请重试"; } }
+				 */
 			}
-			Logger.Write("初始化卡完毕");
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		Logger.Write("初始化卡完毕");
 		return "卡初始化成功";
 	}
 
@@ -459,18 +486,12 @@ public class CardOper implements Runnable {
 	 * @param 长度
 	 * @param 数据
 	 */
-	public void WriteIC(int offset, int len, int[] data) {
-		Logger.Write("等待写IC卡");
-		synchronized (lock) {
-			Logger.Write("开始写IC卡");
-			try {
-				Native.swr_24c02(fd, offset, len, data);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			Logger.Write("写IC卡完毕");
-		}
-	}
+	/*
+	 * public void WriteIC(int offset, int len, int[] data) {
+	 * Logger.Write("等待写IC卡"); synchronized (lock) { Logger.Write("开始写IC卡"); try
+	 * { Native.swr_24c02(fd, offset, len, data); } catch (Exception e) {
+	 * e.printStackTrace(); } Logger.Write("写IC卡完毕"); } }
+	 */
 
 	/**
 	 * 检查卡号是否与当前学员相符（防止不读卡的异常）
@@ -478,56 +499,43 @@ public class CardOper implements Runnable {
 	 */
 	public Boolean checkCardNo() {
 		Logger.Write("检查卡号");
-		synchronized (lock) {
-			if (CardType == CARD_24C02) {
-				String tmpdata = Native.srd_24c02(fd, 16, 8);
+		if (CardType == CARD_24C02) {
+			String tmpdata = Native.srd_24c02(fd, 16, 8);
+			Logger.Write(tmpdata);
+			if (tmpdata == null) {
+				tmpdata = Native.srd_24c02(fd, 16, 8);
 				Logger.Write(tmpdata);
-				if (tmpdata == null) {
-					tmpdata = Native.srd_24c02(fd, 16, 8);
-					Logger.Write(tmpdata);
-				}
-				if (tmpdata == null) {
-					return false;
-				}
-				String[] tmpchars = tmpdata.split(" ");
-				if (tmpchars.length != 8) {
-					return false;
-				}
-				// 卡号
-				String tmpCardNo = String.valueOf((char) Integer.parseInt(tmpchars[0], 16));
-				for (int i = 1; i < 8; i++) {
-					tmpCardNo += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
-				}
-				tmpCardNo = tmpCardNo.trim();
-				return tmpCardNo.equals(Student.CardNo);
-			} else if (CardType == CARD_S50 || CardType == CARD_S70) {
-				/*
-				String tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA);
-				Logger.Write(tmpdata);
-				if (null == tmpdata || !tmpdata.endsWith("1")) {
-					SystemClock.sleep(100);// 100毫秒后尝试重新读卡
-					tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA);
-					if (null == tmpdata || !tmpdata.endsWith("1")) {
-						SystemClock.sleep(100);// 100毫秒后尝试重新读卡
-						tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY, RFID_EARA);
-					}
-				}
-				if (null == tmpdata) {
-					return false;
-				}
-				if (!tmpdata.endsWith("1")) {
-					return false;
-				}
-				String[] tmpchars = tmpdata.split(" ");
-				// 卡号
-				String tmpCardNo = "";
-				for (int i = 1; i < 9; i++) {
-					tmpCardNo += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
-				}
-				tmpCardNo = tmpCardNo.trim();
-				return tmpCardNo.equals(Student.CardNo);
-				*/
 			}
+			if (tmpdata == null) {
+				return false;
+			}
+			String[] tmpchars = tmpdata.split(" ");
+			if (tmpchars.length != 8) {
+				return false;
+			}
+			// 卡号
+			String tmpCardNo = String.valueOf((char) Integer.parseInt(tmpchars[0], 16));
+			for (int i = 1; i < 8; i++) {
+				tmpCardNo += String.valueOf((char) Integer.parseInt(tmpchars[i], 16));
+			}
+			tmpCardNo = tmpCardNo.trim();
+			return tmpCardNo.equals(Student.CardNo);
+		} else if (CardType == CARD_S50 || CardType == CARD_S70) {
+			/*
+			 * String tmpdata = NativeRFID.read_card(new int[] { 1, 1 },
+			 * RFID_KEY, RFID_EARA); Logger.Write(tmpdata); if (null == tmpdata
+			 * || !tmpdata.endsWith("1")) { SystemClock.sleep(100);//
+			 * 100毫秒后尝试重新读卡 tmpdata = NativeRFID.read_card(new int[] { 1, 1 },
+			 * RFID_KEY, RFID_EARA); if (null == tmpdata ||
+			 * !tmpdata.endsWith("1")) { SystemClock.sleep(100);// 100毫秒后尝试重新读卡
+			 * tmpdata = NativeRFID.read_card(new int[] { 1, 1 }, RFID_KEY,
+			 * RFID_EARA); } } if (null == tmpdata) { return false; } if
+			 * (!tmpdata.endsWith("1")) { return false; } String[] tmpchars =
+			 * tmpdata.split(" "); // 卡号 String tmpCardNo = ""; for (int i = 1;
+			 * i < 9; i++) { tmpCardNo += String.valueOf((char)
+			 * Integer.parseInt(tmpchars[i], 16)); } tmpCardNo =
+			 * tmpCardNo.trim(); return tmpCardNo.equals(Student.CardNo);
+			 */
 		}
 		return true;
 	}
@@ -540,7 +548,24 @@ public class CardOper implements Runnable {
 	 */
 	public Boolean WriteFingerFlag(int flag) {
 		if (CardType == CARD_24C02) {
-			WriteIC(0x28, 0x01, new int[] { flag });
+			ICOper icOper = new ICOper();
+			icOper.operType = ICOper.TYPE_WRITE;
+			icOper.offset = 0x28;
+			icOper.len = 0x01;
+			icOper.content = new int[] { flag };
+			icOper.callback = new ICOper.Callback() {
+				public void onStart() {
+					Logger.Write("开始写指纹标记");
+				}
+
+				public void onFinish(int ret) {
+					Logger.Write("写指纹标记结束,ret=" + ret);
+				}
+
+				public void onFinish(String data) {
+				}
+			};
+			icOpers.offer(icOper);
 		} else if (CardType == CARD_S50 || CardType == CARD_S70) {
 			RfidOper rfidOper = new RfidOper();
 			rfidOper.operType = RfidOper.TYPE_WRITE;
@@ -572,7 +597,24 @@ public class CardOper implements Runnable {
 	 */
 	public Boolean WriteNotNeedFingerFlag(int flag) {
 		if (CardType == CARD_24C02) {
-			WriteIC(0x29, 0x01, new int[] { flag });
+			ICOper icOper = new ICOper();
+			icOper.operType = ICOper.TYPE_WRITE;
+			icOper.offset = 0x29;
+			icOper.len = 0x01;
+			icOper.content = new int[] { flag };
+			icOper.callback = new ICOper.Callback() {
+				public void onStart() {
+					Logger.Write("开始写是否验证指纹标记");
+				}
+
+				public void onFinish(int ret) {
+					Logger.Write("写是否验证指纹标记结束,ret=" + ret);
+				}
+
+				public void onFinish(String data) {
+				}
+			};
+			icOpers.offer(icOper);
 		} else if (CardType == CARD_S50 || CardType == CARD_S70) {
 			RfidOper oper = new RfidOper();
 			oper.operType = RfidOper.TYPE_WRITE;
@@ -586,6 +628,54 @@ public class CardOper implements Runnable {
 
 				public void onStart() {
 					Logger.Write("开始写是否验证指纹标记");
+				}
+
+				public void onFinish(String data) {
+				}
+			};
+			rfidOpers.offer(oper);
+		}
+		return true;
+	}
+	
+	/**
+	 * 重写卡内是否计费的标记
+	 * @param flag
+	 * @return
+	 */
+	public Boolean WriteBillingFlag(int flag) {
+		if (CardType == CARD_24C02) {
+			ICOper icOper = new ICOper();
+			icOper.operType = ICOper.TYPE_WRITE;
+			icOper.offset = 0x2A;
+			icOper.len = 0x01;
+			icOper.content = new int[] { flag };
+			icOper.callback = new ICOper.Callback() {
+				public void onStart() {
+					Logger.Write("write billing flag---start");
+				}
+
+				public void onFinish(int ret) {
+					Logger.Write("write billing flag---end,ret=" + ret);
+				}
+
+				public void onFinish(String data) {
+				}
+			};
+			icOpers.offer(icOper);
+		} else if (CardType == CARD_S50 || CardType == CARD_S70) {
+			RfidOper oper = new RfidOper();
+			oper.operType = RfidOper.TYPE_WRITE;
+			oper.address = new int[] { 22 };
+			oper.kind = RFID_BLOCK;
+			oper.content = new int[] { flag };
+			oper.callback = new RfidOper.Callback() {
+				public void onStart() {
+					Logger.Write("write billing flag---start");
+				}
+
+				public void onFinish(int ret) {
+					Logger.Write("write billing flag---end,ret=" + ret);
 				}
 
 				public void onFinish(String data) {
@@ -610,7 +700,25 @@ public class CardOper implements Runnable {
 		buffYE[2] = Integer.parseInt(data.substring(0, 2), 16);
 		buffYE[3] = Integer.parseInt(data.substring(2), 16);
 		if (CardType == CARD_24C02) {
-			WriteIC(0x09, 0x04, buffYE);
+			// WriteIC(0x09, 0x04, buffYE);
+			ICOper icOper = new ICOper();
+			icOper.operType = ICOper.TYPE_WRITE;
+			icOper.offset = 0x09;
+			icOper.len = 0x04;
+			icOper.content = buffYE;
+			icOper.callback = new ICOper.Callback() {
+				public void onStart() {
+					Logger.Write("开始写余额");
+				}
+
+				public void onFinish(int ret) {
+					Logger.Write("写余额结束,ret=" + ret);
+				}
+
+				public void onFinish(String data) {
+				}
+			};
+			icOpers.offer(icOper);
 		} else if (CardType == CARD_S50 || CardType == CARD_S70) {
 			int[] buff = new int[7];
 			// 余额
@@ -673,7 +781,25 @@ public class CardOper implements Runnable {
 				}
 			}
 			Logger.Write(context);
-			WriteIC(0x18, 0x08, context);
+			// WriteIC(0x18, 0x08, context);
+			ICOper icOper = new ICOper();
+			icOper.operType = ICOper.TYPE_WRITE;
+			icOper.offset = 0x18;
+			icOper.len = 0x08;
+			icOper.content = context;
+			icOper.callback = new ICOper.Callback() {
+				public void onStart() {
+					Logger.Write("开始写姓名到IC卡");
+				}
+
+				public void onFinish(int ret) {
+					Logger.Write("写姓名完成,ret=" + ret);
+				}
+
+				public void onFinish(String data) {
+				}
+			};
+			icOpers.offer(icOper);
 		} else if (CardType == CardOper.CARD_S50 || CardType == CardOper.CARD_S70) {
 			int[] address = new int[2];
 			address[0] = 1;

@@ -37,74 +37,98 @@ public final class R {
         public static final int card_bg=0x7f020004;
         public static final int ic_launcher=0x7f020005;
         public static final int photo=0x7f020006;
-        public static final int tile_black=0x7f020007;
-        public static final int top_btn_bg_s=0x7f020009;
-        public static final int transparent=0x7f020008;
+        public static final int progress_vertical=0x7f020007;
+        public static final int seek_thumb=0x7f020008;
+        public static final int seek_thumb_normal=0x7f020009;
+        public static final int seek_thumb_pressed=0x7f02000a;
+        public static final int seek_thumb_selected=0x7f02000b;
+        public static final int tile_black=0x7f02000c;
+        public static final int top_btn_bg_s=0x7f02000e;
+        public static final int transparent=0x7f02000d;
     }
     public static final class id {
-        public static final int TextView01=0x7f06001c;
-        public static final int TextView02=0x7f060020;
-        public static final int TextView03=0x7f06001e;
-        public static final int TextView04=0x7f06002c;
-        public static final int TextView05=0x7f06002e;
-        public static final int TextView14=0x7f060032;
-        public static final int btnLogger=0x7f060035;
-        public static final int btnLoggerReturn=0x7f060033;
-        public static final int btnMode=0x7f060028;
-        public static final int btnRestart=0x7f06002b;
-        public static final int btnRetry=0x7f06003e;
-        public static final int btnReturnToMain=0x7f060031;
-        public static final int btnShutdown=0x7f06002d;
-        public static final int btnSubject=0x7f06000d;
-        public static final int camCanvas=0x7f060013;
+        public static final int SeekBarVolume=0x7f060045;
+        public static final int TextView01=0x7f060026;
+        public static final int TextView02=0x7f06002a;
+        public static final int TextView03=0x7f060028;
+        public static final int TextView04=0x7f06003e;
+        public static final int TextView05=0x7f060040;
+        public static final int TextView14=0x7f060044;
+        public static final int btnLogger=0x7f060048;
+        public static final int btnLoggerReturn=0x7f060046;
+        public static final int btnMode=0x7f06003a;
+        public static final int btnRestart=0x7f06003d;
+        public static final int btnRetry=0x7f060051;
+        public static final int btnReturnToMain=0x7f060043;
+        public static final int btnShutdown=0x7f06003f;
+        public static final int btnSubject=0x7f060017;
+        public static final int camCanvas=0x7f06001d;
         public static final int flipper=0x7f060005;
-        public static final int imgCoach=0x7f060025;
-        public static final int imgLast01=0x7f060015;
-        public static final int imgLast02=0x7f060016;
-        public static final int imgLast03=0x7f060017;
-        public static final int imgLast04=0x7f060018;
-        public static final int imgStudent=0x7f06000a;
-        public static final int layCoachInfo=0x7f060024;
-        public static final int layCoachTitle=0x7f060021;
-        public static final int layScrollDown=0x7f060010;
+        public static final int flipperCoach=0x7f06002f;
+        public static final int flipperStudent=0x7f06000a;
+        public static final int imgCoach=0x7f060031;
+        public static final int imgLast01=0x7f06001f;
+        public static final int imgLast02=0x7f060020;
+        public static final int imgLast03=0x7f060021;
+        public static final int imgLast04=0x7f060022;
+        public static final int imgStudent=0x7f06000c;
+        public static final int layCoachDetail=0x7f060034;
+        public static final int layCoachInfo=0x7f06002e;
+        public static final int layCoachPhoto=0x7f060030;
+        public static final int layCoachTitle=0x7f06002b;
+        public static final int layScrollDown=0x7f06001a;
+        public static final int layStudentDetail=0x7f06000f;
         public static final int layStudentInfo=0x7f060009;
+        public static final int layStudentPhoto=0x7f06000b;
         public static final int layStudentTitle=0x7f060006;
         public static final int layTitle=0x7f060000;
-        public static final int layTts=0x7f060030;
-        public static final int photoView=0x7f06003d;
-        public static final int previewSurface=0x7f060014;
-        public static final int scrollView1=0x7f06002f;
+        public static final int layTts=0x7f060042;
+        public static final int photoView=0x7f060050;
+        public static final int previewSurface=0x7f06001e;
+        public static final int scrollView1=0x7f060041;
         public static final int tableRow1=0x7f060001;
-        public static final int tableRow5=0x7f060039;
-        public static final int textView1=0x7f060022;
-        public static final int textView2=0x7f060012;
-        public static final int textView3=0x7f060011;
-        public static final int textView4=0x7f06001b;
-        public static final int textView5=0x7f060019;
-        public static final int textView6=0x7f060036;
-        public static final int textView7=0x7f060034;
-        public static final int txtBalance=0x7f06000c;
-        public static final int txtCoachCard=0x7f060026;
-        public static final int txtCoachCertificateLabel=0x7f060027;
-        public static final int txtCoachName=0x7f060023;
-        public static final int txtDebug=0x7f060037;
+        public static final int tableRow5=0x7f06004c;
+        public static final int textView1=0x7f06002c;
+        public static final int textView2=0x7f06001c;
+        public static final int textView3=0x7f06001b;
+        public static final int textView4=0x7f060025;
+        public static final int textView5=0x7f060023;
+        public static final int textView6=0x7f060049;
+        public static final int textView7=0x7f060047;
+        public static final int txtBalance=0x7f06000e;
+        public static final int txtCoachCard=0x7f060032;
+        public static final int txtCoachCertificateLabel=0x7f060033;
+        public static final int txtCoachName=0x7f06002d;
+        public static final int txtDebug=0x7f06004a;
+        public static final int txtDetailCoachBrpx=0x7f060038;
+        public static final int txtDetailCoachBypx=0x7f060039;
+        public static final int txtDetailCoachCard=0x7f060035;
+        public static final int txtDetailCoachLevel=0x7f060037;
+        public static final int txtDetailCoachNo=0x7f060036;
+        public static final int txtDetailStudentBrlc=0x7f060014;
+        public static final int txtDetailStudentBrsx=0x7f060016;
+        public static final int txtDetailStudentBrxs=0x7f060015;
+        public static final int txtDetailStudentCard=0x7f060010;
+        public static final int txtDetailStudentLjlc=0x7f060012;
+        public static final int txtDetailStudentLjxs=0x7f060013;
+        public static final int txtDetailStudentStatus=0x7f060011;
         public static final int txtDeviceName=0x7f060002;
-        public static final int txtGPSSpeed=0x7f06001a;
-        public static final int txtGPSStatus=0x7f06003a;
-        public static final int txtLogger=0x7f060038;
-        public static final int txtMode=0x7f060029;
-        public static final int txtModeInfo=0x7f06002a;
-        public static final int txtNetworkStatus=0x7f06003c;
+        public static final int txtGPSSpeed=0x7f060024;
+        public static final int txtGPSStatus=0x7f06004d;
+        public static final int txtLogger=0x7f06004b;
+        public static final int txtMode=0x7f06003b;
+        public static final int txtModeInfo=0x7f06003c;
+        public static final int txtNetworkStatus=0x7f06004f;
         public static final int txtSchoolName=0x7f060004;
-        public static final int txtSensor=0x7f06001f;
-        public static final int txtStatus=0x7f06003b;
-        public static final int txtStudentCard=0x7f06000b;
+        public static final int txtSensor=0x7f060029;
+        public static final int txtStatus=0x7f06004e;
+        public static final int txtStudentCard=0x7f06000d;
         public static final int txtStudentName=0x7f060008;
         public static final int txtStudentTitle=0x7f060007;
-        public static final int txtSubject=0x7f06000e;
-        public static final int txtSubjectInfo=0x7f06000f;
+        public static final int txtSubject=0x7f060018;
+        public static final int txtSubjectInfo=0x7f060019;
         public static final int txtSystemTime=0x7f060003;
-        public static final int txtTrainTime=0x7f06001d;
+        public static final int txtTrainTime=0x7f060027;
     }
     public static final class layout {
         public static final int main=0x7f030000;
@@ -123,4 +147,128 @@ public final class R {
         public static final int server2=0x7f050003;
         public static final int version=0x7f050001;
     }
+    public static final class styleable {
+        /** Attributes that can be used with a ProgressBar.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #ProgressBar_android_max cn.whzxt.android:android_max}</code></td><td></td></tr>
+           <tr><td><code>{@link #ProgressBar_android_maxHeight cn.whzxt.android:android_maxHeight}</code></td><td></td></tr>
+           <tr><td><code>{@link #ProgressBar_android_maxWidth cn.whzxt.android:android_maxWidth}</code></td><td></td></tr>
+           <tr><td><code>{@link #ProgressBar_android_minHeight cn.whzxt.android:android_minHeight}</code></td><td></td></tr>
+           <tr><td><code>{@link #ProgressBar_android_minWidth cn.whzxt.android:android_minWidth}</code></td><td></td></tr>
+           <tr><td><code>{@link #ProgressBar_android_progress cn.whzxt.android:android_progress}</code></td><td></td></tr>
+           <tr><td><code>{@link #ProgressBar_android_progressDrawable cn.whzxt.android:android_progressDrawable}</code></td><td></td></tr>
+           <tr><td><code>{@link #ProgressBar_android_secondaryProgress cn.whzxt.android:android_secondaryProgress}</code></td><td></td></tr>
+           </table>
+           @see #ProgressBar_android_max
+           @see #ProgressBar_android_maxHeight
+           @see #ProgressBar_android_maxWidth
+           @see #ProgressBar_android_minHeight
+           @see #ProgressBar_android_minWidth
+           @see #ProgressBar_android_progress
+           @see #ProgressBar_android_progressDrawable
+           @see #ProgressBar_android_secondaryProgress
+         */
+        public static final int[] ProgressBar = {
+            0x0101011f, 0x01010120, 0x01010136, 0x01010137,
+            0x01010138, 0x0101013c, 0x0101013f, 0x01010140
+        };
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_max}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_max
+        */
+        public static final int ProgressBar_android_max = 2;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_maxHeight}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_maxHeight
+        */
+        public static final int ProgressBar_android_maxHeight = 1;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_maxWidth}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_maxWidth
+        */
+        public static final int ProgressBar_android_maxWidth = 0;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_minHeight}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_minHeight
+        */
+        public static final int ProgressBar_android_minHeight = 7;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_minWidth}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_minWidth
+        */
+        public static final int ProgressBar_android_minWidth = 6;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_progress}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_progress
+        */
+        public static final int ProgressBar_android_progress = 3;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_progressDrawable}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_progressDrawable
+        */
+        public static final int ProgressBar_android_progressDrawable = 5;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_secondaryProgress}
+          attribute's value can be found in the {@link #ProgressBar} array.
+          @attr name android:android_secondaryProgress
+        */
+        public static final int ProgressBar_android_secondaryProgress = 4;
+        /** Attributes that can be used with a SeekBar.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #SeekBar_android_thumb cn.whzxt.android:android_thumb}</code></td><td></td></tr>
+           <tr><td><code>{@link #SeekBar_android_thumbOffset cn.whzxt.android:android_thumbOffset}</code></td><td></td></tr>
+           </table>
+           @see #SeekBar_android_thumb
+           @see #SeekBar_android_thumbOffset
+         */
+        public static final int[] SeekBar = {
+            0x01010142, 0x01010143
+        };
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_thumb}
+          attribute's value can be found in the {@link #SeekBar} array.
+          @attr name android:android_thumb
+        */
+        public static final int SeekBar_android_thumb = 0;
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_thumbOffset}
+          attribute's value can be found in the {@link #SeekBar} array.
+          @attr name android:android_thumbOffset
+        */
+        public static final int SeekBar_android_thumbOffset = 1;
+        /** Attributes that can be used with a Theme.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #Theme_android_disabledAlpha cn.whzxt.android:android_disabledAlpha}</code></td><td></td></tr>
+           </table>
+           @see #Theme_android_disabledAlpha
+         */
+        public static final int[] Theme = {
+            0x01010033
+        };
+        /**
+          <p>This symbol is the offset where the {@link cn.whzxt.android.R.attr#android_disabledAlpha}
+          attribute's value can be found in the {@link #Theme} array.
+          @attr name android:android_disabledAlpha
+        */
+        public static final int Theme_android_disabledAlpha = 0;
+    };
 }

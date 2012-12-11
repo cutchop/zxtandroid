@@ -202,7 +202,7 @@ public class WelcomeActivity extends Activity {
 					startActivity(intent);
 
 					SharedPreferences.Editor editor = settings.edit();
-					editor.putBoolean("firstrun4", false);
+					editor.putBoolean("firstrun5", false);
 					editor.commit();
 
 					gotomain();
@@ -211,7 +211,6 @@ public class WelcomeActivity extends Activity {
 				}
 			}
 		}.execute();
-
 	}
 
 	public void execCommand(String command) {
@@ -349,8 +348,11 @@ public class WelcomeActivity extends Activity {
 					if (results.length > 11) {
 						editor.putString("schoolName", results[11]);
 					}
+					if (results.length > 12) {
+						editor.putBoolean("needfingerimage", results[12].equals("1"));
+					}
 					editor.commit();
-					if (settings.getBoolean("firstrun4", true)) {
+					if (settings.getBoolean("firstrun5", true)) {
 						firstrun();
 					} else {
 						if (settings.getBoolean("clearcache", true)) {

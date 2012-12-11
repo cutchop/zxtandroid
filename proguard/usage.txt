@@ -1,5 +1,8 @@
 android.annotation.SuppressLint
 android.annotation.TargetApi
+cn.whzxt.android.AbsVerticalSeekBar:
+    private static final int NO_ALPHA
+    123:123:public int getKeyProgressIncrement()
 cn.whzxt.android.BuildConfig
 cn.whzxt.android.CardOper:
     public static final java.lang.String MSG_COACH_FIRST
@@ -15,6 +18,7 @@ cn.whzxt.android.CardOper:
     public static final int CARD_S70
     private static final java.lang.String PATH
     private static final int BAUD
+    501:540:public java.lang.Boolean checkCardNo()
 cn.whzxt.android.Coach:
     3:3:public Coach()
 cn.whzxt.android.DeviceInfo:
@@ -67,6 +71,9 @@ cn.whzxt.android.MainActivity:
     private static final int H_W_GET_STUDENTINFO
     private static final int H_W_DOWN_FINGER
     private static final int H_W_WRITE_FINGER
+    private static final int H_W_TAKE_FINGER_PHOTO
+    private static final int H_W_SHOW_STUDENT
+    private static final int H_W_SHOW_COACH
 cn.whzxt.android.MySQLHelper:
     public static final java.lang.String T_ZXT_USE_DATA
     public static final java.lang.String T_ZXT_MODE_CHANGE
@@ -118,13 +125,16 @@ cn.whzxt.android.NativeRFID:
 cn.whzxt.android.NetImageViewCache:
     private static final java.lang.String CACHE_FILE
 cn.whzxt.android.PhotoViewDialog
-cn.whzxt.android.R
+cn.whzxt.android.R:
+    10:10:public R()
 cn.whzxt.android.R$attr
 cn.whzxt.android.R$color
 cn.whzxt.android.R$drawable
 cn.whzxt.android.R$id
 cn.whzxt.android.R$layout
 cn.whzxt.android.R$string
+cn.whzxt.android.R$styleable:
+    150:150:public R$styleable()
 cn.whzxt.android.SocketHttpRequester:
     17:17:public SocketHttpRequester()
 cn.whzxt.android.Student:
@@ -132,8 +142,11 @@ cn.whzxt.android.Student:
 cn.whzxt.android.Train:
     public static final java.lang.String VideoBasePath
     11:11:public Train()
-cn.whzxt.android.VerticalSeekbar:
-    71:71:public synchronized int getMaximum()
+cn.whzxt.android.VerticalProgressBar:
+    private static final int MAX_LEVEL
+    378:378:public synchronized int getSecondaryProgress()
+    427:428:public final synchronized void incrementProgressBy(int)
+    438:439:public final synchronized void incrementSecondaryProgressBy(int)
 cn.whzxt.android.WelcomeActivity:
     private static final int H_W_INIT
     private static final int H_W_UPDATEDIALOG_MAX
@@ -142,7 +155,6 @@ cn.whzxt.android.WelcomeActivity:
     private static final int RetryCount
     private static final int RetryTime
 cn.whzxt.android.lytfingerprint:
-    public native int PSUpImage(int,byte[],int)
     public native int PSImgData2BMP(byte[],java.lang.String)
     public native int PSDelChar(int,int,int)
     public native int PSEmpty(int)

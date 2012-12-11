@@ -1,3 +1,11 @@
+cn.whzxt.android.AbsVerticalSeekBar
+cn.whzxt.android.AbsVerticalSeekBar: AbsVerticalSeekBar(android.content.Context)
+cn.whzxt.android.AbsVerticalSeekBar: AbsVerticalSeekBar(android.content.Context,android.util.AttributeSet)
+cn.whzxt.android.AbsVerticalSeekBar: AbsVerticalSeekBar(android.content.Context,android.util.AttributeSet,int)
+cn.whzxt.android.AbsVerticalSeekBar: void setThumb(android.graphics.drawable.Drawable)
+cn.whzxt.android.AbsVerticalSeekBar: void setThumbOffset(int)
+cn.whzxt.android.AbsVerticalSeekBar: void setKeyProgressIncrement(int)
+cn.whzxt.android.AbsVerticalSeekBar: void setMax(int)
 cn.whzxt.android.BootUpReceiver
 cn.whzxt.android.MainActivity
 cn.whzxt.android.Native
@@ -63,9 +71,15 @@ cn.whzxt.android.R$drawable: int button_checked_bg
 cn.whzxt.android.R$drawable: int card_bg
 cn.whzxt.android.R$drawable: int ic_launcher
 cn.whzxt.android.R$drawable: int photo
+cn.whzxt.android.R$drawable: int progress_vertical
+cn.whzxt.android.R$drawable: int seek_thumb
+cn.whzxt.android.R$drawable: int seek_thumb_normal
+cn.whzxt.android.R$drawable: int seek_thumb_pressed
+cn.whzxt.android.R$drawable: int seek_thumb_selected
 cn.whzxt.android.R$drawable: int tile_black
 cn.whzxt.android.R$drawable: int top_btn_bg_s
 cn.whzxt.android.R$drawable: int transparent
+cn.whzxt.android.R$id: int SeekBarVolume
 cn.whzxt.android.R$id: int TextView01
 cn.whzxt.android.R$id: int TextView02
 cn.whzxt.android.R$id: int TextView03
@@ -82,16 +96,22 @@ cn.whzxt.android.R$id: int btnShutdown
 cn.whzxt.android.R$id: int btnSubject
 cn.whzxt.android.R$id: int camCanvas
 cn.whzxt.android.R$id: int flipper
+cn.whzxt.android.R$id: int flipperCoach
+cn.whzxt.android.R$id: int flipperStudent
 cn.whzxt.android.R$id: int imgCoach
 cn.whzxt.android.R$id: int imgLast01
 cn.whzxt.android.R$id: int imgLast02
 cn.whzxt.android.R$id: int imgLast03
 cn.whzxt.android.R$id: int imgLast04
 cn.whzxt.android.R$id: int imgStudent
+cn.whzxt.android.R$id: int layCoachDetail
 cn.whzxt.android.R$id: int layCoachInfo
+cn.whzxt.android.R$id: int layCoachPhoto
 cn.whzxt.android.R$id: int layCoachTitle
 cn.whzxt.android.R$id: int layScrollDown
+cn.whzxt.android.R$id: int layStudentDetail
 cn.whzxt.android.R$id: int layStudentInfo
+cn.whzxt.android.R$id: int layStudentPhoto
 cn.whzxt.android.R$id: int layStudentTitle
 cn.whzxt.android.R$id: int layTitle
 cn.whzxt.android.R$id: int layTts
@@ -112,6 +132,18 @@ cn.whzxt.android.R$id: int txtCoachCard
 cn.whzxt.android.R$id: int txtCoachCertificateLabel
 cn.whzxt.android.R$id: int txtCoachName
 cn.whzxt.android.R$id: int txtDebug
+cn.whzxt.android.R$id: int txtDetailCoachBrpx
+cn.whzxt.android.R$id: int txtDetailCoachBypx
+cn.whzxt.android.R$id: int txtDetailCoachCard
+cn.whzxt.android.R$id: int txtDetailCoachLevel
+cn.whzxt.android.R$id: int txtDetailCoachNo
+cn.whzxt.android.R$id: int txtDetailStudentBrlc
+cn.whzxt.android.R$id: int txtDetailStudentBrsx
+cn.whzxt.android.R$id: int txtDetailStudentBrxs
+cn.whzxt.android.R$id: int txtDetailStudentCard
+cn.whzxt.android.R$id: int txtDetailStudentLjlc
+cn.whzxt.android.R$id: int txtDetailStudentLjxs
+cn.whzxt.android.R$id: int txtDetailStudentStatus
 cn.whzxt.android.R$id: int txtDeviceName
 cn.whzxt.android.R$id: int txtGPSSpeed
 cn.whzxt.android.R$id: int txtGPSStatus
@@ -142,12 +174,36 @@ cn.whzxt.android.R$string: int copyright
 cn.whzxt.android.R$string: int server1
 cn.whzxt.android.R$string: int server2
 cn.whzxt.android.R$string: int version
-cn.whzxt.android.VerticalSeekbar
-cn.whzxt.android.VerticalSeekbar: VerticalSeekbar(android.content.Context)
-cn.whzxt.android.VerticalSeekbar: VerticalSeekbar(android.content.Context,android.util.AttributeSet,int)
-cn.whzxt.android.VerticalSeekbar: VerticalSeekbar(android.content.Context,android.util.AttributeSet)
-cn.whzxt.android.VerticalSeekbar: void setProgressAndThumb(int)
-cn.whzxt.android.VerticalSeekbar: void setMaximum(int)
+cn.whzxt.android.R$styleable: int[] ProgressBar
+cn.whzxt.android.R$styleable: int ProgressBar_android_max
+cn.whzxt.android.R$styleable: int ProgressBar_android_maxHeight
+cn.whzxt.android.R$styleable: int ProgressBar_android_maxWidth
+cn.whzxt.android.R$styleable: int ProgressBar_android_minHeight
+cn.whzxt.android.R$styleable: int ProgressBar_android_minWidth
+cn.whzxt.android.R$styleable: int ProgressBar_android_progress
+cn.whzxt.android.R$styleable: int ProgressBar_android_progressDrawable
+cn.whzxt.android.R$styleable: int ProgressBar_android_secondaryProgress
+cn.whzxt.android.R$styleable: int[] SeekBar
+cn.whzxt.android.R$styleable: int SeekBar_android_thumb
+cn.whzxt.android.R$styleable: int SeekBar_android_thumbOffset
+cn.whzxt.android.R$styleable: int[] Theme
+cn.whzxt.android.R$styleable: int Theme_android_disabledAlpha
+cn.whzxt.android.VerticalProgressBar
+cn.whzxt.android.VerticalProgressBar: VerticalProgressBar(android.content.Context)
+cn.whzxt.android.VerticalProgressBar: VerticalProgressBar(android.content.Context,android.util.AttributeSet)
+cn.whzxt.android.VerticalProgressBar: VerticalProgressBar(android.content.Context,android.util.AttributeSet,int)
+cn.whzxt.android.VerticalProgressBar: void setProgressDrawable(android.graphics.drawable.Drawable)
+cn.whzxt.android.VerticalProgressBar: void setProgress(int)
+cn.whzxt.android.VerticalProgressBar: void setSecondaryProgress(int)
+cn.whzxt.android.VerticalProgressBar: void setMax(int)
+cn.whzxt.android.VerticalProgressBar: void setVisibility(int)
+cn.whzxt.android.VerticalProgressBar$SavedState
+cn.whzxt.android.VerticalProgressBar$SavedState: android.os.Parcelable$Creator CREATOR
+cn.whzxt.android.VerticalSeekBar
+cn.whzxt.android.VerticalSeekBar: VerticalSeekBar(android.content.Context)
+cn.whzxt.android.VerticalSeekBar: VerticalSeekBar(android.content.Context,android.util.AttributeSet)
+cn.whzxt.android.VerticalSeekBar: VerticalSeekBar(android.content.Context,android.util.AttributeSet,int)
+cn.whzxt.android.VerticalSeekBar: void setOnSeekBarChangeListener(cn.whzxt.android.VerticalSeekBar$OnSeekBarChangeListener)
 cn.whzxt.android.WelcomeActivity
 cn.whzxt.android.lytfingerprint
 cn.whzxt.android.lytfingerprint: int PSOpenDevice(int,int,int,int)
