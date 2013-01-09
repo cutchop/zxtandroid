@@ -74,6 +74,7 @@ cn.whzxt.android.MainActivity:
     private static final int H_W_TAKE_FINGER_PHOTO
     private static final int H_W_SHOW_STUDENT
     private static final int H_W_SHOW_COACH
+    private static final java.lang.String EXAM_PACKAGE
 cn.whzxt.android.MySQLHelper:
     public static final java.lang.String T_ZXT_USE_DATA
     public static final java.lang.String T_ZXT_MODE_CHANGE

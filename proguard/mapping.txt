@@ -298,9 +298,10 @@ cn.whzxt.android.MainActivity -> cn.whzxt.android.MainActivity:
     java.lang.Boolean _sensorTimerFlag -> bH
     java.lang.Boolean _secondTimerFlag -> bI
     java.lang.Boolean _ttsButtonLoaded -> bJ
+    java.lang.Boolean _hasExamApp -> bK
     android.os.Handler handler -> a
     cn.whzxt.android.CardOper$OnChange cardOnChange -> b
-    android.location.LocationListener locationListener -> bK
+    android.location.LocationListener locationListener -> bL
     void onInit(int) -> onInit
     void onActivityResult(int,int,android.content.Intent) -> onActivityResult
     void onCreate(android.os.Bundle) -> onCreate
@@ -402,84 +403,85 @@ cn.whzxt.android.MainActivity -> cn.whzxt.android.MainActivity:
     void access$32(cn.whzxt.android.MainActivity,java.lang.String) -> b
     void access$33(cn.whzxt.android.MainActivity,java.lang.String) -> c
     java.lang.Boolean access$34(cn.whzxt.android.MainActivity) -> A
-    void access$35(cn.whzxt.android.MainActivity) -> B
-    android.widget.ViewFlipper access$36(cn.whzxt.android.MainActivity) -> C
-    void access$37(cn.whzxt.android.MainActivity,int) -> b
-    void access$38(cn.whzxt.android.MainActivity) -> D
-    android.widget.TextView access$39(cn.whzxt.android.MainActivity) -> E
-    android.graphics.Bitmap[] access$40(cn.whzxt.android.MainActivity) -> F
-    android.widget.ViewFlipper access$41(cn.whzxt.android.MainActivity) -> G
+    java.lang.Boolean access$35(cn.whzxt.android.MainActivity) -> B
+    void access$36(cn.whzxt.android.MainActivity) -> C
+    android.widget.ViewFlipper access$37(cn.whzxt.android.MainActivity) -> D
+    void access$38(cn.whzxt.android.MainActivity,int) -> b
+    void access$39(cn.whzxt.android.MainActivity) -> E
+    android.widget.TextView access$40(cn.whzxt.android.MainActivity) -> F
+    android.graphics.Bitmap[] access$41(cn.whzxt.android.MainActivity) -> G
     android.widget.ViewFlipper access$42(cn.whzxt.android.MainActivity) -> H
-    java.lang.Boolean access$43(cn.whzxt.android.MainActivity) -> I
-    void access$44(cn.whzxt.android.MainActivity) -> J
-    java.lang.Boolean access$45(cn.whzxt.android.MainActivity) -> K
-    void access$46(cn.whzxt.android.MainActivity,java.lang.Boolean) -> c
-    float access$47(cn.whzxt.android.MainActivity) -> L
-    android.database.sqlite.SQLiteDatabase access$48(cn.whzxt.android.MainActivity) -> M
-    void access$49(cn.whzxt.android.MainActivity,java.lang.String) -> d
-    java.lang.String access$50(cn.whzxt.android.MainActivity) -> N
+    android.widget.ViewFlipper access$43(cn.whzxt.android.MainActivity) -> I
+    java.lang.Boolean access$44(cn.whzxt.android.MainActivity) -> J
+    void access$45(cn.whzxt.android.MainActivity) -> K
+    java.lang.Boolean access$46(cn.whzxt.android.MainActivity) -> L
+    void access$47(cn.whzxt.android.MainActivity,java.lang.Boolean) -> c
+    float access$48(cn.whzxt.android.MainActivity) -> M
+    android.database.sqlite.SQLiteDatabase access$49(cn.whzxt.android.MainActivity) -> N
+    void access$50(cn.whzxt.android.MainActivity,java.lang.String) -> d
     java.lang.String access$51(cn.whzxt.android.MainActivity) -> O
     java.lang.String access$52(cn.whzxt.android.MainActivity) -> P
     java.lang.String access$53(cn.whzxt.android.MainActivity) -> Q
     java.lang.String access$54(cn.whzxt.android.MainActivity) -> R
-    void access$55(cn.whzxt.android.MainActivity,java.lang.String) -> e
-    java.lang.String access$56(cn.whzxt.android.MainActivity) -> S
-    java.util.HashMap access$57(cn.whzxt.android.MainActivity) -> T
-    android.widget.LinearLayout access$58(cn.whzxt.android.MainActivity) -> U
-    void access$59(cn.whzxt.android.MainActivity,java.lang.Boolean) -> d
-    void access$60(cn.whzxt.android.MainActivity,java.lang.String) -> f
-    java.net.ServerSocket access$61(cn.whzxt.android.MainActivity) -> V
-    void access$62(cn.whzxt.android.MainActivity,java.net.Socket) -> a
-    java.net.Socket access$63(cn.whzxt.android.MainActivity) -> W
-    java.lang.String access$64(cn.whzxt.android.MainActivity) -> X
-    java.lang.Boolean access$65(cn.whzxt.android.MainActivity) -> Y
-    void access$66(cn.whzxt.android.MainActivity,int) -> c
-    cn.whzxt.android.StreamIt access$67(cn.whzxt.android.MainActivity) -> Z
-    java.util.Timer access$68(cn.whzxt.android.MainActivity) -> aa
-    void access$69(cn.whzxt.android.MainActivity,java.util.Timer) -> a
-    void access$70(cn.whzxt.android.MainActivity,java.lang.Boolean) -> e
-    void access$71(cn.whzxt.android.MainActivity) -> ab
-    android.widget.TextView access$72(cn.whzxt.android.MainActivity) -> ac
-    java.lang.Boolean access$73(cn.whzxt.android.MainActivity) -> ad
-    void access$74(cn.whzxt.android.MainActivity) -> ae
-    void access$75(cn.whzxt.android.MainActivity,int) -> d
-    java.text.SimpleDateFormat access$76(cn.whzxt.android.MainActivity) -> af
-    java.util.Date access$77(cn.whzxt.android.MainActivity) -> ag
-    int access$78(cn.whzxt.android.MainActivity) -> ah
-    java.lang.String access$79(cn.whzxt.android.MainActivity) -> ai
-    cn.whzxt.android.lytfingerprint access$80(cn.whzxt.android.MainActivity) -> aj
-    void access$81(cn.whzxt.android.MainActivity) -> ak
-    java.lang.Boolean access$82(cn.whzxt.android.MainActivity) -> al
-    int access$83(cn.whzxt.android.MainActivity) -> am
+    java.lang.String access$55(cn.whzxt.android.MainActivity) -> S
+    void access$56(cn.whzxt.android.MainActivity,java.lang.String) -> e
+    java.lang.String access$57(cn.whzxt.android.MainActivity) -> T
+    java.util.HashMap access$58(cn.whzxt.android.MainActivity) -> U
+    android.widget.LinearLayout access$59(cn.whzxt.android.MainActivity) -> V
+    void access$60(cn.whzxt.android.MainActivity,java.lang.Boolean) -> d
+    void access$61(cn.whzxt.android.MainActivity,java.lang.String) -> f
+    java.net.ServerSocket access$62(cn.whzxt.android.MainActivity) -> W
+    void access$63(cn.whzxt.android.MainActivity,java.net.Socket) -> a
+    java.net.Socket access$64(cn.whzxt.android.MainActivity) -> X
+    java.lang.String access$65(cn.whzxt.android.MainActivity) -> Y
+    java.lang.Boolean access$66(cn.whzxt.android.MainActivity) -> Z
+    void access$67(cn.whzxt.android.MainActivity,int) -> c
+    cn.whzxt.android.StreamIt access$68(cn.whzxt.android.MainActivity) -> aa
+    java.util.Timer access$69(cn.whzxt.android.MainActivity) -> ab
+    void access$70(cn.whzxt.android.MainActivity,java.util.Timer) -> a
+    void access$71(cn.whzxt.android.MainActivity,java.lang.Boolean) -> e
+    void access$72(cn.whzxt.android.MainActivity) -> ac
+    android.widget.TextView access$73(cn.whzxt.android.MainActivity) -> ad
+    java.lang.Boolean access$74(cn.whzxt.android.MainActivity) -> ae
+    void access$75(cn.whzxt.android.MainActivity) -> af
+    void access$76(cn.whzxt.android.MainActivity,int) -> d
+    java.text.SimpleDateFormat access$77(cn.whzxt.android.MainActivity) -> ag
+    java.util.Date access$78(cn.whzxt.android.MainActivity) -> ah
+    int access$79(cn.whzxt.android.MainActivity) -> ai
+    java.lang.String access$80(cn.whzxt.android.MainActivity) -> aj
+    cn.whzxt.android.lytfingerprint access$81(cn.whzxt.android.MainActivity) -> ak
+    void access$82(cn.whzxt.android.MainActivity) -> al
+    java.lang.Boolean access$83(cn.whzxt.android.MainActivity) -> am
     int access$84(cn.whzxt.android.MainActivity) -> an
-    void access$85(cn.whzxt.android.MainActivity) -> ao
+    int access$85(cn.whzxt.android.MainActivity) -> ao
     void access$86(cn.whzxt.android.MainActivity) -> ap
-    java.lang.Boolean access$87(cn.whzxt.android.MainActivity) -> aq
-    void access$88(cn.whzxt.android.MainActivity) -> ar
+    void access$87(cn.whzxt.android.MainActivity) -> aq
+    java.lang.Boolean access$88(cn.whzxt.android.MainActivity) -> ar
     void access$89(cn.whzxt.android.MainActivity) -> as
-    int access$90(cn.whzxt.android.MainActivity) -> at
-    void access$91(cn.whzxt.android.MainActivity,int) -> e
-    void access$92(cn.whzxt.android.MainActivity,java.lang.String) -> g
-    java.lang.String access$93(cn.whzxt.android.MainActivity) -> au
-    void access$94(cn.whzxt.android.MainActivity,java.lang.Boolean) -> f
-    void access$95(cn.whzxt.android.MainActivity,java.lang.Boolean) -> g
-    java.lang.String access$96(cn.whzxt.android.MainActivity) -> av
-    void access$97(cn.whzxt.android.MainActivity,java.lang.Boolean) -> h
-    void access$98(cn.whzxt.android.MainActivity,int) -> f
-    void access$99(cn.whzxt.android.MainActivity) -> aw
-    void access$100(cn.whzxt.android.MainActivity,java.lang.String) -> h
-    java.lang.String access$101(cn.whzxt.android.MainActivity) -> ax
-    void access$102(cn.whzxt.android.MainActivity) -> ay
-    void access$103(cn.whzxt.android.MainActivity,java.lang.String) -> i
-    java.lang.String access$104(cn.whzxt.android.MainActivity) -> az
-    android.widget.TextView access$105(cn.whzxt.android.MainActivity) -> aA
-    void access$106(cn.whzxt.android.MainActivity,android.app.ProgressDialog) -> a
-    void access$107(cn.whzxt.android.MainActivity) -> aB
-    void access$108(cn.whzxt.android.MainActivity,java.io.File) -> a
-    java.io.File access$109(cn.whzxt.android.MainActivity) -> aC
-    void access$110(cn.whzxt.android.MainActivity,int) -> g
-    void access$111(cn.whzxt.android.MainActivity,int) -> h
-    void access$112(cn.whzxt.android.MainActivity,java.io.File) -> b
+    void access$90(cn.whzxt.android.MainActivity) -> at
+    int access$91(cn.whzxt.android.MainActivity) -> au
+    void access$92(cn.whzxt.android.MainActivity,int) -> e
+    void access$93(cn.whzxt.android.MainActivity,java.lang.String) -> g
+    java.lang.String access$94(cn.whzxt.android.MainActivity) -> av
+    void access$95(cn.whzxt.android.MainActivity,java.lang.Boolean) -> f
+    void access$96(cn.whzxt.android.MainActivity,java.lang.Boolean) -> g
+    java.lang.String access$97(cn.whzxt.android.MainActivity) -> aw
+    void access$98(cn.whzxt.android.MainActivity,java.lang.Boolean) -> h
+    void access$99(cn.whzxt.android.MainActivity,int) -> f
+    void access$100(cn.whzxt.android.MainActivity) -> ax
+    void access$101(cn.whzxt.android.MainActivity,java.lang.String) -> h
+    java.lang.String access$102(cn.whzxt.android.MainActivity) -> ay
+    void access$103(cn.whzxt.android.MainActivity) -> az
+    void access$104(cn.whzxt.android.MainActivity,java.lang.String) -> i
+    java.lang.String access$105(cn.whzxt.android.MainActivity) -> aA
+    android.widget.TextView access$106(cn.whzxt.android.MainActivity) -> aB
+    void access$107(cn.whzxt.android.MainActivity,android.app.ProgressDialog) -> a
+    void access$108(cn.whzxt.android.MainActivity) -> aC
+    void access$109(cn.whzxt.android.MainActivity,java.io.File) -> a
+    java.io.File access$110(cn.whzxt.android.MainActivity) -> aD
+    void access$111(cn.whzxt.android.MainActivity,int) -> g
+    void access$112(cn.whzxt.android.MainActivity,int) -> h
+    void access$113(cn.whzxt.android.MainActivity,java.io.File) -> b
 cn.whzxt.android.MainActivity$1 -> cn.whzxt.android.s:
     cn.whzxt.android.MainActivity this$0 -> a
     void handleMessage(android.os.Message) -> handleMessage
@@ -732,7 +734,6 @@ cn.whzxt.android.MainActivity$6 -> cn.whzxt.android.ca:
     cn.whzxt.android.MainActivity access$0(cn.whzxt.android.MainActivity$6) -> a
 cn.whzxt.android.MainActivity$6$1 -> cn.whzxt.android.cb:
     cn.whzxt.android.MainActivity$6 this$1 -> a
-    android.widget.EditText val$txtpsd -> b
     void onClick(android.content.DialogInterface,int) -> onClick
 cn.whzxt.android.MainActivity$6$2 -> cn.whzxt.android.cc:
     cn.whzxt.android.MainActivity$6 this$1 -> a
@@ -740,28 +741,38 @@ cn.whzxt.android.MainActivity$6$2 -> cn.whzxt.android.cc:
 cn.whzxt.android.MainActivity$6$3 -> cn.whzxt.android.cd:
     cn.whzxt.android.MainActivity$6 this$1 -> a
     boolean onKey(android.content.DialogInterface,int,android.view.KeyEvent) -> onKey
-cn.whzxt.android.MainActivity$7 -> cn.whzxt.android.ce:
+cn.whzxt.android.MainActivity$6$4 -> cn.whzxt.android.ce:
+    cn.whzxt.android.MainActivity$6 this$1 -> a
+    android.widget.EditText val$txtpsd -> b
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$6$5 -> cn.whzxt.android.cf:
+    cn.whzxt.android.MainActivity$6 this$1 -> a
+    void onClick(android.content.DialogInterface,int) -> onClick
+cn.whzxt.android.MainActivity$6$6 -> cn.whzxt.android.cg:
+    cn.whzxt.android.MainActivity$6 this$1 -> a
+    boolean onKey(android.content.DialogInterface,int,android.view.KeyEvent) -> onKey
+cn.whzxt.android.MainActivity$7 -> cn.whzxt.android.ch:
     cn.whzxt.android.MainActivity this$0 -> a
     void onClick(android.view.View) -> onClick
-cn.whzxt.android.MainActivity$8 -> cn.whzxt.android.cf:
+cn.whzxt.android.MainActivity$8 -> cn.whzxt.android.ci:
     cn.whzxt.android.MainActivity this$0 -> a
     void onClick(android.view.View) -> onClick
-cn.whzxt.android.MainActivity$9 -> cn.whzxt.android.cg:
+cn.whzxt.android.MainActivity$9 -> cn.whzxt.android.cj:
     cn.whzxt.android.MainActivity this$0 -> a
     void onClick(android.view.View) -> onClick
-cn.whzxt.android.MainActivity$9$1 -> cn.whzxt.android.ch:
+cn.whzxt.android.MainActivity$9$1 -> cn.whzxt.android.ck:
     cn.whzxt.android.MainActivity$9 this$1 -> a
     void onClick(android.content.DialogInterface,int) -> onClick
-cn.whzxt.android.MainActivity$9$2 -> cn.whzxt.android.ci:
+cn.whzxt.android.MainActivity$9$2 -> cn.whzxt.android.cl:
     cn.whzxt.android.MainActivity$9 this$1 -> a
     void onClick(android.content.DialogInterface,int) -> onClick
-cn.whzxt.android.MainActivity$9$3 -> cn.whzxt.android.cj:
+cn.whzxt.android.MainActivity$9$3 -> cn.whzxt.android.cm:
     cn.whzxt.android.MainActivity$9 this$1 -> a
     boolean onKey(android.content.DialogInterface,int,android.view.KeyEvent) -> onKey
-cn.whzxt.android.MySQLHelper -> cn.whzxt.android.ck:
+cn.whzxt.android.MySQLHelper -> cn.whzxt.android.cn:
     void onCreate(android.database.sqlite.SQLiteDatabase) -> onCreate
     void onUpgrade(android.database.sqlite.SQLiteDatabase,int,int) -> onUpgrade
-cn.whzxt.android.NanoHTTPD -> cn.whzxt.android.cl:
+cn.whzxt.android.NanoHTTPD -> cn.whzxt.android.co:
     int myTcpPort -> a
     java.net.ServerSocket myServerSocket -> b
     java.lang.Thread myThread -> c
@@ -774,14 +785,14 @@ cn.whzxt.android.NanoHTTPD -> cn.whzxt.android.cl:
     cn.whzxt.android.NanoHTTPD$Response serveFile(java.lang.String,java.util.Properties,java.io.File,boolean) -> a
     java.text.SimpleDateFormat access$0() -> a
     java.net.ServerSocket access$1(cn.whzxt.android.NanoHTTPD) -> a
-cn.whzxt.android.NanoHTTPD$1 -> cn.whzxt.android.cm:
+cn.whzxt.android.NanoHTTPD$1 -> cn.whzxt.android.cp:
     cn.whzxt.android.NanoHTTPD this$0 -> a
     void run() -> run
-cn.whzxt.android.NanoHTTPD$2 -> cn.whzxt.android.cn:
+cn.whzxt.android.NanoHTTPD$2 -> cn.whzxt.android.cq:
     cn.whzxt.android.NanoHTTPD this$0 -> a
     long val$dataLen -> b
     int available() -> available
-cn.whzxt.android.NanoHTTPD$HTTPSession -> cn.whzxt.android.co:
+cn.whzxt.android.NanoHTTPD$HTTPSession -> cn.whzxt.android.cr:
     java.net.Socket mySocket -> b
     cn.whzxt.android.NanoHTTPD this$0 -> a
     void run() -> run
@@ -794,7 +805,7 @@ cn.whzxt.android.NanoHTTPD$HTTPSession -> cn.whzxt.android.co:
     void decodeParms(java.lang.String,java.util.Properties) -> a
     void sendError(java.lang.String,java.lang.String) -> a
     void sendResponse(java.lang.String,java.lang.String,java.util.Properties,java.io.InputStream,boolean) -> a
-cn.whzxt.android.NanoHTTPD$Response -> cn.whzxt.android.cp:
+cn.whzxt.android.NanoHTTPD$Response -> cn.whzxt.android.cs:
     java.lang.String status -> a
     java.lang.String mimeType -> b
     java.io.InputStream data -> c
@@ -826,7 +837,7 @@ cn.whzxt.android.NetImageView -> cn.whzxt.android.NetImageView:
     byte[] getBytesFromStream(java.io.InputStream) -> a
     byte[] access$0(cn.whzxt.android.NetImageView,java.io.InputStream) -> a
     java.lang.String access$1(cn.whzxt.android.NetImageView) -> a
-cn.whzxt.android.NetImageView$NetImageDownLoad -> cn.whzxt.android.cq:
+cn.whzxt.android.NetImageView$NetImageDownLoad -> cn.whzxt.android.ct:
     cn.whzxt.android.NetImageView this$0 -> a
     void onPreExecute() -> onPreExecute
     android.graphics.Bitmap doInBackground(java.lang.String[]) -> a
@@ -835,7 +846,7 @@ cn.whzxt.android.NetImageView$NetImageDownLoad -> cn.whzxt.android.cq:
     void onPostExecute(java.lang.Object) -> onPostExecute
     java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
     void onProgressUpdate(java.lang.Object[]) -> onProgressUpdate
-cn.whzxt.android.NetImageViewCache -> cn.whzxt.android.cr:
+cn.whzxt.android.NetImageViewCache -> cn.whzxt.android.cu:
     cn.whzxt.android.NetImageViewCache mNetImageViewCache -> a
     cn.whzxt.android.NetImageViewCache getInstance() -> a
     boolean isBitmapExit(java.lang.String) -> a
@@ -847,13 +858,13 @@ cn.whzxt.android.NetImageViewCache -> cn.whzxt.android.cr:
     android.graphics.Bitmap put(java.lang.String,android.graphics.Bitmap) -> a
     android.graphics.Bitmap put(java.lang.String,android.graphics.Bitmap,boolean) -> a
     java.lang.Object put(java.lang.Object,java.lang.Object) -> put
-cn.whzxt.android.PhotoServer -> cn.whzxt.android.cs:
+cn.whzxt.android.PhotoServer -> cn.whzxt.android.cv:
     cn.whzxt.android.StreamIt streamIt -> c
     int ConCount -> a
     int PreConCount -> b
     cn.whzxt.android.NanoHTTPD$Response serve(java.lang.String,java.lang.String,java.util.Properties,java.util.Properties,java.util.Properties) -> a
-cn.whzxt.android.R -> cn.whzxt.android.ct:
-cn.whzxt.android.R$styleable -> cn.whzxt.android.cu:
+cn.whzxt.android.R -> cn.whzxt.android.cw:
+cn.whzxt.android.R$styleable -> cn.whzxt.android.cx:
     int[] ProgressBar -> ProgressBar
     int ProgressBar_android_max -> ProgressBar_android_max
     int ProgressBar_android_maxHeight -> ProgressBar_android_maxHeight
@@ -868,7 +879,7 @@ cn.whzxt.android.R$styleable -> cn.whzxt.android.cu:
     int SeekBar_android_thumbOffset -> SeekBar_android_thumbOffset
     int[] Theme -> Theme
     int Theme_android_disabledAlpha -> Theme_android_disabledAlpha
-cn.whzxt.android.RfidOper -> cn.whzxt.android.cv:
+cn.whzxt.android.RfidOper -> cn.whzxt.android.cy:
     int TYPE_READ -> a
     int TYPE_WRITE -> b
     int operType -> c
@@ -876,14 +887,14 @@ cn.whzxt.android.RfidOper -> cn.whzxt.android.cv:
     int kind -> e
     int[] content -> f
     cn.whzxt.android.RfidOper$Callback callback -> g
-cn.whzxt.android.RfidOper$Callback -> cn.whzxt.android.cw:
+cn.whzxt.android.RfidOper$Callback -> cn.whzxt.android.cz:
     void onStart() -> a
     void onFinish(java.lang.String) -> a
     void onFinish(int) -> a
-cn.whzxt.android.SocketHttpRequester -> cn.whzxt.android.cx:
+cn.whzxt.android.SocketHttpRequester -> cn.whzxt.android.da:
     java.lang.Boolean post(java.lang.String,java.util.Map,cn.whzxt.android.FormFile[]) -> a
     java.lang.Boolean post(java.lang.String,java.util.Map,cn.whzxt.android.FormFile) -> a
-cn.whzxt.android.StreamIt -> cn.whzxt.android.cy:
+cn.whzxt.android.StreamIt -> cn.whzxt.android.db:
     java.lang.Boolean Screenshot -> a
     android.graphics.BitmapFactory$Options options -> b
     java.io.ByteArrayOutputStream output_stream -> d
@@ -896,7 +907,7 @@ cn.whzxt.android.StreamIt -> cn.whzxt.android.cy:
     int format -> j
     android.hardware.Camera$Parameters parameters -> k
     void onPreviewFrame(byte[],android.hardware.Camera) -> onPreviewFrame
-cn.whzxt.android.Student -> cn.whzxt.android.cz:
+cn.whzxt.android.Student -> cn.whzxt.android.dc:
     java.lang.String ID -> a
     java.lang.String Name -> b
     java.lang.String CardNo -> c
@@ -917,7 +928,7 @@ cn.whzxt.android.Student -> cn.whzxt.android.cz:
     int Subject -> r
     java.lang.Boolean IsCharging -> s
     void Init() -> a
-cn.whzxt.android.Train -> cn.whzxt.android.da:
+cn.whzxt.android.Train -> cn.whzxt.android.dd:
     java.text.SimpleDateFormat dateFormat -> l
     java.util.Date StartTime -> a
     java.util.Date EndTime -> b
@@ -982,7 +993,7 @@ cn.whzxt.android.VerticalProgressBar -> cn.whzxt.android.VerticalProgressBar:
     void onRestoreInstanceState(android.os.Parcelable) -> onRestoreInstanceState
     void access$0(cn.whzxt.android.VerticalProgressBar,int,int,boolean) -> a
     void access$1(cn.whzxt.android.VerticalProgressBar,cn.whzxt.android.VerticalProgressBar$RefreshProgressRunnable) -> a
-cn.whzxt.android.VerticalProgressBar$RefreshProgressRunnable -> cn.whzxt.android.db:
+cn.whzxt.android.VerticalProgressBar$RefreshProgressRunnable -> cn.whzxt.android.de:
     int mId -> b
     int mProgress -> c
     boolean mFromUser -> d
@@ -994,7 +1005,7 @@ cn.whzxt.android.VerticalProgressBar$SavedState -> cn.whzxt.android.VerticalProg
     int secondaryProgress -> b
     android.os.Parcelable$Creator CREATOR -> CREATOR
     void writeToParcel(android.os.Parcel,int) -> writeToParcel
-cn.whzxt.android.VerticalProgressBar$SavedState$1 -> cn.whzxt.android.dc:
+cn.whzxt.android.VerticalProgressBar$SavedState$1 -> cn.whzxt.android.df:
     cn.whzxt.android.VerticalProgressBar$SavedState createFromParcel(android.os.Parcel) -> a
     cn.whzxt.android.VerticalProgressBar$SavedState[] newArray(int) -> a
     java.lang.Object createFromParcel(android.os.Parcel) -> createFromParcel
@@ -1005,7 +1016,7 @@ cn.whzxt.android.VerticalSeekBar -> cn.whzxt.android.VerticalSeekBar:
     void setOnSeekBarChangeListener(cn.whzxt.android.VerticalSeekBar$OnSeekBarChangeListener) -> setOnSeekBarChangeListener
     void onStartTrackingTouch() -> b
     void onStopTrackingTouch() -> c
-cn.whzxt.android.VerticalSeekBar$OnSeekBarChangeListener -> cn.whzxt.android.dd:
+cn.whzxt.android.VerticalSeekBar$OnSeekBarChangeListener -> cn.whzxt.android.dg:
     void onProgressChanged(cn.whzxt.android.VerticalSeekBar,int,boolean) -> a
     void onStartTrackingTouch(cn.whzxt.android.VerticalSeekBar) -> b
     void onStopTrackingTouch(cn.whzxt.android.VerticalSeekBar) -> a
@@ -1067,35 +1078,35 @@ cn.whzxt.android.WelcomeActivity -> cn.whzxt.android.WelcomeActivity:
     void access$23(cn.whzxt.android.WelcomeActivity,int) -> d
     void access$24(cn.whzxt.android.WelcomeActivity) -> p
     void access$25(cn.whzxt.android.WelcomeActivity,java.io.File) -> b
-cn.whzxt.android.WelcomeActivity$1 -> cn.whzxt.android.de:
+cn.whzxt.android.WelcomeActivity$1 -> cn.whzxt.android.dh:
     cn.whzxt.android.WelcomeActivity this$0 -> a
     void handleMessage(android.os.Message) -> handleMessage
-cn.whzxt.android.WelcomeActivity$2 -> cn.whzxt.android.df:
+cn.whzxt.android.WelcomeActivity$2 -> cn.whzxt.android.di:
     cn.whzxt.android.WelcomeActivity this$0 -> a
     void onClick(android.view.View) -> onClick
     cn.whzxt.android.WelcomeActivity access$0(cn.whzxt.android.WelcomeActivity$2) -> a
-cn.whzxt.android.WelcomeActivity$2$1 -> cn.whzxt.android.dg:
+cn.whzxt.android.WelcomeActivity$2$1 -> cn.whzxt.android.dj:
     cn.whzxt.android.WelcomeActivity$2 this$1 -> a
     void run() -> run
-cn.whzxt.android.WelcomeActivity$3 -> cn.whzxt.android.dh:
+cn.whzxt.android.WelcomeActivity$3 -> cn.whzxt.android.dk:
     cn.whzxt.android.WelcomeActivity this$0 -> a
     void run() -> run
-cn.whzxt.android.WelcomeActivity$4 -> cn.whzxt.android.di:
+cn.whzxt.android.WelcomeActivity$4 -> cn.whzxt.android.dl:
     cn.whzxt.android.WelcomeActivity this$0 -> a
     void run() -> run
-cn.whzxt.android.WelcomeActivity$5 -> cn.whzxt.android.dj:
+cn.whzxt.android.WelcomeActivity$5 -> cn.whzxt.android.dm:
     cn.whzxt.android.WelcomeActivity this$0 -> a
     java.lang.Integer doInBackground(java.lang.Void[]) -> a
     void onPostExecute(java.lang.Integer) -> a
     void onPostExecute(java.lang.Object) -> onPostExecute
     java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
-cn.whzxt.android.WelcomeActivity$6 -> cn.whzxt.android.dk:
+cn.whzxt.android.WelcomeActivity$6 -> cn.whzxt.android.dn:
     cn.whzxt.android.WelcomeActivity this$0 -> a
     java.lang.Integer doInBackground(java.lang.Void[]) -> a
     void onPostExecute(java.lang.Integer) -> a
     void onPostExecute(java.lang.Object) -> onPostExecute
     java.lang.Object doInBackground(java.lang.Object[]) -> doInBackground
-cn.whzxt.android.WelcomeActivity$7 -> cn.whzxt.android.dl:
+cn.whzxt.android.WelcomeActivity$7 -> cn.whzxt.android.do:
     cn.whzxt.android.WelcomeActivity this$0 -> a
     java.lang.Integer doInBackground(java.lang.Void[]) -> a
     void onPostExecute(java.lang.Integer) -> a

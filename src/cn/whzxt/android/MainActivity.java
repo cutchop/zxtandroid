@@ -46,6 +46,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -236,6 +237,9 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 	private Boolean _sensorTimerFlag = false;
 	private Boolean _secondTimerFlag = false;
 	private Boolean _ttsButtonLoaded = false;
+	// 是否安装模拟考试程序
+	private Boolean _hasExamApp = false;
+	private static final String EXAM_PACKAGE = "net.whzxt.zxtexam";
 
 	Handler handler = new Handler() {
 		@Override
@@ -577,14 +581,33 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 			}
 		});
 
+		_hasExamApp = false;
+		List<PackageInfo> packages = getPackageManager().getInstalledPackages(0);
+		for (int i = 0; i < packages.size(); i++) {
+			if (packages.get(i).packageName.equals(EXAM_PACKAGE)) {
+				_hasExamApp = true;
+				break;
+			}
+		}
 		layScrollDown.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				if (!_ttsButtonLoaded) {
-					ttsButtonInit();
+				if (_hasExamApp) {
+					Intent intent = new Intent();
+					intent.setComponent(new ComponentName(EXAM_PACKAGE, EXAM_PACKAGE + ".WelcomeActivity"));
+					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					try {
+						startActivity(intent);
+					} catch (Exception e) {
+						intent.setComponent(new ComponentName(EXAM_PACKAGE, EXAM_PACKAGE + ".MainActivity"));
+					}
+				} else {
+					if (!_ttsButtonLoaded) {
+						ttsButtonInit();
+					}
+					flipper.setInAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_in));
+					flipper.setOutAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_out));
+					flipper.showNext();
 				}
-				flipper.setInAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_in));
-				flipper.setOutAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.layout.push_right_out));
-				flipper.showNext();
 			}
 		});
 
@@ -2599,7 +2622,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 								} else {
 									if (Student.IsCharging) {
 										Student.IsCharging = false;
-										cardOper.WriteBillingFlag(1);//不计费标记
+										cardOper.WriteBillingFlag(1);// 不计费标记
 									}
 								}
 							}
@@ -2748,7 +2771,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 								} else {
 									if (Student.IsCharging) {
 										Student.IsCharging = false;
-										cardOper.WriteBillingFlag(1);//不计费标记
+										cardOper.WriteBillingFlag(1);// 不计费标记
 									}
 								}
 							}
@@ -2929,7 +2952,7 @@ public class MainActivity extends Activity implements OnInitListener, SurfaceHol
 		new AsyncTask<Void, Void, Integer>() {
 			@Override
 			protected Integer doInBackground(Void... args) {
-				//String systeminfo = "[系统信息:电量";
+				// String systeminfo = "[系统信息:电量";
 				HttpPost httpRequest = new HttpPost(server + "/logupload.ashx");
 				List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 				params.add(new BasicNameValuePair("deviceid", deviceID)); // 设备号码
