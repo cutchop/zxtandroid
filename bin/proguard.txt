@@ -1,0 +1,16 @@
+# view AndroidManifest.xml #generated:20
+-keep class cn.whzxt.android.BootUpReceiver { <init>(...); }
+
+# view AndroidManifest.xml #generated:19
+-keep class cn.whzxt.android.MainActivity { <init>(...); }
+
+# view res/layout/main.xml #generated:111
+# view res/layout/main.xml #generated:532
+-keep class cn.whzxt.android.NetImageView { <init>(...); }
+
+# view res/layout/main.xml #generated:751
+-keep class cn.whzxt.android.VerticalSeekBar { <init>(...); }
+
+# view AndroidManifest.xml #generated:12
+-keep class cn.whzxt.android.WelcomeActivity { <init>(...); }
+
