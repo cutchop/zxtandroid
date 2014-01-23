@@ -2,7 +2,6 @@ android.annotation.SuppressLint
 android.annotation.TargetApi
 cn.whzxt.android.AbsVerticalSeekBar:
     private static final int NO_ALPHA
-    123:123:public int getKeyProgressIncrement()
 cn.whzxt.android.BuildConfig
 cn.whzxt.android.CardOper:
     public static final java.lang.String MSG_COACH_FIRST
@@ -145,7 +144,6 @@ cn.whzxt.android.Train:
     11:11:public Train()
 cn.whzxt.android.VerticalProgressBar:
     private static final int MAX_LEVEL
-    378:378:public synchronized int getSecondaryProgress()
     427:428:public final synchronized void incrementProgressBy(int)
     438:439:public final synchronized void incrementSecondaryProgressBy(int)
 cn.whzxt.android.WelcomeActivity:

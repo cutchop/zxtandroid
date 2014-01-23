@@ -1,13 +1,16 @@
-cn.whzxt.android.AbsVerticalSeekBar
 cn.whzxt.android.AbsVerticalSeekBar: AbsVerticalSeekBar(android.content.Context)
 cn.whzxt.android.AbsVerticalSeekBar: AbsVerticalSeekBar(android.content.Context,android.util.AttributeSet)
 cn.whzxt.android.AbsVerticalSeekBar: AbsVerticalSeekBar(android.content.Context,android.util.AttributeSet,int)
 cn.whzxt.android.AbsVerticalSeekBar: void setThumb(android.graphics.drawable.Drawable)
+cn.whzxt.android.AbsVerticalSeekBar: int getThumbOffset()
 cn.whzxt.android.AbsVerticalSeekBar: void setThumbOffset(int)
 cn.whzxt.android.AbsVerticalSeekBar: void setKeyProgressIncrement(int)
+cn.whzxt.android.AbsVerticalSeekBar: int getKeyProgressIncrement()
 cn.whzxt.android.AbsVerticalSeekBar: void setMax(int)
 cn.whzxt.android.BootUpReceiver
+cn.whzxt.android.BootUpReceiver: BootUpReceiver()
 cn.whzxt.android.MainActivity
+cn.whzxt.android.MainActivity: MainActivity()
 cn.whzxt.android.Native
 cn.whzxt.android.Native: int auto_init(java.lang.String,int)
 cn.whzxt.android.Native: int ic_exit(int)
@@ -188,13 +191,18 @@ cn.whzxt.android.R$styleable: int SeekBar_android_thumb
 cn.whzxt.android.R$styleable: int SeekBar_android_thumbOffset
 cn.whzxt.android.R$styleable: int[] Theme
 cn.whzxt.android.R$styleable: int Theme_android_disabledAlpha
-cn.whzxt.android.VerticalProgressBar
 cn.whzxt.android.VerticalProgressBar: VerticalProgressBar(android.content.Context)
 cn.whzxt.android.VerticalProgressBar: VerticalProgressBar(android.content.Context,android.util.AttributeSet)
 cn.whzxt.android.VerticalProgressBar: VerticalProgressBar(android.content.Context,android.util.AttributeSet,int)
+cn.whzxt.android.VerticalProgressBar: android.graphics.drawable.shapes.Shape getDrawableShape()
+cn.whzxt.android.VerticalProgressBar: android.graphics.drawable.Drawable getProgressDrawable()
 cn.whzxt.android.VerticalProgressBar: void setProgressDrawable(android.graphics.drawable.Drawable)
+cn.whzxt.android.VerticalProgressBar: android.graphics.drawable.Drawable getCurrentDrawable()
 cn.whzxt.android.VerticalProgressBar: void setProgress(int)
 cn.whzxt.android.VerticalProgressBar: void setSecondaryProgress(int)
+cn.whzxt.android.VerticalProgressBar: int getProgress()
+cn.whzxt.android.VerticalProgressBar: int getSecondaryProgress()
+cn.whzxt.android.VerticalProgressBar: int getMax()
 cn.whzxt.android.VerticalProgressBar: void setMax(int)
 cn.whzxt.android.VerticalProgressBar: void setVisibility(int)
 cn.whzxt.android.VerticalProgressBar$SavedState
@@ -205,6 +213,7 @@ cn.whzxt.android.VerticalSeekBar: VerticalSeekBar(android.content.Context,androi
 cn.whzxt.android.VerticalSeekBar: VerticalSeekBar(android.content.Context,android.util.AttributeSet,int)
 cn.whzxt.android.VerticalSeekBar: void setOnSeekBarChangeListener(cn.whzxt.android.VerticalSeekBar$OnSeekBarChangeListener)
 cn.whzxt.android.WelcomeActivity
+cn.whzxt.android.WelcomeActivity: WelcomeActivity()
 cn.whzxt.android.lytfingerprint
 cn.whzxt.android.lytfingerprint: int PSOpenDevice(int,int,int,int)
 cn.whzxt.android.lytfingerprint: int PSCloseDevice()

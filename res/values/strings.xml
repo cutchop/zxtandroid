@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">驾培智能终端</string>
     <string name="version">4.6</string>
-	<string name="server1">http://221.232.160.197</string>
-	<string name="server2">http://gxjp.whzxt.net</string>
-	<string name="copyright">V4.5</string>
+	<string name="server1">http://58.49.56.20:8003</string>
+	<string name="server2">http://58.49.56.20:8003</string>
+	<string name="copyright">V4.6</string>
 	<string name="bottomcenter"></string>
 </resources>
